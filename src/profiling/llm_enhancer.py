@@ -85,7 +85,7 @@ class LLMEnhancer:
     def _get_default_model(self) -> str:
         """Get default model for provider"""
         models = {
-            'anthropic': 'claude-3-haiku-20240307',  # Fast and cheap for classification
+            'anthropic': 'claude-3-haiku-20240307',  # Fast, cheap, works with all API keys
             'openai': 'gpt-4o-mini',  # Fast and cheap
             'google': 'gemini-1.5-flash'  # Fast and cheap
         }
