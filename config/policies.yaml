@@ -1,0 +1,113 @@
+# BACOWR QC Policies
+# Per NEXT-A1-ENGINE-ADDENDUM.md § 3
+
+autofix_policies:
+  enabled: true
+  max_attempts: 1
+  description: "AutoFixOnce - exakt EN automatisk korrigering tillåten"
+
+  allowed_fixes:
+    - name: "move_link_within_section"
+      description: "Flytta länk inom samma sektion till bättre position"
+      conditions:
+        - "link in forbidden location (H1/H2)"
+        - "link lacks context sentences"
+
+    - name: "adjust_anchor_type"
+      description: "Justera ankartyp från exact → brand/generic"
+      conditions:
+        - "anchor_risk == high"
+        - "exact match kan ersättas med brand"
+
+    - name: "inject_missing_lsi"
+      description: "Injicera saknade LSI-termer (inom policy)"
+      conditions:
+        - "lsi_count < 6"
+        - "lsi_count > 10"
+      max_injection: 4
+
+    - name: "add_compliance_disclaimer"
+      description: "Lägg till nödvändig disclaimer för reglerad vertikal"
+      conditions:
+        - "regulated_vertical detected"
+        - "disclaimer missing"
+
+  forbidden_fixes:
+    - name: "change_intent_alignment"
+      reason: "Kräver human review och strategisk omtänk"
+
+    - name: "remove_competitor_mentions"
+      reason: "Kan vara legitimate content, ej AutoFix"
+
+    - name: "fabricate_trust_sources"
+      reason: "Aldrig fabricate källor - kräver research"
+
+    - name: "change_bridge_type"
+      reason: "Strategiskt beslut, ej AutoFix"
+
+blocking_conditions:
+  description: "Conditions som blockerar delivery och kräver human signoff"
+
+  critical_blocks:
+    - condition: "intent_alignment.overall == 'off'"
+      reason: "Intent mismatch - fundamentalt problem"
+      human_signoff_required: true
+
+    - condition: "trust_sources_count == 0"
+      reason: "Inga trovärdiga källor - content credibility fail"
+      human_signoff_required: true
+
+    - condition: "anchor_risk == 'high'"
+      reason: "Hög risk för penalty - kräver review"
+      human_signoff_required: true
+
+    - condition: "regulated_vertical && !disclaimer"
+      reason: "Compliance-krav ej uppfyllt"
+      human_signoff_required: true
+
+    - condition: "competitor_detected_in_content"
+      reason: "Konkurrent-mentions kräver strategisk review"
+      human_signoff_required: false  # Warning, not block
+
+  warning_conditions:
+    - condition: "word_count < minimum"
+      action: "warn"
+
+    - condition: "lsi_count < 6 || lsi_count > 10"
+      action: "attempt_autofix"
+
+    - condition: "link_in_forbidden_location"
+      action: "attempt_autofix"
+
+rescue_policies:
+  max_rescue_attempts: 1
+  description: "RESCUE state policies"
+
+  loop_detection:
+    enabled: true
+    method: "payload_hash_comparison"
+    description: "Om RESCUE inte ändrar payload → ABORT"
+
+  rescue_triggers:
+    - "qc_status == BLOCKED"
+    - "autofix available"
+    - "rescue_count == 0"
+
+  abort_triggers:
+    - "rescue_count >= 1"
+    - "payload unchanged after rescue"
+    - "human_signoff_required == true"
+
+output_policies:
+  storage_location: "storage/output/"
+  file_naming: "{job_id}_{timestamp}"
+  formats:
+    - "job_package.json"
+    - "article.md"
+    - "qc_report.json"
+    - "execution_log.json"
+
+  retention:
+    success: 30  # days
+    blocked: 90  # days for analysis
+    aborted: 90  # days for debugging

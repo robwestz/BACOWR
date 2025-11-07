@@ -1,0 +1,80 @@
+# BACOWR QC Thresholds
+# Per NEXT-A1-ENGINE-ADDENDUM.md § 3
+
+lsi_requirements:
+  min_count: 6
+  max_count: 10
+  placement_radius_sentences: 2
+  description: "LSI-termer ska vara 6-10 st inom ±2 meningar från länk"
+
+trust_sources:
+  tier_1:
+    - ".gov"
+    - ".edu"
+    - "konsumentverket.se"
+    - "riksbanken.se"
+    - "skatteverket.se"
+  tier_2:
+    - "wikipedia.org"
+    - "dn.se"
+    - "svd.se"
+    - "aftonbladet.se"
+    - "expressen.se"
+  tier_3:
+    - "branschorganisationer"
+    - "certifierade experter"
+  tier_4:
+    - "övriga källor"
+  min_tier_1_count: 1
+  min_total_count: 2
+  description: "Minst 1 T1-källa, minst 2 totalt"
+
+anchor_risk:
+  high_risk_patterns:
+    - "exact match commercial queries"
+    - "över-optimerade keyword-stuffing"
+    - "money keywords + exact match"
+  medium_risk_patterns:
+    - "partial match med modifiers"
+    - "branded + keyword"
+  low_risk_patterns:
+    - "brand mentions"
+    - "generic descriptive"
+    - "informational phrases"
+  description: "Klassificering av ankarrisk baserat på mönster"
+
+link_placement:
+  forbidden_locations:
+    - "H1"
+    - "H2"
+  preferred_location: "mittsektion, första relevanta stycke"
+  min_context_sentences: 2
+  max_links_in_paragraph: 1
+  description: "Länkplaceringsregler enligt Next-A1"
+
+word_count:
+  minimum: 900
+  recommended: 1200
+  maximum: 2500
+  description: "Ordkrav för backlink-artiklar"
+
+compliance:
+  regulated_verticals:
+    gambling:
+      disclaimer_required: true
+      disclaimer_text: "Spela ansvarsfullt. 18+. Stödlinjen.se"
+    finance:
+      disclaimer_required: true
+      disclaimer_text: "Finansiella tjänster innebär risker. Sök alltid rådgivning."
+    health:
+      disclaimer_required: true
+      disclaimer_text: "Detta är inte medicinsk rådgivning. Kontakta läkare vid symtom."
+    legal:
+      disclaimer_required: true
+      disclaimer_text: "Detta är generell information, inte juridisk rådgivning."
+  description: "Compliance-krav för reglerade vertikaler"
+
+intent_alignment:
+  aligned_threshold: 0.8
+  partial_threshold: 0.5
+  description: "Tröskelvärden för intent-alignment scoring"
