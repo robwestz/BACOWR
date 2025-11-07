@@ -1,0 +1,19 @@
+{
+  "timeout": 10,
+  "user_agent": "BacklinkBot/1.0 (SEO Research)",
+  "min_word_count": 900,
+  "max_anchor_usages": 2,
+  "rate_limit_delay": 0.5,
+  "serp_api_provider": "mock",
+  "serp_api_key": "YOUR_API_KEY_HERE",
+  "llm_provider": "mock",
+  "llm_api_key": "YOUR_LLM_API_KEY_HERE",
+  "llm_model": "claude-sonnet-4.5",
+  "cache_ttl_target": 86400,
+  "cache_ttl_publisher": 604800,
+  "cache_ttl_serp": 21600,
+  "logging": {
+    "level": "INFO",
+    "file": "backlink_engine.log"
+  }
+}

@@ -1,0 +1,265 @@
+{
+  "$id": "serp_research_extension.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SerpResearchExtension",
+  "description": "SERP Preflight Research för main query + klusterqueries. Används för intent-modellering enligt Next-A1 SERP-first methodology.",
+  "type": "object",
+  "required": [
+    "main_query",
+    "cluster_queries",
+    "queries_rationale",
+    "serp_sets",
+    "derived_links"
+  ],
+  "properties": {
+    "main_query": {
+      "type": "string",
+      "description": "Huvudquery baserad på target_profile.core_entities och anchor_profile."
+    },
+    "cluster_queries": {
+      "type": "array",
+      "description": "2-4 klusterqueries som utforskar relaterade eller bredare/smalare aspekter.",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": {
+        "type": "string"
+      }
+    },
+    "queries_rationale": {
+      "type": "string",
+      "description": "Kort motivering för varför dessa queries valdes utifrån target_profile och anchor_profile."
+    },
+    "serp_sets": {
+      "type": "array",
+      "description": "Ett set per query (main + clusters). Varje set innehåller SERP-analys.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "query",
+          "dominant_intent",
+          "page_archetypes",
+          "required_subtopics",
+          "top_results_sample"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Den faktiska query som kördes."
+          },
+          "dominant_intent": {
+            "type": "string",
+            "description": "Huvudsaklig search intent för denna query.",
+            "enum": [
+              "info_primary",
+              "commercial_research",
+              "transactional",
+              "navigational_brand",
+              "support",
+              "local",
+              "mixed"
+            ]
+          },
+          "secondary_intents": {
+            "type": "array",
+            "description": "Sekundära intents om SERP är mixed.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "info_primary",
+                "commercial_research",
+                "transactional",
+                "navigational_brand",
+                "support",
+                "local"
+              ]
+            }
+          },
+          "page_archetypes": {
+            "type": "array",
+            "description": "Dominerande sidtyper i top-10.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "guide",
+                "comparison",
+                "category",
+                "product",
+                "review",
+                "tool",
+                "faq",
+                "news",
+                "official",
+                "blog",
+                "forum",
+                "video",
+                "other"
+              ]
+            }
+          },
+          "required_subtopics": {
+            "type": "array",
+            "description": "Subtopics som förekommer i ≥60% av top-10. Dessa är 'obligatoriska' för relevans.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "top_results_sample": {
+            "type": "array",
+            "description": "Sample av 3-10 toppresultat med djupanalys.",
+            "minItems": 3,
+            "maxItems": 10,
+            "items": {
+              "type": "object",
+              "required": [
+                "rank",
+                "url",
+                "title",
+                "detected_page_type"
+              ],
+              "properties": {
+                "rank": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100,
+                  "description": "Position i SERP (1-100)."
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "URL till resultatet."
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Title-tag eller SERP-titel."
+                },
+                "snippet": {
+                  "type": "string",
+                  "description": "SERP-snippet (meta description eller extrakt)."
+                },
+                "detected_page_type": {
+                  "type": "string",
+                  "description": "Klassificerad sidtyp baserat på innehåll/struktur.",
+                  "enum": [
+                    "guide",
+                    "comparison",
+                    "category",
+                    "product",
+                    "review",
+                    "tool",
+                    "faq",
+                    "news",
+                    "official",
+                    "blog",
+                    "forum",
+                    "video",
+                    "other"
+                  ]
+                },
+                "content_excerpt": {
+                  "type": "string",
+                  "description": "200-400 tecken från faktiskt sidinnehåll (om fetchat)."
+                },
+                "content_signals": {
+                  "type": "array",
+                  "description": "Korta beskrivningar av vad sidan betonar (t.ex. 'jämförelse av pris', 'transparens om villkor').",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "key_entities": {
+                  "type": "array",
+                  "description": "3-6 nyckelentiteter identifierade från sidans innehåll.",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "key_subtopics": {
+                  "type": "array",
+                  "description": "2-5 subtopics som sidan täcker.",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "why_it_ranks": {
+                  "type": "string",
+                  "description": "1-3 meningar: LLM-genererad analys av varför denna sida rankar (value, coverage, format, E-E-A-T)."
+                },
+                "meta": {
+                  "type": "object",
+                  "description": "Valfri metadata (domain authority, datum, etc.).",
+                  "properties": {
+                    "domain": {
+                      "type": "string"
+                    },
+                    "published_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "domain_authority": {
+                      "type": "number",
+                      "description": "Om tillgängligt från SERP API."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "serp_features": {
+            "type": "array",
+            "description": "SERP-features som observerats (Featured Snippet, People Also Ask, etc.).",
+            "items": {
+              "type": "string",
+              "enum": [
+                "featured_snippet",
+                "people_also_ask",
+                "local_pack",
+                "knowledge_panel",
+                "image_pack",
+                "video_carousel",
+                "shopping_results",
+                "news_box",
+                "site_links",
+                "none"
+              ]
+            }
+          },
+          "competitive_intensity": {
+            "type": "string",
+            "description": "Bedömning av hur konkurrensutsatt denna query är.",
+            "enum": ["low", "medium", "high", "very_high"]
+          }
+        }
+      }
+    },
+    "derived_links": {
+      "type": "object",
+      "description": "Länkar till hur denna SERP-research mappas till intent_extension.",
+      "required": [
+        "intent_profile_ref",
+        "required_subtopics_merged_ref",
+        "data_confidence"
+      ],
+      "properties": {
+        "intent_profile_ref": {
+          "type": "string",
+          "description": "Referens: 'Kopplas till intent_extension.serp_intent_primary/secondary'."
+        },
+        "required_subtopics_merged_ref": {
+          "type": "string",
+          "description": "Referens: 'Kopplas till intent_extension.required_subtopics'."
+        },
+        "data_confidence": {
+          "type": "string",
+          "description": "Övergripande konfidensgrad för denna SERP-research.",
+          "enum": ["high", "medium", "low"]
+        },
+        "notes": {
+          "type": "string",
+          "description": "Valfria kommentarer om SERP-research-processen."
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
