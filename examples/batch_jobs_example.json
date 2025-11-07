@@ -1,0 +1,34 @@
+{
+  "jobs": [
+    {
+      "publisher": "aftonbladet.se",
+      "target": "https://sv.wikipedia.org/wiki/Artificiell_intelligens",
+      "anchor": "läs mer om AI",
+      "llm_provider": "auto",
+      "strategy": "single_shot",
+      "country": "se",
+      "use_ahrefs": false,
+      "enable_llm_profiling": true
+    },
+    {
+      "publisher": "svd.se",
+      "target": "https://sv.wikipedia.org/wiki/Maskininlärning",
+      "anchor": "maskininlärning och djupinlärning",
+      "llm_provider": "anthropic",
+      "strategy": "multi_stage",
+      "country": "se",
+      "use_ahrefs": false,
+      "enable_llm_profiling": true
+    },
+    {
+      "publisher": "dn.se",
+      "target": "https://sv.wikipedia.org/wiki/Neuralt_nätverk",
+      "anchor": "neurala nätverk",
+      "llm_provider": "auto",
+      "strategy": "multi_stage",
+      "country": "se",
+      "use_ahrefs": false,
+      "enable_llm_profiling": true
+    }
+  ]
+}

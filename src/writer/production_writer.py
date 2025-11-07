@@ -65,7 +65,9 @@ class ProductionWriter:
     PRICING = {
         'gpt-4o': {'input': 2.50, 'output': 10.00},
         'gpt-5': {'input': 5.00, 'output': 15.00},  # Estimated
-        'claude-3-5-sonnet-20241022': {'input': 3.00, 'output': 15.00},
+        'claude-3-5-sonnet-20240620': {'input': 3.00, 'output': 15.00},
+        'claude-3-sonnet-20240229': {'input': 3.00, 'output': 15.00},
+        'claude-3-haiku-20240307': {'input': 0.25, 'output': 1.25},
         'gemini-2.5-pro': {'input': 1.25, 'output': 5.00},  # Estimated
     }
 
@@ -101,9 +103,11 @@ class ProductionWriter:
 
         # Try Anthropic first (best for Swedish content)
         if os.getenv('ANTHROPIC_API_KEY'):
+            # Use Haiku by default (works with all API keys, fast and cheap)
+            # For production, upgrade to Sonnet if you have access
             providers.append(LLMConfig(
                 provider=LLMProvider.ANTHROPIC,
-                model='claude-3-5-sonnet-20241022',
+                model='claude-3-haiku-20240307',
                 api_key=os.getenv('ANTHROPIC_API_KEY'),
                 max_tokens=4000,
                 temperature=0.7

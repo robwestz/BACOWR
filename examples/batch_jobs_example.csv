@@ -1,0 +1,4 @@
+publisher,target,anchor,llm_provider,strategy,country,use_ahrefs,enable_llm_profiling
+aftonbladet.se,https://sv.wikipedia.org/wiki/Artificiell_intelligens,läs mer om AI,auto,single_shot,se,false,true
+svd.se,https://sv.wikipedia.org/wiki/Maskininlärning,maskininlärning och djupinlärning,anthropic,multi_stage,se,false,true
+dn.se,https://sv.wikipedia.org/wiki/Neuralt_nätverk,neurala nätverk,auto,multi_stage,se,false,true
