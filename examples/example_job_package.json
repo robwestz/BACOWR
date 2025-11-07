@@ -1,0 +1,79 @@
+{
+  "$id": "BacklinkJobPackage.json",
+  "job_meta": {
+    "job_id": "example-job-001",
+    "created_at": "2025-11-06T12:00:00Z",
+    "spec_version": "Next-A1-SERP-First-v1"
+  },
+  "input_minimal": {
+    "publisher_domain": "example-publisher.com",
+    "target_url": "https://client.com/product-x",
+    "anchor_text": "bästa valet för [tema]"
+  },
+  "publisher_profile": {
+    "domain": "example-publisher.com",
+    "detected_language": "sv",
+    "topic_focus": ["privatekonomi", "konsumentråd"],
+    "tone_class": "consumer_magazine"
+  },
+  "target_profile": {
+    "url": "https://client.com/product-x",
+    "http_status": 200,
+    "detected_language": "sv",
+    "title": "Product X – jämför alternativ och hitta rätt lösning",
+    "core_entities": ["Product X", "kategori Y"],
+    "core_topics": ["jämförelse", "villkor", "fördelar"],
+    "core_offer": "Hjälper användaren välja rätt Product X-lösning."
+  },
+  "anchor_profile": {
+    "proposed_text": "bästa valet för [tema]",
+    "type_hint": null,
+    "llm_classified_type": "partial",
+    "llm_intent_hint": "commercial_research"
+  },
+  "serp_research_extension": {
+    "main_query": "product x jämförelse",
+    "cluster_queries": [
+      "product x erfarenheter",
+      "product x villkor"
+    ],
+    "queries_rationale": "Valda utifrån target_profile.core_entities och kommersiell informationsintent.",
+    "serp_sets": [],
+    "data_confidence": "medium"
+  },
+  "intent_extension": {
+    "serp_intent_primary": "commercial_research",
+    "serp_intent_secondary": ["info_primary"],
+    "target_page_intent": "transactional_with_info_support",
+    "anchor_implied_intent": "commercial_research",
+    "publisher_role_intent": "info_primary",
+    "intent_alignment": {
+      "anchor_vs_serp": "aligned",
+      "target_vs_serp": "partial",
+      "publisher_vs_serp": "aligned",
+      "overall": "aligned"
+    },
+    "recommended_bridge_type": "pivot",
+    "recommended_article_angle": "Informativ guide som jämför alternativen och naturligt introducerar Product X.",
+    "required_subtopics": [
+      "vad är product x",
+      "fördelar/nackdelar",
+      "villkor",
+      "vem passar det"
+    ],
+    "forbidden_angles": [
+      "överdrivet aggressiv säljcopy",
+      "löften som inte stöds av målsidan"
+    ],
+    "notes": {
+      "rationale": "SERP visar research/jämförelse, publisher är rådgivande, target är kommersiell lösning.",
+      "data_confidence": "medium"
+    }
+  },
+  "generation_constraints": {
+    "language": "sv",
+    "min_word_count": 900,
+    "max_anchor_usages": 2,
+    "anchor_policy": "Ingen anchor i H1/H2, placera i första relevanta stycke i mittsektionen."
+  }
+}
