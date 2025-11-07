@@ -355,7 +355,7 @@ For storing results in a database, consider these schemas:
 ```sql
 CREATE TABLE page_profiles (
     id UUID PRIMARY KEY,
-    url VARCHAR NOT NULL,
+    url TEXT NOT NULL,
     crawled_at TIMESTAMP,
     http_status INT,
     title TEXT,
@@ -367,7 +367,7 @@ CREATE TABLE page_profiles (
     word_count INT,
     internal_links_count INT,
     external_links_count INT,
-    canonical_url VARCHAR,
+    canonical_url TEXT,
     schema_types JSONB
 );
 ```
