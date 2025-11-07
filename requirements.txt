@@ -1,0 +1,11 @@
+# BACOWR BacklinkContent Engine Requirements
+# Python 3.8+
+
+# JSON Schema validation (required for tests/test_schema_validation.py)
+jsonschema>=4.0.0,<5.0.0
+
+# Optional: For future development
+# requests>=2.31.0        # HTTP requests for SERP/web fetching
+# beautifulsoup4>=4.12.0  # HTML parsing for page profiling
+# pyyaml>=6.0            # YAML config files (thresholds.yaml, policies.yaml)
+# pytest>=7.4.0          # Test framework for CI/CD

@@ -2,11 +2,15 @@
 """
 Live Test för BACOWR Backlink Engine
 Validerar BacklinkJobPackage mot JSON-schema
+
+E2E light test per NEXT-A1-ENGINE-ADDENDUM.md § 2.2
 """
 
 import json
 import sys
+import os
 from datetime import datetime
+from pathlib import Path
 
 def log(message, level="INFO"):
     """Logger med timestamp"""
@@ -18,10 +22,14 @@ def validate_json_structure():
     log("🚀 Startar BACOWR Live Test")
     log("=" * 60)
 
+    # Get project root (parent of tests/)
+    project_root = Path(__file__).parent.parent
+
     # Test 1: Läs schema
     log("Test 1: Läser JSON-schema...")
+    schema_path = project_root / 'backlink_job_package.schema.json'
     try:
-        with open('backlink_job_package.schema.json', 'r', encoding='utf-8') as f:
+        with open(schema_path, 'r', encoding='utf-8') as f:
             schema = json.load(f)
         log("✅ Schema läst framgångsrikt", "SUCCESS")
         log(f"   Schema titel: {schema.get('title', 'N/A')}")
@@ -32,8 +40,15 @@ def validate_json_structure():
 
     # Test 2: Läs job package
     log("\nTest 2: Läser BacklinkJobPackage...")
+
+    # Try examples/ first, fallback to root
+    job_path = project_root / 'examples' / 'example_job_package.json'
+    if not job_path.exists():
+        job_path = project_root / 'BacklinkJobPackage.json'
+        log(f"   Using: {job_path.name}")
+
     try:
-        with open('BacklinkJobPackage.json', 'r', encoding='utf-8') as f:
+        with open(job_path, 'r', encoding='utf-8') as f:
             job_package = json.load(f)
         log("✅ Job package läst framgångsrikt", "SUCCESS")
         log(f"   Job ID: {job_package.get('job_meta', {}).get('job_id', 'N/A')}")
