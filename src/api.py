@@ -14,6 +14,10 @@ from typing import Dict, Any, Optional
 
 from .qc import QualityController, QCStatus
 from .engine import BacklinkStateMachine, State, ExecutionLogger
+from .profiling.page_profiler import PageProfiler
+from .research.serp_researcher import SERPResearcher
+from .analysis.intent_analyzer import IntentAnalyzer
+from .writer.writer_engine import WriterEngine
 
 
 def generate_job_id() -> str:
@@ -262,11 +266,71 @@ def run_backlink_job(
             # Override job_id
             job_package['job_meta']['job_id'] = job_id
         else:
-            # Real implementation would call:
-            # - PageProfiler
-            # - SERPResearcher
-            # - IntentAnalyzer
-            raise NotImplementedError("Real mode not yet implemented. Use mock=True.")
+            # Real implementation - Del 3B
+            logger.log_info("Building job package with real profiling", {})
+
+            # Initialize modules
+            profiler = PageProfiler()
+            researcher = SERPResearcher(mock_mode=False)  # Set to False for real SERP
+            analyzer = IntentAnalyzer()
+
+            # Profile publisher
+            logger.log_info("Profiling publisher", {'domain': publisher_domain})
+            publisher_profile = profiler.profile_publisher_domain(publisher_domain)
+
+            # Profile target
+            logger.log_info("Profiling target", {'url': target_url})
+            target_profile = profiler.profile_target_page(target_url)
+
+            # Analyze anchor
+            anchor_profile = {
+                'proposed_text': anchor_text,
+                'type_hint': None,
+                'llm_classified_type': 'partial',  # Could be enhanced with LLM
+                'llm_intent_hint': None  # Could be enhanced with LLM
+            }
+
+            # SERP research
+            logger.log_info("Performing SERP research", {})
+            serp_research = researcher.research(target_profile, anchor_text)
+
+            # Intent analysis
+            logger.log_info("Analyzing intent alignment", {})
+            intent_extension = analyzer.analyze(
+                target_profile,
+                publisher_profile,
+                anchor_profile,
+                serp_research
+            )
+
+            # Generation constraints
+            generation_constraints = {
+                'language': target_profile.get('detected_language', 'sv'),
+                'min_word_count': 900,
+                'max_anchor_usages': 2,
+                'anchor_policy': 'Ingen anchor i H1/H2, mittsektion'
+            }
+
+            # Build complete job package
+            job_package = {
+                'job_meta': {
+                    'job_id': job_id,
+                    'created_at': datetime.utcnow().isoformat(),
+                    'spec_version': 'Next-A1-SERP-First-v1',
+                    'mode': 'real'
+                },
+                'input_minimal': {
+                    'publisher_domain': publisher_domain,
+                    'target_url': target_url,
+                    'anchor_text': anchor_text
+                },
+                'publisher_profile': publisher_profile,
+                'target_profile': target_profile,
+                'anchor_profile': anchor_profile,
+                'serp_research_extension': serp_research,
+                'intent_extension': intent_extension,
+                'generation_constraints': generation_constraints
+            }
 
         logger.log_info("Job package built", {'mode': 'mock' if mock else 'real'})
 
@@ -278,7 +342,10 @@ def run_backlink_job(
         if mock:
             article = generate_mock_article(job_package)
         else:
-            raise NotImplementedError("Real WriterEngine not yet implemented.")
+            # Real Writer Engine - Del 3B
+            logger.log_info("Generating article with Writer Engine", {})
+            writer = WriterEngine(mock_mode=True)  # Still use mock mode for article generation
+            article = writer.generate(job_package)
 
         # Check for payload loop
         if sm.check_loop(article, 'WRITE'):
