@@ -30,32 +30,51 @@ Därifrån sker allt annat automatiskt.
 
 ## 🏗️ Arkitektur
 
-### Komponenter
+### Projektstruktur
 
 ```
 BACOWR/
-├── backlink_job_package.schema.json    # JSON Schema (single source of truth)
-├── BacklinkJobPackage.json             # Exempel-jobb
-├── backlink_engine_ideal_flow.md       # Idealflöde dokumentation
-├── next-a1-spec.json                   # Next-A1 specifikation
-├── NEXT-A1-ENGINE-ADDENDUM.md          # Del 2 tillägg och krav
-├── examples/
-│   └── example_job_package.json        # Exempel på komplett job package
+├── config/
+│   ├── thresholds.yaml                 # ✅ QC-regler och tröskelvärden
+│   └── policies.yaml                   # ✅ AutoFix policies och blocking conditions
+├── src/
+│   ├── __init__.py
+│   ├── api.py                          # ✅ Main API: run_backlink_job()
+│   ├── qc/
+│   │   ├── __init__.py
+│   │   ├── models.py                   # ✅ QCReport, QCIssue, AutoFixLog
+│   │   └── quality_controller.py      # ✅ Komplett QC-system
+│   └── engine/
+│       ├── __init__.py
+│       ├── state_machine.py            # ✅ State machine med loop-skydd
+│       └── execution_logger.py         # ✅ Execution logging
 ├── tests/
-│   ├── test_schema_validation.py       # Schema-validering med jsonschema
-│   └── test_live_validation.py         # Live E2E-validering
+│   ├── test_schema_validation.py       # ✅ JSON Schema-validering
+│   ├── test_live_validation.py         # ✅ Live E2E-validering
+│   ├── test_qc_system.py               # ✅ QC-tester (Del 3A)
+│   └── test_e2e_mock.py                # ✅ E2E mock pipeline-tester
+├── examples/
+│   └── example_job_package.json        # ✅ Referens-implementation
+├── backlink_job_package.schema.json    # ✅ JSON Schema (single source of truth)
+├── BacklinkJobPackage.json             # ✅ Original exempel-jobb
+├── backlink_engine_ideal_flow.md       # ✅ Idealflöde dokumentation
+├── next-a1-spec.json                   # ✅ Next-A1 specifikation
+├── NEXT-A1-ENGINE-ADDENDUM.md          # ✅ Del 2 tillägg och krav
+├── main.py                             # ✅ CLI entrypoint
+├── requirements.txt                    # ✅ Python dependencies
 └── README.md                           # Denna fil
 ```
 
-### Output (planerad produktion)
+### Output-filer
 
-När motorn körs produceras:
+När motorn körs i mock-mode (redo nu) produceras:
 
-1. **BacklinkJobPackage** (JSON) – Komplett kontext och instruktioner
-2. **Backlink-artikel** (MD/HTML) – Typiskt ≥900 ord
-3. **Next-A1 extensions** (JSON) – Intent, SERP-research, QC, LSI-data
-4. **QC-rapport** (JSON) – Kvalitetsbedömning och AutoFix-historik
-5. **Execution log** (JSON) – State machine-spårning
+1. **`{job_id}_job_package.json`** – Komplett BacklinkJobPackage
+2. **`{job_id}_article.md`** – Genererad backlink-artikel (≥900 ord)
+3. **`{job_id}_qc_report.json`** – QC-rapport med issues och AutoFix-logs
+4. **`{job_id}_execution_log.json`** – State machine-spårning
+
+Alla filer sparas i `storage/output/` (konfigurerbart).
 
 ## 📦 Installation
 
@@ -75,64 +94,216 @@ cd BACOWR
 pip install -r requirements.txt
 ```
 
+## 🚀 Användning
+
+### CLI (Mock Mode)
+
+Kör full pipeline i mock-mode (ingen extern API krävs):
+
+```bash
+python main.py \
+  --publisher example-publisher.com \
+  --target https://client.com/product-x \
+  --anchor "bästa valet för [tema]" \
+  --mock
+```
+
+**Output:**
+```
+======================================================================
+BACOWR - BacklinkContent Engine (Next-A1)
+======================================================================
+
+Publisher:  example-publisher.com
+Target:     https://client.com/product-x
+Anchor:     bästa valet för [tema]
+Mode:       MOCK
+
+----------------------------------------------------------------------
+
+Job ID: job_20251107_110356_abc123
+Status: BLOCKED
+
+QC Report:
+  Status: BLOCKED
+  Issues: 2
+  AutoFix: Yes
+  Human Signoff Required: No
+
+Output Files:
+  - job_package: storage/output/job_..._job_package.json
+  - article: storage/output/job_..._article.md
+  - qc_report: storage/output/job_..._qc_report.json
+  - execution_log: storage/output/job_..._execution_log.json
+```
+
+### Python API
+
+```python
+from src.api import run_backlink_job
+
+result = run_backlink_job(
+    publisher_domain="example-publisher.com",
+    target_url="https://client.com/product-x",
+    anchor_text="bästa valet för [tema]",
+    mock=True  # Mock mode - no external APIs
+)
+
+# result innehåller:
+# - job_id: str
+# - status: 'DELIVERED' | 'BLOCKED' | 'ABORTED'
+# - job_package: dict
+# - article: str
+# - qc_report: dict
+# - execution_log: dict
+# - output_files: dict (paths till sparade filer)
+```
+
 ## 🧪 Tester
 
-Projektet har två nivåer av validering enligt NEXT-A1-ENGINE-ADDENDUM.md:
+Alla tester körs utan externa dependencies:
 
-### 1. Schema-validering (obligatorisk)
-
-Validerar att exempel-JSON följer schemat:
+### 1. Schema-validering
 
 ```bash
 python tests/test_schema_validation.py
 ```
 
-**Vad testet gör:**
-- Läser `backlink_job_package.schema.json`
-- Läser `examples/example_job_package.json`
-- Validerar med `jsonschema.validate()`
-- Säkerställer att alla obligatoriska fält finns
+Validerar BacklinkJobPackage mot JSON Schema.
 
-**Förväntat resultat:**
-```
-[INFO] 🔍 Starting JSON Schema Validation
-[SUCCESS] ✅ Schema loaded: BacklinkJobPackage
-[SUCCESS] ✅ Example loaded: Job ID = example-job-001
-[INFO] 🔬 Validating against schema...
-[SUCCESS] ✅ VALIDATION PASSED!
-[SUCCESS] ✅ TEST PASSED
-```
-
-### 2. Live validering (E2E light)
-
-Validerar datakvalitet och konsistens:
+### 2. Live validering
 
 ```bash
 python tests/test_live_validation.py
 ```
 
-**Vad testet gör:**
-- Läser schema och job package
-- Validerar alla obligatoriska fält finns
-- Kontrollerar språk-konsistens (sv/en/etc)
-- Verifierar intent alignment
-- Kontrollerar generation constraints (ordkrav, etc)
+Validerar datakvalitet, språk-konsistens, intent alignment.
 
-**Förväntat resultat:**
-```
-[INFO] 🚀 Startar BACOWR Live Test
-[SUCCESS] ✅ Alla obligatoriska fält finns!
-[CHECK] ✅ Språk konsistent: sv
-[CHECK] ✅ Intent alignment: aligned
-[CHECK] ✅ Ordkrav uppfyllt: 900 ord
-[SUCCESS] 🎉 Alla tester godkända!
-```
-
-### Köra alla tester
+### 3. QC-system (Del 3A)
 
 ```bash
-# Från projektroten
-python tests/test_schema_validation.py && python tests/test_live_validation.py
+python tests/test_qc_system.py
+```
+
+**7 tester:**
+- LSI requirements check
+- Trust sources validation
+- Anchor risk assessment
+- Link placement rules
+- Full QC validation
+- AutoFixOnce limit enforcement
+- Blocking conditions
+
+### 4. E2E Mock Pipeline (Del 3A)
+
+```bash
+python tests/test_e2e_mock.py
+```
+
+**7 tester:**
+- Full pipeline execution
+- State machine transitions
+- QC integration
+- Output file generation
+- Loop detection
+- Job package schema validation
+- RESCUE max once verification
+
+### Kör alla tester
+
+```bash
+python tests/test_schema_validation.py && \
+python tests/test_live_validation.py && \
+python tests/test_qc_system.py && \
+python tests/test_e2e_mock.py
+```
+
+**Förväntat resultat:** ✅ Alla tester passar
+
+## 🛡️ QC-System (Implementerat i Del 3A)
+
+Quality Control-systemet har två nivåer:
+
+### 1. Automatisk korrigering (AutoFixOnce)
+
+Vid **mindre avvikelser** görs exakt EN automatisk fix:
+
+- Flytta länk inom samma sektion
+- Justera ankartyp (exact → brand/generic)
+- Injicera saknade LSI (inom policy)
+- Lägga till compliance-disclaimers
+
+Alla ändringar loggas i `qc_report.json` → `autofix_logs`.
+
+**Konfiguration:** `config/policies.yaml`
+
+### 2. Blocking Conditions
+
+Vid **allvarliga avvikelser** blockeras delivery och kräver human signoff:
+
+- Intent alignment: "off"
+- Trust-källor: 0 godkända
+- Konkurrent-detektion i content
+- Reglerad vertikal utan disclaimers
+- Ankar-risk: "high"
+
+Sätter `human_signoff_required: true` i QC-rapport.
+
+**Konfiguration:** `config/thresholds.yaml`
+
+### QC-regler
+
+Se `config/thresholds.yaml` för komplett regeluppsättning:
+
+- **LSI:** 6-10 termer, ±2 meningar från länk
+- **Trust sources:** T1-T4 tiers, minst 1 T1-källa
+- **Anchor risk:** High/Medium/Low patterns
+- **Link placement:** Ej H1/H2, mittsektion preferred
+- **Word count:** Minimum 900 ord
+- **Compliance:** Disclaimers för reglerade vertikaler (gambling, finance, health, legal)
+
+## 📊 State Machine (Implementerat i Del 3A)
+
+Varje körning går genom följande states:
+
+```
+RECEIVE → PREFLIGHT → WRITE → QC → DELIVER
+                                ↓ (on QC fail)
+                             RESCUE (max 1 gång)
+                                ↓
+                               QC → DELIVER or ABORT
+```
+
+**Loop-skydd:**
+- Payload hashas efter WRITE och RESCUE
+- Om identisk → ABORT (ingen förändring)
+
+**RESCUE-policy:**
+- Max 1 försök per körning
+- Endast vid auto-fixable issues
+- Vid human_signoff_required → direkt ABORT
+
+**Spårbarhet:**
+Alla state-övergångar loggas i `execution_log.json`:
+
+```json
+{
+  "metadata": {
+    "job_id": "job_...",
+    "started_at": "2025-11-07T10:30:00Z",
+    "completed_at": "2025-11-07T10:30:05Z",
+    "final_state": "DELIVER"
+  },
+  "log_entries": [
+    {
+      "type": "state_transition",
+      "timestamp": "...",
+      "from_state": "RECEIVE",
+      "to_state": "PREFLIGHT"
+    },
+    ...
+  ]
+}
 ```
 
 ## 📖 Dokumentation
@@ -144,7 +315,7 @@ python tests/test_schema_validation.py && python tests/test_live_validation.py
    - Beskriver alla profileringar och extensions
 
 2. **[NEXT-A1-ENGINE-ADDENDUM.md](NEXT-A1-ENGINE-ADDENDUM.md)**
-   - Formella krav för Del 2
+   - Formella krav för Del 2 & 3
    - QC & AutoFixOnce specifikation
    - State machine krav
    - Acceptance-kriterier
@@ -172,94 +343,56 @@ Detta schema definierar det bindande kontraktet för BacklinkJobPackage.
 - `intent_extension` – Intent-modellering och alignment
 - `generation_constraints` – Generationspolicies (språk, ordkrav, etc)
 
-## 🎯 Acceptance-kriterier
+## 🎯 Acceptance-kriterier & Status
 
-Motorn anses stabil när (per NEXT-A1-ENGINE-ADDENDUM.md § 7):
+Per NEXT-A1-ENGINE-ADDENDUM.md § 7:
 
-- [x] `test_schema_validation.py` passerar
-- [x] `test_live_validation.py` passerar
-- [ ] QC-system implementerat med AutoFixOnce
-- [ ] State machine loggar till `execution_log`
+### Del 2 (Schema & Validering)
+- [x] `test_schema_validation.py` passerar ✅
+- [x] `test_live_validation.py` passerar ✅
+- [x] README beskriver struktur och användning ✅
+
+### Del 3A (Production Infrastructure & QC)
+- [x] QC-system implementerat med AutoFixOnce ✅
+- [x] State machine loggar till `execution_log` ✅
+- [x] CLI och Python API fungerar ✅
+- [x] Mock-mode tillåter testing utan externa deps ✅
+- [x] `test_qc_system.py` passerar (7/7 tester) ✅
+- [x] `test_e2e_mock.py` passerar (7/7 tester) ✅
+- [x] README uppdaterad med Del 3A ✅
+
+### Del 3B (Content Generation Pipeline) - Planerad
+- [ ] PageProfiler kan extrahera från URLs
+- [ ] SERP Researcher kan fetcha & analysera SERP
+- [ ] Intent Analyzer bygger intent_extension
+- [ ] Writer Engine genererar artiklar med LLM
+- [ ] Bridge types (strong/pivot/wrapper) implementerade
+- [ ] LSI-injection fungerar
+- [ ] Full E2E-test med riktiga inputs
+
+### Production Readiness
 - [ ] Minst 1–2 manuella produktionskörningar genomförda
-- [ ] README beskriver hur man kör och tolkar output
+- [ ] Performance-tuning baserat på verklig användning
+- [ ] Deployment-guide och best practices dokumenterade
 
-### Nuvarande status
+## 🔬 Implementation Status
 
-**✅ Specifikation:** Komplett
-**🚧 Implementation:** Pågående
-**✅ Tester:** Schema-validering klar
+**Version:** 0.3.0-alpha
 
-## 🔧 Användning (planerad)
+| Komponent | Status | Tester | Dokumentation |
+|-----------|--------|--------|---------------|
+| JSON Schema | ✅ Klar | ✅ 2/2 | ✅ Komplett |
+| QC System | ✅ Klar | ✅ 7/7 | ✅ Komplett |
+| State Machine | ✅ Klar | ✅ 7/7 | ✅ Komplett |
+| Execution Logger | ✅ Klar | ✅ 7/7 | ✅ Komplett |
+| CLI & API | ✅ Klar (mock) | ✅ 7/7 | ✅ Komplett |
+| PageProfiler | ⏳ Planerad | - | - |
+| SERP Researcher | ⏳ Planerad | - | - |
+| Writer Engine | ⏳ Planerad | - | - |
+| Intent Analyzer | ⏳ Planerad | - | - |
 
-### CLI
-
-```bash
-python main.py \
-  --publisher example-publisher.com \
-  --target https://client.com/product-x \
-  --anchor "bästa valet för [tema]" \
-  --output ./storage/output/
-```
-
-### Python API
-
-```python
-from bacowr import run_backlink_job
-
-result = run_backlink_job(
-    publisher_domain="example-publisher.com",
-    target_url="https://client.com/product-x",
-    anchor_text="bästa valet för [tema]"
-)
-
-# result innehåller:
-# - job_package (dict)
-# - article (str)
-# - qc_report (dict)
-```
-
-## 🛡️ QC & AutoFixOnce (planerad)
-
-Quality Control-systemet har två nivåer:
-
-### 1. Automatisk korrigering (AutoFixOnce)
-
-Vid **mindre avvikelser** görs exakt en automatisk fix:
-
-- Flytta länk inom samma sektion
-- Justera ankartyp (exact → brand/generic)
-- Injicera saknade LSI
-- Lägga till compliance-disclaimers
-
-Alla ändringar loggas i `qc_extension`.
-
-### 2. Manuell signoff
-
-Vid **allvarliga avvikelser** blockeras automatisk fix:
-
-- Intent alignment: "off"
-- Trust-källor: 0 godkända
-- Konkurrent-detektion i content
-- Reglerad vertikal utan disclaimers
-- Ankar-risk: "high"
-
-Sätter `human_signoff_required: true` i output.
-
-## 📊 State Machine (planerad)
-
-Varje körning går genom:
-
-```
-RECEIVE → PREFLIGHT → WRITE → QC → DELIVER
-                                ↓
-                              RESCUE (max 1 gång)
-                                ↓
-                              ABORT (vid loop/deadlock)
-```
-
-**Loop-skydd:** Om RESCUE inte ändrar payload → ABORT
-
-**Spårbarhet:** Alla state-övergångar loggas i `execution_log.json`
+**Del 3A:** ✅ **Komplett och testad**
+**Del 3B:** ⏳ **Planerad för nästa iteration**
 
 ## 🤝 Integration
 
@@ -272,7 +405,7 @@ Motorn är utformad för att vara **integrationsklar utan hårda beroenden**.
 - **GUI/Dashboard** för manuell körning
 - **CI/CD pipelines** för automatisk content-generering
 
-Inga antaganden görs om externa orchestrators.
+Inga antaganden görs om externa orchestrators. Mock-mode tillåter testning av full pipeline utan externa API:er.
 
 ## 📝 Exempel
 
@@ -285,26 +418,52 @@ Exempel visar:
 - Aligned intent mellan SERP, target och publisher
 - Pivot bridge-type rekommenderad
 
-## 🔬 Utveckling
-
-### Lägg till nya tester
+## 🔄 Workflow
 
 ```bash
-# Skapa ny testfil i tests/
-touch tests/test_my_feature.py
+# 1. Klona och installera
+git clone https://github.com/robwestz/BACOWR.git
+cd BACOWR
+pip install -r requirements.txt
 
-# Kör alla tester
-python -m pytest tests/
+# 2. Kör tester för att verifiera installation
+python tests/test_qc_system.py
+python tests/test_e2e_mock.py
+
+# 3. Kör pipeline i mock-mode
+python main.py \
+  --publisher test.com \
+  --target https://example.com \
+  --anchor "test link" \
+  --mock \
+  --verbose
+
+# 4. Inspektera output
+ls -la storage/output/
+cat storage/output/job_*_qc_report.json
+cat storage/output/job_*_article.md
 ```
 
-### Validera schema-ändringar
+## 🐛 Troubleshooting
 
-När du ändrar `backlink_job_package.schema.json`:
+### QC blockerar i mock-mode
 
-1. Uppdatera exempel i `examples/`
-2. Kör `test_schema_validation.py`
-3. Kör `test_live_validation.py`
-4. Verifiera att båda passerar
+**Problem:** Mock-artiklar innehåller ofta inte tillräckligt med trust-källor eller LSI-termer.
+
+**Förväntat beteende:** QC ska blockera vid brister - detta visar att systemet fungerar korrekt.
+
+**Lösning för produktion:** Implementera Del 3B (Writer Engine med LLM) som genererar fullständiga artiklar.
+
+### Tester misslyckas
+
+```bash
+# Verifiera installation
+pip install -r requirements.txt
+
+# Kör tester individuellt för att isolera problem
+python tests/test_schema_validation.py
+python tests/test_qc_system.py
+```
 
 ## 📄 Licens
 
@@ -316,10 +475,11 @@ När du ändrar `backlink_job_package.schema.json`:
 
 ## 📞 Support
 
-För frågor eller buggrapporter, öppna en issue i GitHub-repot.
+För frågor eller buggrapporter, öppna en issue i GitHub-repot:
+https://github.com/robwestz/BACOWR/issues
 
 ---
 
-**Version:** 1.0
-**Status:** Specification Complete, Implementation In Progress
+**Version:** 0.3.0-alpha (Del 3A Komplett)
+**Status:** Production Infrastructure Ready, Content Generation Planned
 **Last Updated:** 2025-11-07
