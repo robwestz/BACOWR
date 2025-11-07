@@ -357,8 +357,8 @@ class PageProfiler:
                     for item in data:
                         if isinstance(item, dict) and '@type' in item:
                             types.add(item['@type'])
-            except:
-                pass
+            except json.JSONDecodeError as e:
+                logger.warning("Failed to parse JSON-LD", error=str(e))
 
         return sorted(list(types))
 
