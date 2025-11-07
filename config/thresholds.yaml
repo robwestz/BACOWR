@@ -1,0 +1,115 @@
+# QC Thresholds Configuration - Next-A1 BacklinkContent Engine
+# Version: A1
+#
+# These thresholds define quality requirements for backlink content.
+# Adjust based on project needs and empirical results.
+
+version: "A1"
+
+# LSI (Latent Semantic Indexing) requirements
+lsi:
+  min_terms: 6
+  max_terms: 10
+  near_window_radius: 2  # sentences around the link
+  unit: "sentence"
+  quality:
+    require_entity_cluster: true
+    avoid_synonym_only: true
+    min_diversity: 0.6  # At least 60% of terms should be distinct concepts
+
+# Anchor placement and risk
+anchor:
+  forbidden_elements:
+    - "H1"
+    - "H2"
+  preferred_section: "middle"  # first-third, middle, last-third
+  preferred_paragraph_in_section: [1, 2]  # First or second paragraph
+  max_repetitions: 2
+  risk_thresholds:
+    high:
+      - "Exact match in weak context"
+      - "Multiple exact matches in same section"
+      - "Anchor in forbidden element"
+    medium:
+      - "Generic anchor without trust nearby"
+      - "Partial anchor with weak semantic fit"
+    low:
+      - "Brand/generic in natural context with LSI"
+      - "Well-integrated partial match"
+
+# Trust source requirements
+trust:
+  min_sources: 1
+  preferred_sources: 2
+  priority_order:
+    - "T1_public"  # Government, standards bodies
+    - "T2_academic"  # Universities, research
+    - "T3_industry"  # Trade organizations, whitepapers
+    - "T4_media"  # Reputable news (only if T1-T3 unavailable)
+  constraints:
+    - "Never link to direct competitors"
+    - "Avoid user-generated content as primary trust"
+    - "Prefer Swedish sources for SE markets"
+  fallback_policy: "placeholder"  # Use PLATSFÖRSLAG with rationale
+
+# Intent alignment requirements
+intent:
+  alignment_threshold: "partial"  # Minimum: partial (aligned is better)
+  fail_conditions:
+    - "overall=off without wrapper strategy"
+    - "All three dimensions (anchor, target, publisher) off"
+  require_bridge_type_match: true  # intent_extension.recommended must match links_extension
+
+# Readability requirements (LIX for Swedish, similar for other languages)
+readability:
+  target_range:
+    min: 35
+    max: 50
+  preferred: 40
+  language_specific:
+    sv:
+      measure: "lix"
+      target_range: [35, 50]
+    en:
+      measure: "flesch_reading_ease"
+      target_range: [60, 70]
+
+# Content length requirements
+content:
+  min_word_count: 900
+  recommended_word_count: 1200
+  min_paragraphs: 5
+  min_sections: 3  # H2 sections
+
+# Compliance requirements (industry-specific)
+compliance:
+  gambling:
+    require_disclaimer: true
+    min_age_mention: true
+    responsible_gaming_link: true
+  finance:
+    require_disclaimer: true
+    risk_warning: true
+    regulatory_mention: recommended
+  health:
+    require_disclaimer: true
+    not_medical_advice: true
+    consult_professional: true
+  legal:
+    require_disclaimer: true
+    not_legal_advice: true
+    jurisdiction_specific: true
+  crypto:
+    require_disclaimer: true
+    volatility_warning: true
+    not_investment_advice: true
+
+# Human sign-off triggers
+human_signoff_required:
+  conditions:
+    - "anchor_risk=high"
+    - "intent_alignment.overall=off"
+    - "No trust sources found"
+    - "Compliance violation"
+    - "Bridge type mismatch"
+    - "Multiple autofix attempts failed"
