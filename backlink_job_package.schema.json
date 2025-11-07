@@ -1,0 +1,342 @@
+{
+  "$id": "backlink_job_package.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BacklinkJobPackage",
+  "description": "Central payload för BacklinkContent Engine enligt Next-A1. Byggs av tekniska moduler och konsumeras av Writer Engine.",
+  "type": "object",
+  "required": [
+    "job_meta",
+    "input_minimal",
+    "publisher_profile",
+    "target_profile",
+    "anchor_profile",
+    "serp_research_extension",
+    "intent_extension",
+    "generation_constraints"
+  ],
+  "properties": {
+    "job_meta": {
+      "type": "object",
+      "description": "Metadata för körningen.",
+      "required": ["job_id", "created_at", "spec_version"],
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "description": "Unikt ID för jobbet."
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Tidpunkt då paketet skapades."
+        },
+        "spec_version": {
+          "type": "string",
+          "description": "Version av Next-A1/BacklinkJobPackage-spec som används, t.ex. 'Next-A1-SERP-First-v1'."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Valfria interna kommentarer."
+        }
+      }
+    },
+
+    "input_minimal": {
+      "type": "object",
+      "description": "Enda manuella input från användaren.",
+      "required": ["publisher_domain", "target_url", "anchor_text"],
+      "properties": {
+        "publisher_domain": {
+          "type": "string",
+          "description": "Domän där innehållet ska publiceras."
+        },
+        "target_url": {
+          "type": "string",
+          "description": "Målsidan som länken ska peka mot."
+        },
+        "anchor_text": {
+          "type": "string",
+          "description": "Föreslagen ankartext eller ankartyp från användaren."
+        }
+      }
+    },
+
+    "publisher_profile": {
+      "type": "object",
+      "description": "Profilerad bild av publiceringssajten.",
+      "required": [
+        "domain",
+        "detected_language",
+        "topic_focus",
+        "tone_class"
+      ],
+      "properties": {
+        "domain": {
+          "type": "string"
+        },
+        "sample_urls": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Exempel-URLs som använts för profilering."
+        },
+        "about_excerpt": {
+          "type": "string",
+          "description": "Kort extrakt från 'Om oss' eller liknande."
+        },
+        "detected_language": {
+          "type": "string",
+          "description": "Språk som dominerar på sajten, t.ex. 'sv'."
+        },
+        "topic_focus": {
+          "type": "array",
+          "description": "Huvudsakliga ämnesområden.",
+          "items": { "type": "string" }
+        },
+        "audience": {
+          "type": "string",
+          "description": "Beskrivning av primär målgrupp."
+        },
+        "tone_class": {
+          "type": "string",
+          "description": "Matchar Next-A1 PublisherVoice: t.ex. 'academic', 'authority_public', 'consumer_magazine', 'hobby_blog'."
+        },
+        "allowed_commerciality": {
+          "type": "string",
+          "description": "T.ex. 'low', 'medium', 'high'."
+        },
+        "brand_safety_notes": {
+          "type": "string",
+          "description": "Ev. restriktioner (t.ex. inga aggressiva lån, inga olicensierade casinon)."
+        }
+      }
+    },
+
+    "target_profile": {
+      "type": "object",
+      "description": "Profilerad bild av målsidan.",
+      "required": [
+        "url",
+        "http_status",
+        "detected_language",
+        "title",
+        "core_entities",
+        "core_topics",
+        "core_offer"
+      ],
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "http_status": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "meta_description": {
+          "type": "string"
+        },
+        "h1": {
+          "type": "string"
+        },
+        "h2_h3_sample": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "main_content_excerpt": {
+          "type": "string",
+          "description": "Trunkerad huvudtext, tillräcklig för att förstå sidans syfte."
+        },
+        "detected_language": {
+          "type": "string"
+        },
+        "core_entities": {
+          "type": "array",
+          "description": "Identifierade nyckelentiteter på sidan.",
+          "items": { "type": "string" }
+        },
+        "core_topics": {
+          "type": "array",
+          "description": "Centrala teman/ämnen.",
+          "items": { "type": "string" }
+        },
+        "core_offer": {
+          "type": "string",
+          "description": "Vad sidan faktiskt hjälper användaren med."
+        },
+        "candidate_main_queries": {
+          "type": "array",
+          "description": "Potentiella huvudqueries härledda från innehållet.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "anchor_profile": {
+      "type": "object",
+      "description": "Tolkning av föreslagen ankartext.",
+      "required": ["proposed_text"],
+      "properties": {
+        "proposed_text": {
+          "type": "string"
+        },
+        "type_hint": {
+          "type": ["string", "null"],
+          "description": "Ev. användarhint: 'exact' | 'partial' | 'brand' | 'generic'."
+        },
+        "llm_classified_type": {
+          "type": ["string", "null"],
+          "description": "LLM/agentens bedömning av ankartyp.",
+          "enum": ["exact", "partial", "brand", "generic", null]
+        },
+        "llm_intent_hint": {
+          "type": ["string", "null"],
+          "description": "Vilken intent ankaren antyder.",
+          "enum": [
+            "info_primary",
+            "commercial_research",
+            "transactional",
+            "navigational_brand",
+            "support",
+            "local",
+            "mixed",
+            null
+          ]
+        }
+      }
+    },
+
+    "serp_research_extension": {
+      "$ref": "serp_research_extension.schema.json",
+      "description": "Preflight SERP-analys för huvud- och klusterqueries enligt separat schema."
+    },
+
+    "intent_extension": {
+      "type": "object",
+      "description": "Intentprofil härledd från target, SERP och publisher. Bygger vidare på Next-A1 intent_extension.",
+      "required": [
+        "serp_intent_primary",
+        "target_page_intent",
+        "anchor_implied_intent",
+        "publisher_role_intent",
+        "intent_alignment",
+        "recommended_bridge_type",
+        "required_subtopics",
+        "notes"
+      ],
+      "properties": {
+        "serp_intent_primary": {
+          "type": "string",
+          "enum": [
+            "info_primary",
+            "commercial_research",
+            "transactional",
+            "navigational_brand",
+            "support",
+            "local",
+            "mixed"
+          ]
+        },
+        "serp_intent_secondary": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "target_page_intent": {
+          "type": "string",
+          "description": "LLM/agentens tolkning av målsidans huvudsakliga intent."
+        },
+        "anchor_implied_intent": {
+          "type": "string",
+          "description": "Vilken intent ankaren antyder."
+        },
+        "publisher_role_intent": {
+          "type": "string",
+          "description": "Vilken roll publisher rimligen har i SERP-ekosystemet (info, expert, etc.)."
+        },
+        "intent_alignment": {
+          "type": "object",
+          "required": ["anchor_vs_serp", "target_vs_serp", "publisher_vs_serp", "overall"],
+          "properties": {
+            "anchor_vs_serp": {
+              "type": "string",
+              "enum": ["aligned", "partial", "off"]
+            },
+            "target_vs_serp": {
+              "type": "string",
+              "enum": ["aligned", "partial", "off"]
+            },
+            "publisher_vs_serp": {
+              "type": "string",
+              "enum": ["aligned", "partial", "off"]
+            },
+            "overall": {
+              "type": "string",
+              "enum": ["aligned", "partial", "off"]
+            }
+          }
+        },
+        "recommended_bridge_type": {
+          "type": "string",
+          "enum": ["strong", "pivot", "wrapper"]
+        },
+        "recommended_article_angle": {
+          "type": "string",
+          "description": "Kort beskrivning av föreslagen vinkel som förenar intent + publisher + target."
+        },
+        "required_subtopics": {
+          "type": "array",
+          "description": "Sammanfogade obligatoriska subteman från SERP-seten som ska stödjas i texten.",
+          "items": { "type": "string" }
+        },
+        "forbidden_angles": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": {
+          "type": "object",
+          "required": ["rationale", "data_confidence"],
+          "properties": {
+            "rationale": {
+              "type": "string",
+              "description": "Kort motivering för intentprofil och bridge-val."
+            },
+            "data_confidence": {
+              "type": "string",
+              "enum": ["high", "medium", "low"]
+            }
+          }
+        }
+      }
+    },
+
+    "generation_constraints": {
+      "type": "object",
+      "description": "Regler för hur Writer Engine ska generera texten.",
+      "required": ["language", "min_word_count"],
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "Språk för output, t.ex. 'sv'."
+        },
+        "min_word_count": {
+          "type": "integer",
+          "description": "Minsta ordlängd för backlinktexten.",
+          "minimum": 300
+        },
+        "max_anchor_usages": {
+          "type": "integer",
+          "description": "Max antal gånger ankaren får förekomma.",
+          "default": 2
+        },
+        "anchor_policy": {
+          "type": "string",
+          "description": "T.ex. 'ingen anchor i H1/H2, placera i mittsektionens första relevanta stycken'."
+        },
+        "tone_override": {
+          "type": "string",
+          "description": "Valfritt, annars används publisher_profile.tone_class."
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
