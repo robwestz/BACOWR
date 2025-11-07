@@ -1,0 +1,56 @@
+# BacklinkContent Engine - Next-A1 SERP-First Implementation
+# Core dependencies for production-ready backlink content generation
+
+# Web scraping & HTTP
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+html5lib>=1.1
+
+# Language detection & NLP
+langdetect>=1.0.9
+nltk>=3.8.1
+spacy>=3.7.0
+
+# LLM & AI
+anthropic>=0.25.0
+openai>=1.0.0  # Fallback/alternative
+tiktoken>=0.5.0
+
+# JSON schema validation
+jsonschema>=4.20.0
+pydantic>=2.5.0
+
+# Configuration management
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+
+# Logging & monitoring
+structlog>=24.1.0
+rich>=13.7.0
+
+# Date/time handling
+python-dateutil>=2.8.2
+
+# Text processing & readability
+textstat>=0.7.3
+readability-lxml>=0.8.1
+
+# Caching
+diskcache>=5.6.3
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+
+# Development
+black>=23.12.0
+flake8>=6.1.0
+mypy>=1.7.0
+ipython>=8.18.0
+
+# Optional: SERP API clients (uncomment as needed)
+# serpapi>=0.1.5
+# serper>=0.1.0
