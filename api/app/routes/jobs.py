@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
+import asyncio
 
 from ..database import get_db
 from ..models.database import User, Job, JobResult
@@ -15,6 +16,7 @@ from ..models.schemas import (
 )
 from ..auth import get_current_user
 from ..core.bacowr_wrapper import bacowr
+from ..websocket import ws_manager
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -35,6 +37,14 @@ async def run_job_background(
         job.started_at = datetime.utcnow()
         db.commit()
 
+        # Emit WebSocket event: Job started
+        await ws_manager.broadcast_job_update(
+            job_id=job_id,
+            status='PROCESSING',
+            progress=10,
+            message='Job started - Profiling publisher and target'
+        )
+
         # Run BACOWR
         result = await bacowr.run_job(
             publisher_domain=job_create.publisher_domain,
@@ -45,6 +55,14 @@ async def run_job_background(
             use_ahrefs=job_create.use_ahrefs,
             country=job_create.country,
             enable_llm_profiling=job_create.enable_llm_profiling
+        )
+
+        # Emit WebSocket event: Content generated
+        await ws_manager.broadcast_job_update(
+            job_id=job_id,
+            status='PROCESSING',
+            progress=80,
+            message='Content generated - Running quality checks'
         )
 
         # Update job with results
@@ -85,11 +103,31 @@ async def run_job_background(
             db.add(job_result)
             db.commit()
 
+        # Emit WebSocket event: Job completed
+        if job.status == JobStatus.DELIVERED:
+            await ws_manager.broadcast_job_completed(
+                job_id=job_id,
+                message=f'Article successfully generated and delivered'
+            )
+        else:
+            await ws_manager.broadcast_job_update(
+                job_id=job_id,
+                status=job.status,
+                progress=100,
+                message=f'Job completed with status: {job.status}'
+            )
+
     except Exception as e:
         job.status = JobStatus.ABORTED
         job.error_message = str(e)
         job.completed_at = datetime.utcnow()
         db.commit()
+
+        # Emit WebSocket event: Job error
+        await ws_manager.broadcast_job_error(
+            job_id=job_id,
+            error_message=str(e)
+        )
 
 
 @router.post("", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
@@ -127,6 +165,14 @@ async def create_job(
     db.add(job)
     db.commit()
     db.refresh(job)
+
+    # Emit WebSocket event: Job created
+    await ws_manager.broadcast_job_update(
+        job_id=job.id,
+        status='PENDING',
+        progress=0,
+        message='Job created and queued for processing'
+    )
 
     # Schedule background task
     background_tasks.add_task(run_job_background, job.id, job_create, db)

@@ -10,10 +10,12 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import os
 from dotenv import load_dotenv
+import socketio
 
 from .database import engine, get_db, init_db, Base
 from .auth import create_default_user
 from .routes import jobs, backlinks, analytics
+from .websocket import sio
 
 # Load environment variables
 load_dotenv()
@@ -63,6 +65,7 @@ async def startup_event():
     print("=" * 70)
     print("✓ BACOWR API Ready!")
     print(f"  Docs: http://localhost:8000/docs")
+    print(f"  WebSocket: ws://localhost:8000/socket.io")
     print("=" * 70)
 
 
@@ -109,11 +112,19 @@ async def global_exception_handler(request, exc):
     )
 
 
+# Wrap FastAPI app with Socket.IO ASGI application
+socket_app = socketio.ASGIApp(
+    sio,
+    app,
+    socketio_path='socket.io'
+)
+
+
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "app.main:app",
+        "app.main:socket_app",  # Run Socket.IO wrapped app
         host="0.0.0.0",
         port=8000,
         reload=True,
