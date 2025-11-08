@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "bacowr": {
+      "command": "python",
+      "args": [
+        "/home/user/BACOWR/mcp-server/server.py"
+      ],
+      "env": {
+        "ANTHROPIC_API_KEY": "your-api-key-here",
+        "PYTHONPATH": "/home/user/BACOWR"
+      }
+    }
+  }
+}
