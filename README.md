@@ -34,6 +34,28 @@ Därifrån sker allt annat automatiskt.
 
 ```
 BACOWR/
+├── api/                                # ✅ FastAPI Backend
+│   ├── app/
+│   │   ├── main.py                     # ✅ API application + WebSocket
+│   │   ├── database.py                 # ✅ Database configuration
+│   │   ├── auth.py                     # ✅ Authentication & API keys
+│   │   ├── websocket.py                # ✅ WebSocket manager
+│   │   ├── models/                     # ✅ SQLAlchemy & Pydantic models
+│   │   ├── routes/                     # ✅ API endpoints
+│   │   └── core/                       # ✅ BACOWR wrapper
+│   └── requirements.txt                # ✅ API dependencies
+├── frontend/                           # ✅ Next.js 14 Frontend
+│   ├── src/
+│   │   ├── app/                        # ✅ Pages (dashboard, jobs, backlinks)
+│   │   ├── components/                 # ✅ React components
+│   │   ├── lib/                        # ✅ API client & WebSocket
+│   │   └── types/                      # ✅ TypeScript types
+│   └── package.json                    # ✅ Frontend dependencies
+├── mcp-server/                         # ✅ MCP Integration
+│   ├── server.py                       # ✅ MCP server for Claude Desktop
+│   ├── install.sh                      # ✅ Installation (macOS/Linux)
+│   ├── install.ps1                     # ✅ Installation (Windows)
+│   └── README.md                       # ✅ MCP documentation
 ├── config/
 │   ├── thresholds.yaml                 # ✅ QC-regler och tröskelvärden
 │   └── policies.yaml                   # ✅ AutoFix policies och blocking conditions
@@ -86,10 +108,17 @@ BACOWR/
 ├── backlink_engine_ideal_flow.md       # ✅ Idealflöde dokumentation
 ├── next-a1-spec.json                   # ✅ Next-A1 specifikation
 ├── NEXT-A1-ENGINE-ADDENDUM.md          # ✅ Del 2 tillägg och krav
+├── PROJECT_CONTEXT.md                  # ✅ Complete project context & vision
 ├── PRODUCTION_GUIDE.md                 # ✅ Complete production guide
 ├── BATCH_GUIDE.md                      # ✅ Complete batch processing guide
+├── WEBSOCKET_GUIDE.md                  # ✅ Real-time updates guide
+├── API_BACKEND_COMPLETE.md             # ✅ Backend API documentation
+├── FRONTEND_OVERVIEW.md                # ✅ Frontend architecture
+├── DEMO_START.md                       # ✅ Quick demo start guide
 ├── main.py                             # ✅ CLI entrypoint (mock)
 ├── production_main.py                  # ✅ Production CLI with LLM
+├── setup_demo.py                       # ✅ One-click demo setup
+├── start_demo.py                       # ✅ Start API + Frontend
 ├── batch_runner.py                     # ✅ Batch processing CLI
 ├── batch_monitor.py                    # ✅ Batch monitoring dashboard
 ├── batch_scheduler.py                  # ✅ Batch scheduling utility
@@ -197,6 +226,81 @@ python cost_calculator.py --jobs 1 --provider anthropic --strategy multi_stage
 # Estimate batch file
 python cost_calculator.py --input jobs.csv --details
 ```
+
+## 🌐 Full-Stack Platform
+
+BACOWR includes a complete production-ready web platform with API backend and React frontend.
+
+### Quick Start with Demo
+
+```bash
+# First time setup
+python setup_demo.py
+
+# Start both API and frontend
+python start_demo.py
+
+# Open in browser
+open http://localhost:3000
+```
+
+**What's included:**
+- **API Backend** (FastAPI): REST endpoints, WebSocket, database, authentication
+- **Frontend** (Next.js): Job creation wizard, real-time monitoring, analytics dashboard
+- **Real-time Updates**: WebSocket for live job progress tracking
+- **Database**: PostgreSQL (production) / SQLite (development)
+
+See [API_BACKEND_COMPLETE.md](API_BACKEND_COMPLETE.md) and [FRONTEND_OVERVIEW.md](FRONTEND_OVERVIEW.md) for details.
+
+### API Backend Features
+
+- **REST API** with auto-generated Swagger docs (`/docs`)
+- **WebSocket** real-time updates for job progress
+- **Authentication** with API keys
+- **Database** models for jobs, backlinks, analytics
+- **Background processing** for async job execution
+- **Batch support** with progress tracking
+
+**API Endpoints:**
+- `POST /api/v1/jobs` - Create new job
+- `GET /api/v1/jobs` - List jobs with pagination
+- `GET /api/v1/jobs/{id}` - Get job details
+- `POST /api/v1/backlinks/bulk` - Import backlinks
+- `GET /api/v1/analytics` - Usage analytics
+
+See [WEBSOCKET_GUIDE.md](WEBSOCKET_GUIDE.md) for real-time updates documentation.
+
+### Frontend Features
+
+- **Dashboard** with quick start widget
+- **Job Creation Wizard** (4 steps with validation)
+- **Real-time Monitoring** with progress bars
+- **Backlinks Library** (supports 3000+ backlinks)
+- **Cost Calculator** with real-time estimates
+- **Analytics Charts** for usage tracking
+- **Dark Mode** built-in
+
+### MCP Integration (Claude Desktop)
+
+Use BACOWR directly from Claude Desktop without managing API keys:
+
+```bash
+# Install MCP server
+cd mcp-server
+./install.sh  # macOS/Linux
+# or
+./install.ps1  # Windows
+
+# Restart Claude Desktop
+# Ask Claude: "Can you generate a backlink article for aftonbladet.se?"
+```
+
+**Available tools:**
+- `generate_backlink_article` - Full content generation
+- `estimate_cost` - Cost estimation before running
+- `get_provider_info` - LLM provider and model information
+
+See [mcp-server/README.md](mcp-server/README.md) for complete MCP documentation.
 
 ## 🛠️ Advanced Usage
 
