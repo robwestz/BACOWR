@@ -16,7 +16,7 @@ from slowapi.errors import RateLimitExceeded
 
 from .database import engine, get_db, init_db, Base
 from .auth import create_default_user, get_current_user_optional
-from .routes import jobs, backlinks, analytics, auth, notifications, campaigns, templates, scheduling, publisher_research
+from .routes import jobs, backlinks, analytics, auth, notifications, campaigns, templates, scheduling, publisher_research, serp_research, intent_analysis, qc_validation
 from .websocket import sio
 from .rate_limit import limiter
 from .scheduler_service import start_scheduler, stop_scheduler
@@ -146,6 +146,9 @@ app.include_router(campaigns.router, prefix="/api/v1")
 app.include_router(templates.router, prefix="/api/v1")
 app.include_router(scheduling.router, prefix="/api/v1")
 app.include_router(publisher_research.router, prefix="/api/v1")
+app.include_router(serp_research.router, prefix="/api/v1")
+app.include_router(intent_analysis.router, prefix="/api/v1")
+app.include_router(qc_validation.router, prefix="/api/v1")
 
 
 # Error handlers
