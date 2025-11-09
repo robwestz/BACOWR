@@ -247,4 +247,49 @@ export const statsAPI = {
   },
 }
 
+// Notifications API
+export const notificationsAPI = {
+  // Get notification preferences
+  get: async (): Promise<{
+    notification_email: string | null
+    webhook_url: string | null
+    enable_email_notifications: boolean
+    enable_webhook_notifications: boolean
+  }> => {
+    return fetchAPI('/api/v1/notifications')
+  },
+
+  // Update notification preferences
+  update: async (preferences: {
+    notification_email?: string | null
+    webhook_url?: string | null
+    enable_email_notifications?: boolean
+    enable_webhook_notifications?: boolean
+  }): Promise<{
+    notification_email: string | null
+    webhook_url: string | null
+    enable_email_notifications: boolean
+    enable_webhook_notifications: boolean
+  }> => {
+    return fetchAPI('/api/v1/notifications', {
+      method: 'PUT',
+      body: JSON.stringify(preferences),
+    })
+  },
+
+  // Test email notification
+  testEmail: async (): Promise<{ message: string }> => {
+    return fetchAPI('/api/v1/notifications/test-email', {
+      method: 'POST',
+    })
+  },
+
+  // Test webhook notification
+  testWebhook: async (): Promise<{ message: string }> => {
+    return fetchAPI('/api/v1/notifications/test-webhook', {
+      method: 'POST',
+    })
+  },
+}
+
 export { APIError }
