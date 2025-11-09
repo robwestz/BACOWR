@@ -354,3 +354,122 @@ class ScheduledJob(Base):
         Index('idx_scheduled_next_run', 'next_run_at', 'status'),
         Index('idx_scheduled_campaign', 'campaign_id'),
     )
+
+
+class PublisherMetrics(Base):
+    """
+    Publisher performance metrics model.
+
+    Tracks aggregated performance data for each publisher domain to provide:
+    - Historical success/failure rates
+    - Average quality scores
+    - Cost analytics
+    - Performance trends over time
+    - Publisher recommendations
+    """
+
+    __tablename__ = "publisher_metrics"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    publisher_domain = Column(String, nullable=False, index=True)
+
+    # Job statistics
+    total_jobs = Column(Integer, default=0)
+    successful_jobs = Column(Integer, default=0)  # status = delivered
+    failed_jobs = Column(Integer, default=0)  # status = blocked/aborted
+    pending_jobs = Column(Integer, default=0)  # status = pending/processing
+
+    # Success rate (0-100)
+    success_rate = Column(Float, default=0.0)
+
+    # Quality metrics
+    avg_qc_score = Column(Float, nullable=True)  # Average QC score
+    avg_issue_count = Column(Float, nullable=True)  # Average issues per job
+    quality_trend = Column(String, nullable=True)  # improving, stable, declining
+
+    # Cost metrics
+    total_cost_usd = Column(Float, default=0.0)
+    avg_cost_per_job = Column(Float, nullable=True)
+    cost_trend = Column(String, nullable=True)  # increasing, stable, decreasing
+
+    # Performance metrics
+    avg_generation_time_seconds = Column(Float, nullable=True)
+    avg_retry_count = Column(Float, nullable=True)
+
+    # Provider analytics
+    most_used_provider = Column(String, nullable=True)  # anthropic, openai, google
+    most_used_strategy = Column(String, nullable=True)  # multi_stage, single_shot
+    provider_distribution = Column(JSON, nullable=True)  # {"anthropic": 60, "openai": 40}
+
+    # Recommendation score (0-100)
+    # Based on success_rate, avg_qc_score, avg_cost, etc.
+    recommendation_score = Column(Float, default=0.0)
+    recommendation_reason = Column(Text, nullable=True)
+
+    # Timestamps
+    first_job_at = Column(DateTime(timezone=True), nullable=True)
+    last_job_at = Column(DateTime(timezone=True), nullable=True)
+    last_updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("User")
+
+    __table_args__ = (
+        Index('idx_publisher_user_domain', 'user_id', 'publisher_domain', unique=True),
+        Index('idx_publisher_recommendation', 'user_id', 'recommendation_score'),
+        Index('idx_publisher_success_rate', 'user_id', 'success_rate'),
+    )
+
+
+class PublisherInsight(Base):
+    """
+    Publisher insights and recommendations.
+
+    Stores AI-generated insights about publisher performance:
+    - What works well for this publisher
+    - Common failure patterns
+    - Optimization suggestions
+    - Competitive comparisons
+    """
+
+    __tablename__ = "publisher_insights"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    publisher_domain = Column(String, nullable=False, index=True)
+
+    # Insight type
+    insight_type = Column(String, nullable=False)  # recommendation, warning, success_pattern, failure_pattern
+    priority = Column(String, default="medium")  # high, medium, low
+
+    # Insight content
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
+    action_items = Column(JSON, nullable=True)  # Array of suggested actions
+
+    # Supporting data
+    confidence_score = Column(Float, default=0.0)  # 0-100, how confident is this insight
+    sample_size = Column(Integer, default=0)  # Number of jobs this is based on
+    evidence = Column(JSON, nullable=True)  # Supporting statistics/examples
+
+    # Metadata
+    is_active = Column(Boolean, default=True)  # Can be dismissed by user
+    is_automated = Column(Boolean, default=True)  # AI-generated vs manual
+    tags = Column(JSON, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=True)  # Insights can expire
+
+    # Relationships
+    user = relationship("User")
+
+    __table_args__ = (
+        Index('idx_insight_user_domain', 'user_id', 'publisher_domain'),
+        Index('idx_insight_type', 'insight_type'),
+        Index('idx_insight_priority', 'user_id', 'priority'),
+        Index('idx_insight_active', 'user_id', 'is_active'),
+    )

@@ -585,3 +585,163 @@ class ScheduledJobResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ============================================================================
+# PUBLISHER RESEARCH SCHEMAS
+# ============================================================================
+
+class InsightType(str, Enum):
+    """Publisher insight types."""
+    RECOMMENDATION = "recommendation"
+    WARNING = "warning"
+    SUCCESS_PATTERN = "success_pattern"
+    FAILURE_PATTERN = "failure_pattern"
+    OPTIMIZATION = "optimization"
+
+
+class InsightPriority(str, Enum):
+    """Insight priority levels."""
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class PublisherMetricsResponse(BaseModel):
+    """Response schema for publisher metrics."""
+
+    id: str
+    user_id: str
+    publisher_domain: str
+
+    # Job statistics
+    total_jobs: int
+    successful_jobs: int
+    failed_jobs: int
+    pending_jobs: int
+    success_rate: float
+
+    # Quality metrics
+    avg_qc_score: Optional[float]
+    avg_issue_count: Optional[float]
+    quality_trend: Optional[str]
+
+    # Cost metrics
+    total_cost_usd: float
+    avg_cost_per_job: Optional[float]
+    cost_trend: Optional[str]
+
+    # Performance metrics
+    avg_generation_time_seconds: Optional[float]
+    avg_retry_count: Optional[float]
+
+    # Provider analytics
+    most_used_provider: Optional[str]
+    most_used_strategy: Optional[str]
+    provider_distribution: Optional[Dict[str, int]]
+
+    # Recommendation
+    recommendation_score: float
+    recommendation_reason: Optional[str]
+
+    # Timestamps
+    first_job_at: Optional[datetime]
+    last_job_at: Optional[datetime]
+    last_updated_at: Optional[datetime]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PublisherInsightCreate(BaseModel):
+    """Create a publisher insight (typically automated)."""
+
+    publisher_domain: str
+    insight_type: InsightType
+    priority: InsightPriority = Field(default=InsightPriority.MEDIUM)
+    title: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(..., min_length=1)
+    action_items: Optional[List[str]] = None
+    confidence_score: float = Field(default=0.0, ge=0.0, le=100.0)
+    sample_size: int = Field(default=0, ge=0)
+    evidence: Optional[Dict[str, Any]] = None
+    tags: Optional[List[str]] = None
+    expires_at: Optional[datetime] = None
+
+
+class PublisherInsightUpdate(BaseModel):
+    """Update a publisher insight."""
+
+    is_active: Optional[bool] = None
+    priority: Optional[InsightPriority] = None
+    expires_at: Optional[datetime] = None
+
+
+class PublisherInsightResponse(BaseModel):
+    """Response schema for publisher insights."""
+
+    id: str
+    user_id: str
+    publisher_domain: str
+    insight_type: str
+    priority: str
+    title: str
+    description: str
+    action_items: Optional[List[str]]
+    confidence_score: float
+    sample_size: int
+    evidence: Optional[Dict[str, Any]]
+    is_active: bool
+    is_automated: bool
+    tags: Optional[List[str]]
+    created_at: datetime
+    updated_at: Optional[datetime]
+    expires_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class PublisherComparisonRequest(BaseModel):
+    """Request to compare publishers."""
+
+    publisher_domains: List[str] = Field(..., min_items=2, max_items=10)
+    metrics: Optional[List[str]] = Field(default=["success_rate", "avg_qc_score", "avg_cost_per_job"])
+
+
+class PublisherComparisonItem(BaseModel):
+    """Single publisher in comparison."""
+
+    publisher_domain: str
+    total_jobs: int
+    success_rate: float
+    avg_qc_score: Optional[float]
+    avg_cost_per_job: Optional[float]
+    recommendation_score: float
+    rank: int  # 1 = best
+
+
+class PublisherComparisonResponse(BaseModel):
+    """Response for publisher comparison."""
+
+    publishers: List[PublisherComparisonItem]
+    best_publisher: str
+    metrics_compared: List[str]
+    comparison_date: datetime
+
+
+class PublisherRecommendationRequest(BaseModel):
+    """Request for publisher recommendations."""
+
+    limit: int = Field(default=10, ge=1, le=50)
+    min_jobs: int = Field(default=3, ge=1)  # Minimum jobs to be considered
+    criteria: Optional[str] = Field(default="balanced")  # balanced, cost_optimized, quality_focused
+
+
+class PublisherRecommendationResponse(BaseModel):
+    """Response with recommended publishers."""
+
+    recommendations: List[PublisherMetricsResponse]
+    criteria: str
+    total_publishers_evaluated: int
