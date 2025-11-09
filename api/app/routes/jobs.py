@@ -413,8 +413,8 @@ async def run_orchestrated_job_background(
 
         # Initialize orchestrator
         orchestrator = BacklinkJobOrchestrator(
-            provider=llm_provider,
-            serp_mode="api"  # Use real SERP API
+            llm_provider=llm_provider
+            # serp_api_key will be loaded from environment variable SERPAPI_KEY
         )
 
         # Progress callback for WebSocket updates
