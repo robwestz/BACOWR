@@ -6,7 +6,7 @@ Supports dual authentication:
 - JWT Bearer token authentication (Authorization: Bearer <token>)
 """
 
-from fastapi import Depends, HTTPException, status, Security
+from fastapi import Depends, HTTPException, status, Security, Request
 from fastapi.security import APIKeyHeader, HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
@@ -315,6 +315,49 @@ async def get_refresh_token_user(
         )
 
     return user
+
+
+async def get_current_user_optional(
+    request: Request,
+    db: Session
+) -> Optional[User]:
+    """
+    Get current user from request without raising exceptions.
+
+    Used in middleware for rate limiting to optionally identify users.
+
+    Args:
+        request: FastAPI request object
+        db: Database session
+
+    Returns:
+        User object if authenticated, None otherwise
+    """
+    # Try API key from header
+    api_key = request.headers.get("x-api-key")
+    if api_key:
+        user = db.query(User).filter(User.api_key == api_key).first()
+        if user and user.is_active:
+            return user
+
+    # Try JWT bearer token
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header[7:]  # Remove "Bearer " prefix
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+            token_type = payload.get("token_type")
+
+            # Only use access tokens for user identification
+            if user_id and token_type == "access":
+                user = db.query(User).filter(User.id == user_id).first()
+                if user and user.is_active:
+                    return user
+        except JWTError:
+            pass
+
+    return None
 
 
 # ============================================================================

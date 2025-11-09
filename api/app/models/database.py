@@ -28,6 +28,13 @@ class User(Base):
     hashed_password = Column(String, nullable=True)  # Optional for API key-only users
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
+
+    # Notification preferences
+    notification_email = Column(String, nullable=True)  # Can be different from login email
+    webhook_url = Column(String, nullable=True)
+    enable_email_notifications = Column(Boolean, default=False)
+    enable_webhook_notifications = Column(Boolean, default=False)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

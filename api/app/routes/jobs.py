@@ -2,11 +2,14 @@
 Job routes for creating and managing content generation jobs.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 from ..database import get_db
 from ..models.database import User, Job, JobResult
@@ -17,6 +20,9 @@ from ..models.schemas import (
 from ..auth import get_current_user
 from ..core.bacowr_wrapper import bacowr
 from ..websocket import ws_manager
+from ..rate_limit import limiter, RATE_LIMITS
+from ..notifications.email import email_service
+from ..notifications.webhook import webhook_service
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -117,6 +123,39 @@ async def run_job_background(
                 message=f'Job completed with status: {job.status}'
             )
 
+        # Send notifications
+        user = db.query(User).filter(User.id == job.user_id).first()
+        if user:
+            # Send email notification
+            if user.enable_email_notifications and user.notification_email:
+                try:
+                    await email_service.send_job_completed(
+                        to_email=user.notification_email,
+                        job_id=job.id,
+                        publisher_domain=job.publisher_domain,
+                        target_url=job.target_url,
+                        status=job.status,
+                        completed_at=job.completed_at.isoformat() if job.completed_at else None,
+                        actual_cost=job.actual_cost
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send email notification: {str(e)}")
+
+            # Send webhook notification
+            if user.enable_webhook_notifications and user.webhook_url:
+                try:
+                    await webhook_service.send_job_completed(
+                        webhook_url=user.webhook_url,
+                        job_id=job.id,
+                        status=job.status,
+                        publisher_domain=job.publisher_domain,
+                        target_url=job.target_url,
+                        completed_at=job.completed_at.isoformat() if job.completed_at else None,
+                        actual_cost=job.actual_cost
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send webhook notification: {str(e)}")
+
     except Exception as e:
         job.status = JobStatus.ABORTED
         job.error_message = str(e)
@@ -129,9 +168,38 @@ async def run_job_background(
             error_message=str(e)
         )
 
+        # Send error notifications
+        user = db.query(User).filter(User.id == job.user_id).first()
+        if user:
+            # Send email notification
+            if user.enable_email_notifications and user.notification_email:
+                try:
+                    await email_service.send_job_error(
+                        to_email=user.notification_email,
+                        job_id=job.id,
+                        publisher_domain=job.publisher_domain,
+                        error_message=str(e)
+                    )
+                except Exception as email_error:
+                    logger.error(f"Failed to send email notification: {str(email_error)}")
+
+            # Send webhook notification
+            if user.enable_webhook_notifications and user.webhook_url:
+                try:
+                    await webhook_service.send_job_error(
+                        webhook_url=user.webhook_url,
+                        job_id=job.id,
+                        publisher_domain=job.publisher_domain,
+                        error_message=str(e)
+                    )
+                except Exception as webhook_error:
+                    logger.error(f"Failed to send webhook notification: {str(webhook_error)}")
+
 
 @router.post("", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(RATE_LIMITS["create_job"])
 async def create_job(
+    request: Request,
     job_create: JobCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),

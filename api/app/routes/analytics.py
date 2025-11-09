@@ -5,7 +5,7 @@ Comprehensive analytics dashboard with cost tracking, performance metrics,
 time-series data, and export functionality.
 """
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, case
@@ -23,6 +23,7 @@ from ..models.schemas import (
 )
 from ..auth import get_current_user, get_current_admin_user
 from ..core.bacowr_wrapper import bacowr
+from ..rate_limit import limiter, RATE_LIMITS
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -387,7 +388,9 @@ def get_time_series(
 # ============================================================================
 
 @router.get("/export/csv")
+@limiter.limit(RATE_LIMITS["export"])
 def export_jobs_csv(
+    request: Request,
     days: int = 30,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -444,7 +447,9 @@ def export_jobs_csv(
 
 
 @router.get("/export/json")
+@limiter.limit(RATE_LIMITS["export"])
 def export_jobs_json(
+    request: Request,
     days: int = 30,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)

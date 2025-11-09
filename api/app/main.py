@@ -4,18 +4,21 @@ BACOWR FastAPI Application
 Production-ready REST API for BACOWR content generation system.
 """
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import os
 from dotenv import load_dotenv
 import socketio
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from .database import engine, get_db, init_db, Base
-from .auth import create_default_user
-from .routes import jobs, backlinks, analytics, auth
+from .auth import create_default_user, get_current_user_optional
+from .routes import jobs, backlinks, analytics, auth, notifications
 from .websocket import sio
+from .rate_limit import limiter
 
 # Load environment variables
 load_dotenv()
@@ -29,6 +32,10 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # CORS configuration
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
@@ -39,6 +46,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Middleware to set user in request state for rate limiting
+@app.middleware("http")
+async def add_user_to_request(request: Request, call_next):
+    """
+    Middleware to add authenticated user to request.state.
+
+    This allows the rate limiter to use user ID for per-user rate limiting.
+    Falls back to IP address for unauthenticated requests.
+    """
+    db = next(get_db())
+    try:
+        # Try to get current user (won't raise exception if not authenticated)
+        user = await get_current_user_optional(request, db)
+        request.state.user = user
+    except:
+        request.state.user = None
+    finally:
+        db.close()
+
+    response = await call_next(request)
+    return response
 
 
 # Startup event
@@ -98,6 +128,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(backlinks.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
+app.include_router(notifications.router, prefix="/api/v1")
 
 
 # Error handlers

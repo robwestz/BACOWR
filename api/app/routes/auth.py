@@ -2,7 +2,7 @@
 Authentication routes for user registration, login, and management.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -19,12 +19,15 @@ from ..auth import (
     get_current_user, get_current_admin_user, get_refresh_token_user,
     generate_api_key, ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from ..rate_limit import limiter, RATE_LIMITS
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
+@limiter.limit(RATE_LIMITS["register"])
 def register(
+    request: Request,
     user_data: UserRegister,
     db: Session = Depends(get_db)
 ):
@@ -74,7 +77,9 @@ def register(
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit(RATE_LIMITS["login"])
 def login(
+    request: Request,
     credentials: UserLogin,
     db: Session = Depends(get_db)
 ):
@@ -118,7 +123,9 @@ def login(
 
 
 @router.post("/refresh", response_model=Token)
+@limiter.limit(RATE_LIMITS["refresh"])
 def refresh_token(
+    request: Request,
     user: User = Depends(get_refresh_token_user)
 ):
     """
@@ -191,7 +198,9 @@ def update_profile(
 
 
 @router.post("/change-password")
+@limiter.limit(RATE_LIMITS["password_change"])
 def change_password(
+    request: Request,
     password_data: PasswordChange,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
