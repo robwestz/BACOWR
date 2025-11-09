@@ -360,3 +360,228 @@ class PaginatedResponse(BaseModel):
             page_size=page_size,
             total_pages=(total + page_size - 1) // page_size
         )
+
+
+# ============================================================================
+# Campaign Schemas
+# ============================================================================
+
+class CampaignStatus(str, Enum):
+    """Campaign status enumeration."""
+    ACTIVE = "active"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+
+
+class CampaignCreate(BaseModel):
+    """Schema for creating a campaign."""
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+    color: Optional[str] = Field(default=None, pattern="^#[0-9A-Fa-f]{6}$")  # Hex color
+    tags: Optional[List[str]] = None
+    target_job_count: Optional[int] = Field(default=None, ge=0)
+    target_budget_usd: Optional[float] = Field(default=None, ge=0)
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+
+
+class CampaignUpdate(BaseModel):
+    """Schema for updating a campaign."""
+    name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    status: Optional[CampaignStatus] = None
+    color: Optional[str] = Field(default=None, pattern="^#[0-9A-Fa-f]{6}$")
+    tags: Optional[List[str]] = None
+    target_job_count: Optional[int] = Field(default=None, ge=0)
+    target_budget_usd: Optional[float] = Field(default=None, ge=0)
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+
+
+class CampaignResponse(BaseModel):
+    """Schema for campaign response."""
+    id: str
+    user_id: str
+    name: str
+    description: Optional[str]
+    status: str
+    color: Optional[str]
+    tags: Optional[List[str]]
+    target_job_count: Optional[int]
+    target_budget_usd: Optional[float]
+    created_at: datetime
+    updated_at: Optional[datetime]
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
+
+    # Stats (computed)
+    job_count: Optional[int] = 0
+    total_cost: Optional[float] = 0.0
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================================================
+# Job Template Schemas
+# ============================================================================
+
+class JobTemplateCreate(BaseModel):
+    """Schema for creating a job template."""
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+    campaign_id: Optional[str] = None
+
+    # Template configuration
+    publisher_domain: Optional[str] = Field(default=None, max_length=255)
+    llm_provider: Optional[LLMProvider] = None
+    writing_strategy: Optional[WritingStrategy] = None
+    country: Optional[str] = Field(default=None, min_length=2, max_length=2)
+    use_ahrefs: Optional[bool] = True
+    enable_llm_profiling: Optional[bool] = True
+
+    is_favorite: Optional[bool] = False
+    tags: Optional[List[str]] = None
+
+
+class JobTemplateUpdate(BaseModel):
+    """Schema for updating a job template."""
+    name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    campaign_id: Optional[str] = None
+
+    publisher_domain: Optional[str] = None
+    llm_provider: Optional[LLMProvider] = None
+    writing_strategy: Optional[WritingStrategy] = None
+    country: Optional[str] = None
+    use_ahrefs: Optional[bool] = None
+    enable_llm_profiling: Optional[bool] = None
+
+    is_favorite: Optional[bool] = None
+    tags: Optional[List[str]] = None
+
+
+class JobTemplateResponse(BaseModel):
+    """Schema for job template response."""
+    id: str
+    user_id: str
+    campaign_id: Optional[str]
+    name: str
+    description: Optional[str]
+
+    # Configuration
+    publisher_domain: Optional[str]
+    llm_provider: Optional[str]
+    writing_strategy: Optional[str]
+    country: Optional[str]
+    use_ahrefs: bool
+    enable_llm_profiling: bool
+
+    # Metadata
+    use_count: int
+    is_favorite: bool
+    tags: Optional[List[str]]
+
+    created_at: datetime
+    updated_at: Optional[datetime]
+    last_used_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================================================
+# Scheduled Job Schemas
+# ============================================================================
+
+class ScheduleType(str, Enum):
+    """Schedule type enumeration."""
+    ONCE = "once"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    CRON = "cron"
+
+
+class ScheduledJobStatus(str, Enum):
+    """Scheduled job status enumeration."""
+    ACTIVE = "active"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    EXPIRED = "expired"
+    ERROR = "error"
+
+
+class ScheduledJobCreate(BaseModel):
+    """Schema for creating a scheduled job."""
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+    campaign_id: Optional[str] = None
+    template_id: Optional[str] = None
+
+    # Schedule configuration
+    schedule_type: ScheduleType
+    scheduled_at: datetime  # First/next run time
+    recurrence_pattern: Optional[str] = None  # e.g., "daily", "weekly:monday", "monthly:1"
+    recurrence_end_date: Optional[datetime] = None
+    timezone: Optional[str] = "UTC"
+    max_runs: Optional[int] = Field(default=None, ge=1)
+
+    # Job configuration
+    job_config: Dict[str, Any]  # JobCreate-compatible dict
+
+
+class ScheduledJobUpdate(BaseModel):
+    """Schema for updating a scheduled job."""
+    name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    status: Optional[ScheduledJobStatus] = None
+
+    scheduled_at: Optional[datetime] = None
+    recurrence_pattern: Optional[str] = None
+    recurrence_end_date: Optional[datetime] = None
+    max_runs: Optional[int] = None
+
+    job_config: Optional[Dict[str, Any]] = None
+
+
+class ScheduledJobResponse(BaseModel):
+    """Schema for scheduled job response."""
+    id: str
+    user_id: str
+    campaign_id: Optional[str]
+    template_id: Optional[str]
+
+    name: str
+    description: Optional[str]
+
+    # Schedule info
+    schedule_type: str
+    scheduled_at: datetime
+    recurrence_pattern: Optional[str]
+    recurrence_end_date: Optional[datetime]
+    timezone: str
+
+    # Status
+    status: str
+    last_run_at: Optional[datetime]
+    next_run_at: Optional[datetime]
+    run_count: int
+    max_runs: Optional[int]
+
+    # Related
+    last_job_id: Optional[str]
+    last_job_status: Optional[str]
+
+    # Job config
+    job_config: Dict[str, Any]
+
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    error_count: int
+    last_error: Optional[str]
+
+    class Config:
+        from_attributes = True

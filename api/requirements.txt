@@ -13,6 +13,7 @@ psycopg2-binary==2.9.9
 # Background Tasks
 celery==5.3.6
 redis==5.0.1
+apscheduler==3.10.4
 
 # WebSocket
 python-socketio==5.11.0

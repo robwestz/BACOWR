@@ -16,9 +16,10 @@ from slowapi.errors import RateLimitExceeded
 
 from .database import engine, get_db, init_db, Base
 from .auth import create_default_user, get_current_user_optional
-from .routes import jobs, backlinks, analytics, auth, notifications
+from .routes import jobs, backlinks, analytics, auth, notifications, campaigns, templates, scheduling
 from .websocket import sio
 from .rate_limit import limiter
+from .scheduler_service import start_scheduler, stop_scheduler
 
 # Load environment variables
 load_dotenv()
@@ -92,11 +93,23 @@ async def startup_event():
     finally:
         db.close()
 
+    # Start scheduler
+    start_scheduler()
+
     print("=" * 70)
     print("✓ BACOWR API Ready!")
     print(f"  Docs: http://localhost:8000/docs")
     print(f"  WebSocket: ws://localhost:8000/socket.io")
     print("=" * 70)
+
+
+# Shutdown event
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    print("Shutting down BACOWR API...")
+    stop_scheduler()
+    print("✓ Scheduler stopped")
 
 
 # Health check
@@ -129,6 +142,9 @@ app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(backlinks.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
+app.include_router(campaigns.router, prefix="/api/v1")
+app.include_router(templates.router, prefix="/api/v1")
+app.include_router(scheduling.router, prefix="/api/v1")
 
 
 # Error handlers

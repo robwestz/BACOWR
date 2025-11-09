@@ -41,6 +41,9 @@ class User(Base):
     # Relationships
     jobs = relationship("Job", back_populates="user", cascade="all, delete-orphan")
     backlinks = relationship("Backlink", back_populates="user", cascade="all, delete-orphan")
+    campaigns = relationship("Campaign", cascade="all, delete-orphan")
+    job_templates = relationship("JobTemplate", cascade="all, delete-orphan")
+    scheduled_jobs = relationship("ScheduledJob", cascade="all, delete-orphan")
 
 
 class Job(Base):
@@ -191,4 +194,163 @@ class JobResult(Base):
         Index('idx_user_strategy', 'user_id', 'strategy_used'),
         Index('idx_user_delivered', 'user_id', 'delivered'),
         Index('idx_created_delivered', 'created_at', 'delivered'),
+    )
+
+
+class Campaign(Base):
+    """
+    Campaign model for organizing jobs into logical groups.
+
+    Campaigns allow users to group related jobs together for:
+    - Publisher-specific campaigns (all backlinks to one publisher)
+    - Topic-specific campaigns (all backlinks about one topic)
+    - Time-based campaigns (Q1 2025 backlinks)
+    - Client campaigns (all work for one client)
+    """
+
+    __tablename__ = "campaigns"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Campaign info
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+
+    # Campaign metadata
+    status = Column(String, default="active")  # active, paused, completed, archived
+    color = Column(String, nullable=True)  # Hex color for UI
+    tags = Column(JSON, nullable=True)  # Array of tags
+
+    # Campaign goals (optional tracking)
+    target_job_count = Column(Integer, nullable=True)
+    target_budget_usd = Column(Float, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    start_date = Column(DateTime(timezone=True), nullable=True)
+    end_date = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    user = relationship("User")
+    scheduled_jobs = relationship("ScheduledJob", back_populates="campaign")
+    job_templates = relationship("JobTemplate", back_populates="campaign")
+
+    __table_args__ = (
+        Index('idx_campaign_user_status', 'user_id', 'status'),
+        Index('idx_campaign_user_created', 'user_id', 'created_at'),
+    )
+
+
+class JobTemplate(Base):
+    """
+    Job template model for reusable job configurations.
+
+    Templates allow users to save job configurations for reuse:
+    - Publisher-specific settings
+    - Common configurations (e.g., "High quality backlink")
+    - Client-specific templates
+    """
+
+    __tablename__ = "job_templates"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    campaign_id = Column(String, ForeignKey("campaigns.id"), nullable=True, index=True)
+
+    # Template info
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+
+    # Template configuration (same as Job inputs)
+    publisher_domain = Column(String, nullable=True)  # Can be empty for generic templates
+    llm_provider = Column(String, nullable=True)
+    writing_strategy = Column(String, nullable=True)
+    country = Column(String, nullable=True)
+    use_ahrefs = Column(Boolean, default=True)
+    enable_llm_profiling = Column(Boolean, default=True)
+
+    # Template metadata
+    use_count = Column(Integer, default=0)  # Track how many times it's been used
+    is_favorite = Column(Boolean, default=False)
+    tags = Column(JSON, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    user = relationship("User")
+    campaign = relationship("Campaign", back_populates="job_templates")
+    scheduled_jobs = relationship("ScheduledJob", back_populates="template")
+
+    __table_args__ = (
+        Index('idx_template_user_favorite', 'user_id', 'is_favorite'),
+        Index('idx_template_campaign', 'campaign_id'),
+    )
+
+
+class ScheduledJob(Base):
+    """
+    Scheduled job model for jobs that should run in the future.
+
+    Supports:
+    - One-time scheduled jobs (run once at specific time)
+    - Recurring jobs (daily, weekly, monthly)
+    - Cron-like scheduling
+    """
+
+    __tablename__ = "scheduled_jobs"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    campaign_id = Column(String, ForeignKey("campaigns.id"), nullable=True, index=True)
+    template_id = Column(String, ForeignKey("job_templates.id"), nullable=True, index=True)
+
+    # Schedule info
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+
+    # Scheduling configuration
+    schedule_type = Column(String, nullable=False)  # once, daily, weekly, monthly, cron
+    scheduled_at = Column(DateTime(timezone=True), nullable=False, index=True)  # Next run time
+
+    # Recurring configuration
+    recurrence_pattern = Column(String, nullable=True)  # e.g., "daily", "weekly:monday", "monthly:1"
+    recurrence_end_date = Column(DateTime(timezone=True), nullable=True)
+    timezone = Column(String, default="UTC")
+
+    # Job configuration (can override template)
+    job_config = Column(JSON, nullable=False)  # JobCreate-compatible config
+
+    # Status
+    status = Column(String, default="active")  # active, paused, completed, expired, error
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+    next_run_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    run_count = Column(Integer, default=0)
+    max_runs = Column(Integer, nullable=True)  # Optional limit on recurring jobs
+
+    # Related jobs
+    last_job_id = Column(String, nullable=True)  # ID of last created job
+    last_job_status = Column(String, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Error tracking
+    error_count = Column(Integer, default=0)
+    last_error = Column(Text, nullable=True)
+
+    # Relationships
+    user = relationship("User")
+    campaign = relationship("Campaign", back_populates="scheduled_jobs")
+    template = relationship("JobTemplate", back_populates="scheduled_jobs")
+
+    __table_args__ = (
+        Index('idx_scheduled_user_status', 'user_id', 'status'),
+        Index('idx_scheduled_next_run', 'next_run_at', 'status'),
+        Index('idx_scheduled_campaign', 'campaign_id'),
     )
