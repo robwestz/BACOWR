@@ -23,8 +23,9 @@ class User(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
     email = Column(String, unique=True, index=True, nullable=False)
+    full_name = Column(String, nullable=True)
     api_key = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=True)  # Optional for now
+    hashed_password = Column(String, nullable=True)  # Optional for API key-only users
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

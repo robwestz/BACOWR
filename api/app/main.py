@@ -14,7 +14,7 @@ import socketio
 
 from .database import engine, get_db, init_db, Base
 from .auth import create_default_user
-from .routes import jobs, backlinks, analytics
+from .routes import jobs, backlinks, analytics, auth
 from .websocket import sio
 
 # Load environment variables
@@ -94,6 +94,7 @@ def root():
 
 
 # Include routers
+app.include_router(auth.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(backlinks.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
