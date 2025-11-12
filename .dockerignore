@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv
+
+# Environment
+.env
+*.key
+*_api_key.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Output and logs
+storage/output/*
+storage/batch_output/*
+storage/batch_chunks/*
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation
+*.md
+docs/
+
+# Examples (optional - keep if needed in container)
+# examples/

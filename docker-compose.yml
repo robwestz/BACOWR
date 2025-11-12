@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # BACOWR API
+  api:
+    build: .
+    container_name: bacowr-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Database
+      - DATABASE_URL=postgresql://bacowr:bacowr_password@db:5432/bacowr
+
+      # LLM API Keys (provide your own)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+
+      # SERP
+      - AHREFS_API_KEY=${AHREFS_API_KEY:-}
+
+      # Application settings
+      - LOG_LEVEL=INFO
+      - OUTPUT_DIR=/app/storage/output
+      - DEFAULT_LLM_PROVIDER=anthropic
+      - DEFAULT_STRATEGY=multi_stage
+
+      # Frontend URL for CORS
+      - FRONTEND_URL=http://localhost:3000
+
+    volumes:
+      - ./storage:/app/storage
+      - ./config:/app/config
+    depends_on:
+      - db
+    networks:
+      - bacowr-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: bacowr-db
+    environment:
+      - POSTGRES_USER=bacowr
+      - POSTGRES_PASSWORD=bacowr_password
+      - POSTGRES_DB=bacowr
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - bacowr-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bacowr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: bacowr-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@bacowr.local
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - bacowr-network
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+
+networks:
+  bacowr-network:
+    driver: bridge
