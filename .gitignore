@@ -17,7 +17,12 @@ venv/
 ENV/
 
 # Output and Storage
-storage/
+storage/output/*
+storage/batch_output/*
+storage/batch_chunks/*
+!storage/output/.gitkeep
+!storage/batch_output/.gitkeep
+!storage/batch_chunks/.gitkeep
 output/
 *.log
 
