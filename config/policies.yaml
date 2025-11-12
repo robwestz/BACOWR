@@ -1,84 +1,204 @@
-# BACOWR QC Policies
-# Per NEXT-A1-ENGINE-ADDENDUM.md § 3
+# QC Policies Configuration - Next-A1 BacklinkContent Engine
+#
+# Defines what is allowed, forbidden, and requires human review.
+# Based on Next-A1 Autofix specifications (Section 7).
 
-autofix_policies:
-  enabled: true
-  max_attempts: 1
-  description: "AutoFixOnce - exakt EN automatisk korrigering tillåten"
+# Autofix allowed operations (can be done automatically, once)
+autofix_allowed:
+  - action: "move_link_within_section"
+    description: "Move [[LINK]] within the same H2 section for better placement"
+    constraints:
+      - "Stay within the originally chosen H2 section"
+      - "Move to paragraph 1-2 of section"
+      - "Ensure LSI window requirements met"
+    max_attempts: 1
 
-  allowed_fixes:
-    - name: "move_link_within_section"
-      description: "Flytta länk inom samma sektion till bättre position"
-      conditions:
-        - "link in forbidden location (H1/H2)"
-        - "link lacks context sentences"
+  - action: "swap_anchor_type"
+    description: "Change anchor type for naturalness (exact→partial→brand→generic)"
+    allowed_swaps:
+      - from: "exact"
+        to: ["partial", "generic", "brand"]
+        rationale: "Increase naturalness, reduce footprint"
+      - from: "partial"
+        to: ["brand", "generic"]
+        rationale: "Simplify or add authority"
+      - from: "generic"
+        to: ["brand"]
+        rationale: "Add specificity if brand has E-E-A-T"
+    constraints:
+      - "Document in links_extension.anchor_swap"
+      - "Provide clear rationale"
+    max_attempts: 1
 
-    - name: "adjust_anchor_type"
-      description: "Justera ankartyp från exact → brand/generic"
-      conditions:
-        - "anchor_risk == high"
-        - "exact match kan ersättas med brand"
+  - action: "adjust_lsi_terms"
+    description: "Add or refine LSI terms in near window"
+    constraints:
+      - "Stay within 6-10 terms"
+      - "Maintain entity cluster diversity"
+      - "Keep within ±2 sentence window"
+    max_attempts: 1
 
-    - name: "inject_missing_lsi"
-      description: "Injicera saknade LSI-termer (inom policy)"
-      conditions:
-        - "lsi_count < 6"
-        - "lsi_count > 10"
-      max_injection: 4
+  - action: "add_or_swap_trust_source"
+    description: "Add trust link or replace with better source"
+    constraints:
+      - "Follow T1→T2→T3→T4 priority"
+      - "Use PLATSFÖRSLAG if source unknown"
+      - "Document rationale"
+    max_attempts: 1
 
-    - name: "add_compliance_disclaimer"
-      description: "Lägg till nödvändig disclaimer för reglerad vertikal"
-      conditions:
-        - "regulated_vertical detected"
-        - "disclaimer missing"
+  - action: "inject_compliance_disclaimer"
+    description: "Add industry-specific disclaimer"
+    allowed_locations:
+      - "End of article"
+      - "Resources section"
+      - "Before link (if critical)"
+    industry_specific: true
+    max_attempts: 1
 
-  forbidden_fixes:
-    - name: "change_intent_alignment"
-      reason: "Kräver human review och strategisk omtänk"
+  - action: "adjust_tone_alignment"
+    description: "Fine-tune microcopy to match serp_intent_primary"
+    constraints:
+      - "Don't change core message"
+      - "Stay within publisher tone_class"
+      - "Subtle adjustments only"
+    max_attempts: 1
 
-    - name: "remove_competitor_mentions"
-      reason: "Kan vara legitimate content, ej AutoFix"
+# Operations requiring human sign-off (NEVER auto-fix)
+require_human_signoff:
+  - action: "change_h1_or_title"
+    reason: "Core structural change affecting SEO and messaging"
 
-    - name: "fabricate_trust_sources"
-      reason: "Aldrig fabricate källor - kräver research"
+  - action: "change_main_theme"
+    reason: "Fundamental content strategy change"
 
-    - name: "change_bridge_type"
-      reason: "Strategiskt beslut, ej AutoFix"
+  - action: "remove_entire_section"
+    reason: "Major structural change affecting content completeness"
 
-blocking_conditions:
-  description: "Conditions som blockerar delivery och kräver human signoff"
+  - action: "change_bridge_type"
+    reason: "Core strategy decision affecting article structure"
 
-  critical_blocks:
-    - condition: "intent_alignment.overall == 'off'"
-      reason: "Intent mismatch - fundamentalt problem"
-      human_signoff_required: true
+# Forbidden operations (NEVER allowed, even with sign-off)
+forbidden:
+  - action: "fabricate_data"
+    description: "Inventing statistics, quotes, or facts"
+    severity: "critical"
 
-    - condition: "trust_sources_count == 0"
-      reason: "Inga trovärdiga källor - content credibility fail"
-      human_signoff_required: true
+  - action: "link_to_competitor"
+    description: "Linking to direct competitors of target"
+    severity: "critical"
 
-    - condition: "anchor_risk == 'high'"
-      reason: "Hög risk för penalty - kräver review"
-      human_signoff_required: true
+  - action: "violate_intent_alignment"
+    description: "Changing content to mislead or contradict intent_extension.overall"
+    severity: "critical"
 
-    - condition: "regulated_vertical && !disclaimer"
-      reason: "Compliance-krav ej uppfyllt"
-      human_signoff_required: true
+  - action: "plagiarize_content"
+    description: "Copying substantial content from SERP results"
+    severity: "critical"
 
-    - condition: "competitor_detected_in_content"
-      reason: "Konkurrent-mentions kräver strategisk review"
-      human_signoff_required: false  # Warning, not block
+  - action: "skip_required_subtopics"
+    description: "Omitting intent_extension.required_subtopics without rationale"
+    severity: "high"
 
-  warning_conditions:
-    - condition: "word_count < minimum"
-      action: "warn"
+# Industry-specific policies
+industry_policies:
+  gambling:
+    required_disclaimers:
+      - "18+ age restriction"
+      - "Gambling can be addictive"
+      - "Play responsibly"
+    required_links:
+      - "Responsible gaming resource"
+      - "National gambling helpline (if applicable)"
+    forbidden_claims:
+      - "Guaranteed wins"
+      - "Sure thing"
+      - "Can't lose"
 
-    - condition: "lsi_count < 6 || lsi_count > 10"
-      action: "attempt_autofix"
+  finance:
+    required_disclaimers:
+      - "Financial risk warning"
+      - "Not financial advice"
+      - "Past performance not indicative"
+    required_content:
+      - "Risk disclosure"
+      - "Regulatory information (if applicable)"
+    forbidden_claims:
+      - "Guaranteed returns"
+      - "Risk-free"
+      - "Get rich quick"
 
-    - condition: "link_in_forbidden_location"
-      action: "attempt_autofix"
+  health:
+    required_disclaimers:
+      - "Not medical advice"
+      - "Consult healthcare professional"
+    forbidden_claims:
+      - "Cures disease"
+      - "FDA approved" (without verification)
+      - "Guaranteed results"
+    required_sources:
+      - "Medical/scientific sources for health claims"
 
+  legal:
+    required_disclaimers:
+      - "Not legal advice"
+      - "Jurisdiction-specific"
+      - "Consult qualified attorney"
+    forbidden_claims:
+      - "Guaranteed legal outcome"
+
+  crypto:
+    required_disclaimers:
+      - "High volatility warning"
+      - "Not investment advice"
+      - "Risk of total loss"
+    forbidden_claims:
+      - "Guaranteed profits"
+      - "No risk"
+      - "Can't fail"
+
+# Bridge type policies (from Next-A1 Section 2)
+bridge_type_policies:
+  strong:
+    requirements:
+      - "anchor_vs_serp != 'off'"
+      - "target_vs_serp != 'off'"
+      - "publisher_vs_serp != 'off'"
+      - "publisher_niche_overlap >= 0.7"
+    trust_requirement: "min 1 source (T1/T2/T3)"
+    placement_rule: "First relevant H2 section, early but after context"
+
+  pivot:
+    requirements:
+      - "at_least_one_partial_alignment"
+      - "publisher_niche_overlap 0.4-0.7"
+    trust_requirement: "1-2 sources supporting pivot theme"
+    placement_rule: "After pivot theme established"
+    strategy: "Establish semantic bridge first, then link"
+
+  wrapper:
+    requirements:
+      - "overall_alignment_can_be_off"
+      - "publisher_niche_overlap < 0.4 OR semantic_mismatch"
+    trust_requirement: "2-3 sources for triangulation (Publisher ↔ TRUST ↔ Target)"
+    placement_rule: "Only after wrapper/meta-frame established"
+    strategy: "Build neutral meta-frame (methodology, risk, stats, innovation, ethics)"
+
+# AutoFixOnce policy (Loop protection)
+autofix_once:
+  max_autofix_rounds: 1
+  trigger_conditions:
+    - "QC finds fixable issues"
+    - "No human sign-off triggers"
+  after_autofix:
+    - "Re-run QC"
+    - "If still failing → Flag for human review"
+    - "If passing → Approve"
+  loop_protection:
+    - "Track payload hash"
+    - "If same payload repeats → ABORT with error"
+    - "Prevent infinite autofix loops"
+
+# Rescue policies
 rescue_policies:
   max_rescue_attempts: 1
   description: "RESCUE state policies"
@@ -86,7 +206,7 @@ rescue_policies:
   loop_detection:
     enabled: true
     method: "payload_hash_comparison"
-    description: "Om RESCUE inte ändrar payload → ABORT"
+    description: "If RESCUE doesn't change payload → ABORT"
 
   rescue_triggers:
     - "qc_status == BLOCKED"
@@ -98,6 +218,7 @@ rescue_policies:
     - "payload unchanged after rescue"
     - "human_signoff_required == true"
 
+# Output policies
 output_policies:
   storage_location: "storage/output/"
   file_naming: "{job_id}_{timestamp}"
