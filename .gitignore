@@ -31,3 +31,6 @@ output/
 # OS
 .DS_Store
 Thumbs.db
+
+# Private/Personal Files
+demo_for_productteam.md
