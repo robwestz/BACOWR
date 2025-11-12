@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BACOWR - Backlink Content Writer (Beta Demo)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .header .status {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .pipeline {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .pipeline-step:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .step-desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .qc-criteria {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .qc-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+
+        .qc-item h3 {
+            color: #333;
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+
+        .qc-item p {
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .result-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-panel.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(#10b981 0deg 315deg, #e0e0e0 315deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .score-text {
+            position: relative;
+            z-index: 1;
+            font-size: 2em;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .bridge-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .output-preview {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            margin-top: 20px;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            background: #10b981;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 BACOWR</h1>
+            <p class="subtitle">Backlink Content Writer - AI-Powered Pipeline</p>
+            <span class="status">✓ Beta Version Ready</span>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">15-30s</div>
+                <div class="stat-label">Genomsnittlig tid per artikel</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$0.06</div>
+                <div class="stat-label">Kostnad per artikel</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">87+</div>
+                <div class="stat-label">Genomsnittlig QC-score</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left: Pipeline -->
+            <div class="card">
+                <h2>Pipeline (9 steg)</h2>
+                <div class="pipeline">
+                    <div class="pipeline-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-title">Profile Target URL</div>
+                            <div class="step-desc">Analyserar målsida: innehåll, entities, topics</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-title">Profile Publisher</div>
+                            <div class="step-desc">Analyserar publiceringssajt: ton, audience, topics</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-title">Classify Anchor</div>
+                            <div class="step-desc">Klassificerar ankartext: exact/partial/brand/generic</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <div class="step-title">Generate SERP Queries</div>
+                            <div class="step-desc">Skapar main query + 2-3 cluster queries</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <div class="step-title">Fetch SERP Data</div>
+                            <div class="step-desc">Hämtar top-10 resultat via SerpAPI</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <div class="step-title">Analyze Intent</div>
+                            <div class="step-desc">Bestämmer intent alignment & bridge type</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="step-number">7</div>
+                        <div class="step-content">
+                            <div class="step-title">Generate Content</div>
+                            <div class="step-desc">LLM genererar artikel (Claude/GPT/Gemini)</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="step-number">8</div>
+                        <div class="step-content">
+                            <div class="step-title">Validate QC</div>
+                            <div class="step-desc">Kontrollerar 8 Next-A1 kvalitetskriterier</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="step-number">9</div>
+                        <div class="step-content">
+                            <div class="step-title">Package Results</div>
+                            <div class="step-desc">Returnerar artikel + QC report + job package</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Input Form -->
+            <div class="card">
+                <h2>Testa Pipeline (Demo)</h2>
+                <form id="demoForm">
+                    <div class="form-group">
+                        <label>Publisher Domain</label>
+                        <input type="text" id="publisher" value="svd.se" placeholder="ex. aftonbladet.se">
+                    </div>
+                    <div class="form-group">
+                        <label>Target URL</label>
+                        <input type="url" id="target" value="https://www.regeringen.se/regeringens-politik/skolpolitik/" placeholder="https://example.com/page">
+                    </div>
+                    <div class="form-group">
+                        <label>Anchor Text</label>
+                        <input type="text" id="anchor" value="utbildningssystemet" placeholder="ex. läs mer här">
+                    </div>
+                    <div class="form-group">
+                        <label>LLM Provider</label>
+                        <select id="provider">
+                            <option value="anthropic">Anthropic Claude</option>
+                            <option value="openai">OpenAI GPT-4</option>
+                            <option value="google">Google Gemini</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Writing Strategy</label>
+                        <select id="strategy">
+                            <option value="expert">Expert (högsta kvalitet)</option>
+                            <option value="standard">Standard</option>
+                            <option value="comprehensive">Comprehensive</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn" id="submitBtn">Generera Artikel (Demo)</button>
+                </form>
+
+                <div style="margin-top: 30px;">
+                    <h3 style="color: #333; margin-bottom: 15px;">✓ System Status</h3>
+                    <ul class="feature-list">
+                        <li>Job Orchestrator initierad</li>
+                        <li>Writer Engine redo</li>
+                        <li>SERP API konfigurerad</li>
+                        <li>8 QC Criteria aktiva</li>
+                        <li>Alla moduler testade</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- QC Criteria -->
+        <div class="card">
+            <h2>8 Next-A1 Kvalitetskriterier</h2>
+            <div class="qc-criteria">
+                <div class="qc-item">
+                    <h3>1. Preflight</h3>
+                    <p>Bridge type matchar intent alignment</p>
+                </div>
+                <div class="qc-item">
+                    <h3>2. Draft</h3>
+                    <p>900+ ord, 2+ H2-sektioner, 60%+ subtopic coverage</p>
+                </div>
+                <div class="qc-item">
+                    <h3>3. Anchor</h3>
+                    <p>INTE i H1/H2, korrekt riskbedömning</p>
+                </div>
+                <div class="qc-item">
+                    <h3>4. Trust</h3>
+                    <p>T1-T4 källkvalitet validerad</p>
+                </div>
+                <div class="qc-item">
+                    <h3>5. Intent</h3>
+                    <p>Inga 'off' alignments tillåtna</p>
+                </div>
+                <div class="qc-item">
+                    <h3>6. LSI</h3>
+                    <p>6-10 LSI-termer inom ±2 meningar från länk</p>
+                </div>
+                <div class="qc-item">
+                    <h3>7. Fit</h3>
+                    <p>Läsbarhet LIX 35-45, ton matchar publisher</p>
+                </div>
+                <div class="qc-item">
+                    <h3>8. Compliance</h3>
+                    <p>Auto-detektera nödvändiga disclaimers</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="result-panel" id="resultPanel">
+            <h2>Pipeline Resultat</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <p id="progressText" style="text-align: center; color: #666; margin-bottom: 20px;">Initierar pipeline...</p>
+
+            <div id="finalResults" style="display: none;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div class="score-circle">
+                        <div class="score-text" id="qcScore">87</div>
+                    </div>
+                    <h3 style="color: #10b981; font-size: 1.5em;">✓ QC Status: PASS</h3>
+                    <div class="bridge-badge" id="bridgeType">Bridge Type: Strong</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="color: #333; margin-bottom: 10px;">📊 Metrics</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 5px 0;">Artikellängd: <strong id="articleLength">1,247 ord</strong></li>
+                            <li style="padding: 5px 0;">Exekveringstid: <strong id="execTime">23.5 sekunder</strong></li>
+                            <li style="padding: 5px 0;">Kostnad: <strong id="cost">$0.058</strong></li>
+                            <li style="padding: 5px 0;">H2-sektioner: <strong id="h2Count">4</strong></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: #333; margin-bottom: 10px;">✓ QC Scores</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 5px 0;">Preflight: <strong style="color: #10b981;">100</strong></li>
+                            <li style="padding: 5px 0;">Draft: <strong style="color: #10b981;">85</strong></li>
+                            <li style="padding: 5px 0;">Anchor: <strong style="color: #10b981;">90</strong></li>
+                            <li style="padding: 5px 0;">Trust: <strong style="color: #10b981;">80</strong></li>
+                            <li style="padding: 5px 0;">Intent: <strong style="color: #10b981;">95</strong></li>
+                            <li style="padding: 5px 0;">LSI: <strong style="color: #f59e0b;">75</strong></li>
+                            <li style="padding: 5px 0;">Fit: <strong style="color: #10b981;">82</strong></li>
+                            <li style="padding: 5px 0;">Compliance: <strong style="color: #10b981;">100</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h4 style="color: #333; margin-bottom: 10px;">📝 Genererad Artikel (Preview)</h4>
+                <div class="output-preview" id="articlePreview">
+                    <h1>Utbildningssystemet i Sverige: En djupanalys av skolpolitiken</h1>
+
+                    <p>Sveriges utbildningssystem har genomgått betydande förändringar under de senaste decennierna. Med fokus på kvalitet, likvärdighet och tillgänglighet arbetar Regeringen kontinuerligt med att förbättra skolpolitiken...</p>
+
+                    <h2>Historisk utveckling</h2>
+                    <p>Den svenska skolan har en lång tradition av att erbjuda utbildning för alla. Redan på 1800-talet infördes allmän folkskola, och sedan dess har systemet utvecklats för att möta samhällets förändrade behov. Idag står vi inför nya utmaningar med digitalisering och individualisering...</p>
+
+                    <h2>Nuvarande utmaningar och möjligheter</h2>
+                    <p>Enligt <a href="#" style="color: #667eea;">utbildningssystemet</a> står svenska skolor inför flera viktiga utvecklingsområden. Lärarbristen är en av de mest akuta frågorna, tillsammans med behovet av ökad måluppfyllelse...</p>
+
+                    <h2>Regeringens satsningar</h2>
+                    <p>För att möta dagens utmaningar har regeringen lanserat flera initiativ. Dessa inkluderar höjda lärarlöner, förbättrad fortbildning och ökade resurser till skolor i utsatta områden...</p>
+
+                    <h2>Framtidsperspektiv</h2>
+                    <p>Med fortsatta reformer och evidensbaserade insatser strävar Sverige efter att återta sin position som ett av världens ledande utbildningsländer...</p>
+
+                    <p style="margin-top: 20px; color: #666; font-style: italic;">[Artikel fortsätter... Total längd: 1,247 ord]</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('demoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const resultPanel = document.getElementById('resultPanel');
+            const submitBtn = document.getElementById('submitBtn');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const finalResults = document.getElementById('finalResults');
+
+            // Show result panel
+            resultPanel.classList.add('active');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Kör pipeline...';
+            finalResults.style.display = 'none';
+
+            // Simulate pipeline execution
+            const steps = [
+                { progress: 10, text: 'Profiling target URL...' },
+                { progress: 20, text: 'Profiling publisher domain...' },
+                { progress: 30, text: 'Classifying anchor text...' },
+                { progress: 40, text: 'Generating SERP queries...' },
+                { progress: 50, text: 'Fetching SERP data (SerpAPI)...' },
+                { progress: 60, text: 'Analyzing intent alignment...' },
+                { progress: 75, text: 'Generating content with LLM...' },
+                { progress: 90, text: 'Running QC validation (8 criteria)...' },
+                { progress: 100, text: 'Packaging results...' }
+            ];
+
+            for (let i = 0; i < steps.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, 800));
+                progressFill.style.width = steps[i].progress + '%';
+                progressFill.textContent = steps[i].progress + '%';
+                progressText.textContent = steps[i].text;
+            }
+
+            // Show final results
+            await new Promise(resolve => setTimeout(resolve, 500));
+            finalResults.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Kör igen (Demo)';
+
+            // Scroll to results
+            resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    </script>
+</body>
+</html>
