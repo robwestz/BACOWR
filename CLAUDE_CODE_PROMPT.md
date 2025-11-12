@@ -1,661 +1,750 @@
-# CLAUDE CODE PROMPT: BACOWR Production Development
-
-## System Overview
-
-BACOWR (**B**acklink **A**rticle **C**ontent **O**rchestration **W**ith **R**efinement) is an enterprise-grade content generation engine for creating high-quality backlink articles. This is a **production system**, not an MVP or prototype.
-
-### Core Purpose
-
-Generate SEO-optimized backlink articles that:
-- Analyze SERP intent and top results
-- Profile target pages and publisher sites automatically
-- Create natural content that fits the SERP landscape
-- Validate quality with comprehensive QC system
-- Log every step for complete traceability
-
-### Three-Input Paradigm
-
-The system requires only three inputs to generate complete articles:
-```json
-{
-  "publisher_domain": "example-publisher.com",
-  "target_url": "https://client.com/product-x",
-  "anchor_text": "best choice for [theme]"
-}
-```
-
-Everything else is derived automatically through:
-- Page profiling (publisher & target)
-- SERP research and analysis
-- Intent modeling and alignment
-- Multi-LLM content generation
-- Quality control validation
+# CLAUDE CODE PROMPT - BACOWR System Build
+## Kopiera denna prompt till Claude Code i browser för att bygga hela systemet
 
 ---
 
-## Architecture Principles
+## DIN UPPGIFT
 
-### 1. Production-First Design
+Du ska bygga ett komplett Python-system för att generera högkvalitativa backlänksartiklar.
 
-**Everything you build must be production-ready:**
-- Full error handling and logging
-- Comprehensive input validation
-- Proper resource cleanup
-- Performance optimization
-- Security best practices
+**System:** BACOWR (Backlink Content Writer)
 
-**No shortcuts. No "TODO: implement later". No MVP compromises.**
+**Input (endast 3 fält):**
+- `publisher_domain` (t.ex. "example-publisher.com")
+- `target_url` (t.ex. "https://client.com/product-x")
+- `anchor_text` (t.ex. "bästa valet för X")
 
-### 2. State Machine Foundation
-
-All job execution flows through a deterministic state machine:
-
-```
-RECEIVE → PREFLIGHT → WRITE → QC → DELIVER
-                                ↓ (on QC fail)
-                             RESCUE (max 1x)
-                                ↓
-                               QC → DELIVER or ABORT
-```
-
-**Rules:**
-- Every state transition is logged
-- No loops (hash-based detection)
-- RESCUE max once per job
-- Automatic ABORT on repeated failures
-
-### 3. Quality Control System
-
-Two-tier QC with:
-- **AutoFixOnce**: Automatic corrections for minor issues (link placement, LSI injection, etc)
-- **Blocking Conditions**: Human signoff required for serious issues (intent misalignment, no trust sources, etc)
-
-**Critical:** QC is non-negotiable. Articles that fail blocking conditions MUST NOT be delivered.
-
-### 4. Multi-Provider LLM Support
-
-Support for multiple LLM providers with automatic fallback:
-- **Anthropic Claude** (Haiku, Sonnet, Opus)
-- **OpenAI GPT** (GPT-4o, GPT-4-turbo, etc)
-- **Google Gemini** (Flash, Pro 1.5/2.0)
-
-**Cost optimization:** Use cheap models for classification, expensive models only for writing.
-
-### 5. Traceability & Observability
-
-Every job produces complete audit trail:
-- `job_package.json` - Complete specification
-- `article.md` - Generated content
-- `qc_report.json` - Quality validation results
-- `execution_log.json` - State machine trace
-- `metrics.json` - Performance and cost data
+**Output:**
+- Komplett artikel (900+ ord) i Markdown
+- JSON-paket med all metadata (job_package, extensions)
+- QC-rapport
+- Execution log
 
 ---
 
-## Code Standards
+## VÄGLEDANDE DOKUMENT
 
-### File Organization
+Du har tillgång till följande dokument i projektet:
 
+1. **`IMPLEMENTATION_SPEC.md`** - Komplett specifikation (vad systemet ska göra)
+2. **`BUILDER_PROMPT.md`** - Steg-för-steg guide (hur man bygger det)
+3. **`API_INTEGRATION_GUIDE.md`** - Hur man integrerar ChatGPT:s API-kod
+4. **`PROJECT_STATUS.md`** - Nuläge och översikt
+5. **`utkast-till-api-lösning/`** - Befintlig kod från ChatGPT (SERP, metadata extraction)
+6. **`next-a1-spec.json`** - Next-A1 ramverkets fullständiga spec
+
+**Läs dessa filer först innan du börjar!**
+
+---
+
+## ARKITEKTUR-BESLUT
+
+### Integration-strategi: STRATEGI B (Monolitisk)
+
+Använd **Strategi B** från `API_INTEGRATION_GUIDE.md`:
+- Importera moduler från `utkast-till-api-lösning/app/` direkt i pipeline
+- Allt körs i samma process (no HTTP calls)
+- Enklare deployment, snabbare exekvering
+
+**Konkret:**
+1. Kopiera `utkast-till-api-lösning/app/` → `src/preflight/`
+2. Importera och använd modulerna direkt i profilers och SERP research
+3. Förstärk med LLM-analys där heuristiker inte räcker
+
+### LLM Provider: Claude (Anthropic)
+
+Använd Claude API (Anthropic):
+- Sonnet för djupare analyser (intent modeling, content generation)
+- Haiku för snabbare klassificeringar (anchor type, page type)
+- Structured output (JSON mode) där möjligt
+
+### SERP Provider: Mock först, sedan riktig
+
+Börja med mock-provider (redan implementerad i ChatGPT:s kod).
+Byt till riktig SERP API (SerpAPI eller Google CSE) senare.
+
+---
+
+## BYGGORDNING (Följ exakt)
+
+### STEG 0: SETUP & STRUKTUR
+
+**Skapa filstruktur:**
 ```
 BACOWR/
-├── src/                    # Core engine code
-│   ├── engine/            # State machine, logging
-│   ├── qc/                # Quality control
-│   ├── profiling/         # Page profiling
-│   ├── research/          # SERP research
-│   ├── analysis/          # Intent analysis
-│   └── writer/            # Content generation
-├── config/                # QC rules, policies
-├── tests/                 # Comprehensive tests
-├── storage/               # Output files
-├── api/                   # REST API backend
-└── frontend/              # Web UI (separate)
+├── main.py                    # CLI entrypoint
+├── requirements.txt           # Python dependencies
+├── .env.example              # Environment variables example
+├── README.md                 # User documentation
+├── src/
+│   ├── __init__.py
+│   ├── api.py                # Python API (run_backlink_job)
+│   ├── preflight/            # <-- Kopierad från utkast-till-api-lösning/app/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── models.py
+│   │   ├── extract.py
+│   │   ├── serp_providers.py
+│   │   ├── intent_policy.py
+│   │   ├── policy.py
+│   │   ├── utils.py
+│   │   └── webhooks.py
+│   ├── profile/
+│   │   ├── __init__.py
+│   │   ├── target_profiler.py
+│   │   ├── publisher_profiler.py
+│   │   └── anchor_profiler.py
+│   ├── serp/
+│   │   ├── __init__.py
+│   │   └── research.py
+│   ├── intent/
+│   │   ├── __init__.py
+│   │   └── modeler.py
+│   ├── generation/
+│   │   ├── __init__.py
+│   │   └── writer.py
+│   ├── qc/
+│   │   ├── __init__.py
+│   │   ├── controller.py
+│   │   └── autofix.py
+│   ├── state/
+│   │   ├── __init__.py
+│   │   └── machine.py
+│   └── utils/
+│       ├── __init__.py
+│       ├── llm.py
+│       └── helpers.py
+├── config/
+│   ├── thresholds.yaml
+│   ├── policies.yaml
+│   └── publisher_voices.yaml
+├── schemas/
+│   └── backlink_job_package.schema.json
+├── storage/
+│   └── output/
+│       └── .gitkeep
+├── tests/
+│   ├── __init__.py
+│   ├── test_schema_validation.py
+│   └── test_live_validation.py
+└── examples/
+    └── example_job_package.json
 ```
 
-### Naming Conventions
+**Action:**
+1. Skapa alla mappar och `__init__.py` filer
+2. Kopiera `utkast-till-api-lösning/app/*` → `src/preflight/`
+3. Skapa `requirements.txt` (se nedan)
+4. Skapa `.env.example` (se nedan)
 
-**Classes:** PascalCase
+**requirements.txt:**
+```
+requests>=2.31.0
+httpx>=0.27.2
+beautifulsoup4>=4.12.3
+lxml>=5.3.0
+anthropic>=0.8.0
+jsonschema>=4.20.0
+pyyaml>=6.0.0
+pydantic>=2.9.2
+pydantic-settings>=2.5.2
+python-dotenv>=1.0.1
+```
+
+**.env.example:**
+```
+ANTHROPIC_API_KEY=your_key_here
+SERP_PROVIDER=mock
+SERPAPI_KEY=
+DEFAULT_LANGUAGE=sv
+OUTPUT_DIR=./storage/output
+```
+
+---
+
+### STEG 1: UTILS & LLM CLIENT
+
+**Fil:** `src/utils/llm.py`
+
+Implementera LLM client wrapper för Anthropic Claude API:
+- `generate_structured(prompt, schema)` - För JSON output
+- `generate_text(prompt)` - För fritext
+- Hantera retries och errors
+- Logga API-calls
+
+**Referens:** Se `BUILDER_PROMPT.md` STEG 1 för kodskelett
+
+**Fil:** `src/utils/helpers.py`
+
+Implementera hjälpfunktioner:
+- `generate_job_id()` - Unikt ID per jobb
+- `sanitize_filename(name)` - Säkra filnamn
+- `truncate_text(text, max_chars)` - Trunkera text
+- `extract_domain(url)` - Extrahera domän från URL
+
+**Test:** Kör `python -c "from src.utils.llm import LLMClient; print('OK')"`
+
+---
+
+### STEG 2: TARGET PROFILER
+
+**Fil:** `src/profile/target_profiler.py`
+
+**Använd:** `src/preflight/extract.py` för HTML-hämtning + BeautifulSoup parsing
+
+**Förstärk med:** LLM-analys för:
+- `core_entities` - Extrahera viktiga namngivna entiteter
+- `core_topics` - Identifiera huvudteman
+- `core_offer` - Vad hjälper sidan användaren med?
+- `candidate_main_queries` - 2-3 sökqueries sidan vill ranka för
+
+**Huvudfunktion:**
 ```python
-class PageProfiler:
-class QualityController:
-class StateMachine:
+async def profile_target(url: str, llm_client: LLMClient) -> dict:
+    """Returns target_profile according to schema"""
 ```
 
-**Functions/Methods:** snake_case
+**LLM Prompt exempel:** Se `BUILDER_PROMPT.md` STEG 2
+
+**Test:** Kör på en känd URL (t.ex. "https://www.ica.se/recept/")
+
+---
+
+### STEG 3: PUBLISHER PROFILER
+
+**Fil:** `src/profile/publisher_profiler.py`
+
+**Använd:** `src/preflight/extract.py` för att fetch homepage + about page + sample articles
+
+**Förstärk med:** LLM-analys för:
+- `topic_focus` - Vilka ämnen täcker sajten?
+- `audience` - Vilken målgrupp?
+- `tone_class` - academic | authority_public | consumer_magazine | hobby_blog
+- `allowed_commerciality` - low | medium | high
+- `brand_safety_notes` - Restriktioner (gambling, lån, etc.)
+
+**Huvudfunktion:**
 ```python
-def run_backlink_job():
-def validate_qc_report():
-def extract_page_content():
+async def profile_publisher(domain: str, llm_client: LLMClient) -> dict:
+    """Returns publisher_profile according to schema"""
 ```
 
-**Constants:** UPPER_SNAKE_CASE
+**LLM Prompt exempel:** Se `BUILDER_PROMPT.md` STEG 3
+
+**Test:** Kör på en känd publisher (t.ex. "konsumenternas.se")
+
+---
+
+### STEG 4: ANCHOR PROFILER
+
+**Fil:** `src/profile/anchor_profiler.py`
+
+**Använd:** `src/preflight/intent_policy.py` för basic heuristics
+
+**Förstärk med:** LLM-klassificering:
+- `llm_classified_type` - exact | partial | brand | generic
+- `llm_intent_hint` - info_primary | commercial_research | transactional | navigational_brand
+
+**Huvudfunktion:**
 ```python
-MAX_RESCUE_ATTEMPTS = 1
-DEFAULT_MIN_WORD_COUNT = 900
-QC_BLOCKING_SCORE = 7
+def profile_anchor(anchor_text: str, target_context: dict, llm_client: LLMClient) -> dict:
+    """Returns anchor_profile"""
 ```
 
-**Files:** snake_case.py
-```
-page_profiler.py
-quality_controller.py
-state_machine.py
+**LLM Prompt exempel:** Se `BUILDER_PROMPT.md` STEG 4
+
+**Test:** Testa med olika ankartexter
+
+---
+
+### STEG 5: SERP RESEARCH
+
+**Fil:** `src/serp/research.py`
+
+**Använd:** `src/preflight/serp_providers.py` för SERP-hämtning (börja med mock)
+
+**Förstärk med:** LLM-analys på två nivåer:
+
+1. **Per SERP-resultat:**
+   - Klassificera page type (guide, comparison, product, etc.)
+   - Extrahera key entities (3-5 st)
+   - Extrahera key subtopics (2-4 st)
+
+2. **Per SERP-set (hela topp-10):**
+   - Bestäm dominant_intent
+   - Bestäm secondary_intents
+   - Identifiera required_subtopics (vad ALLA täcker)
+   - Identifiera page_archetypes
+
+**Huvudfunktion:**
+```python
+async def conduct_serp_research(
+    target_profile: dict,
+    anchor_profile: dict,
+    llm_client: LLMClient
+) -> dict:
+    """Returns serp_research_extension"""
 ```
 
-### Type Hints
+**LLM Prompts exempel:** Se `BUILDER_PROMPT.md` STEG 5
 
-**Always use type hints:**
+**Test:** Kör med mock-queries och inspektera strukturen
+
+---
+
+### STEG 6: INTENT MODELER
+
+**Fil:** `src/intent/modeler.py`
+
+**Använd:** `src/preflight/intent_policy.py` för basic alignment logic
+
+**Förstärk med:** LLM-analys för:
+- `target_page_intent` - Vilken intent har målsidan?
+- `publisher_role_intent` - Vilken roll spelar publisher naturligt?
+- `intent_alignment` - Jämför anchor/target/publisher vs SERP
+- `recommended_bridge_type` - strong | pivot | wrapper
+- `recommended_article_angle` - Vilken vinkel ska artikeln ha?
+- `required_subtopics` - Merged från alla SERP-sets
+- `forbidden_angles` - Vad ska artikeln INTE göra?
+
+**Huvudfunktion:**
+```python
+def model_intent(
+    target_profile: dict,
+    publisher_profile: dict,
+    anchor_profile: dict,
+    serp_research: dict,
+    llm_client: LLMClient
+) -> dict:
+    """Returns intent_extension"""
+```
+
+**Bridge Type Logic (VIKTIGT):**
+- **STRONG:** Om anchor_vs_serp, target_vs_serp, publisher_vs_serp alla är aligned/partial
+- **PIVOT:** Om minst en är partial men kan lösas med tematisk brygga
+- **WRAPPER:** Om overall är off, behöver meta-ram
+
+**LLM Prompt exempel:** Se `BUILDER_PROMPT.md` STEG 6 (stor och viktig prompt!)
+
+**Test:** Kör med kompletta profiler och verifiera alignment-logiken
+
+---
+
+### STEG 7: CONTENT GENERATION (WRITER)
+
+**Fil:** `src/generation/writer.py`
+
+Detta är den **viktigaste** komponenten! Generera komplett artikel enligt:
+
+**Inputs:**
+- target_profile
+- publisher_profile
+- anchor_profile
+- serp_research
+- intent_profile
+
+**Outputs:**
+- article_text (Markdown, 900+ ord)
+- links_extension (JSON med metadata om länkplacering)
+
+**Huvudfunktion:**
+```python
+def generate_article(
+    target_profile: dict,
+    publisher_profile: dict,
+    anchor_profile: dict,
+    serp_research: dict,
+    intent_profile: dict,
+    llm_client: LLMClient
+) -> tuple[str, dict]:
+    """Returns (article_text, links_extension)"""
+```
+
+**Artikel-struktur beroende på publisher tone_class:**
+
+Läs från `config/publisher_voices.yaml`:
+```yaml
+academic:
+  structure: "Inledning → Metod → Resultat/Implikation → Referenser"
+  tone: "Saklig, källförande, låg värdeladdning"
+
+authority_public:
+  structure: "Sammanhang → Rekommendation → Hur-gör-man → Källor"
+  tone: "Myndighetsnära klarspråk"
+
+consumer_magazine:
+  structure: "Hook → Mittpunkt → Fördjupning → Call-to-value → Resurser"
+  tone: "Lättillgänglig, nytta först, konkreta exempel"
+
+hobby_blog:
+  structure: "Bakgrund → Case → Tips → Resurser"
+  tone: "Personligt sakkunnig, berättande"
+```
+
+**Kritiska krav:**
+1. **Bridge type-strategi:**
+   - STRONG: Direktlänkning tidigt i relevant sektion
+   - PIVOT: Etablera tematisk pivot först, länka sedan
+   - WRAPPER: Bygg neutral meta-ram, länka efter ram är etablerad
+
+2. **Länkplacering:**
+   - ALDRIG i H1 eller H2
+   - I mittsektion (stycke 1-2 efter kontext etablerats)
+   - Markera som: `[[LINK:{anchor_text}|{target_url}]]`
+
+3. **LSI-termer:**
+   - 6-10 relevanta termer i närfönster (±2 meningar från anchor)
+   - Blanda begreppstyper: processer, mått, teorier, felkällor
+   - Använd entiteter från SERP research + target profile
+
+4. **Trust-källor:**
+   - 1-3 källor (T1_public > T2_academic > T3_industry > T4_media)
+   - Prioritera svenska myndigheter
+   - Markera som: `[[TRUST:{beskrivning}|{url}]]`
+
+5. **Compliance:**
+   - Lägg till disclaimer för reglerade vertikaler (gambling, finance, health, crypto)
+
+**LLM Prompt:** Se `BUILDER_PROMPT.md` STEG 7 (mycket stor och komplex prompt!)
+
+**Test:** Generera en artikel och inspektera manuellt
+
+---
+
+### STEG 8: QC CONTROLLER
+
+**Fil:** `src/qc/controller.py`
+
+Validera genererad artikel mot kvalitetskriterier:
+
+**Huvudfunktion:**
+```python
+def run_qc(
+    article_text: str,
+    links_extension: dict,
+    intent_profile: dict,
+    target_profile: dict,
+    publisher_profile: dict,
+    policies: dict
+) -> dict:
+    """Returns qc_extension"""
+```
+
+**Validera:**
+1. **Anchor risk** (high/medium/low) - Se `config/thresholds.yaml`
+2. **LSI quality** - Räkna LSI-termer i närfönster (6-10 krav)
+3. **Trust sources** - Minst 1 godkänd källa
+4. **Placement** - Länk EJ i H1/H2
+5. **Compliance** - Disclaimers för reglerade vertikaler
+6. **Intent alignment** - Från intent_profile
+
+**Status-logik:**
+- **PASS:** Allt OK
+- **WARNING:** Mindre brister (kan fixas med AutoFix)
+- **BLOCKED:** Allvarliga brister (kräver manuell granskning)
+
+**Flagga för manuell granskning när:**
+- anchor_risk == "high"
+- Inga trust-källor hittades
+- Compliance-disclaimers saknas i reglerad vertikal
+- intent_alignment.overall == "off"
+
+**Config:** `config/thresholds.yaml` - Se `BUILDER_PROMPT.md` STEG 8
+
+**Test:** Kör på genererad artikel
+
+---
+
+### STEG 9: AUTOFIX
+
+**Fil:** `src/qc/autofix.py`
+
+Om QC hittar mindre brister (WARNING), gör EN automatisk fix:
+
+**Huvudfunktion:**
+```python
+def apply_autofix_once(
+    article_text: str,
+    links_extension: dict,
+    qc_report: dict,
+    policies: dict,
+    llm_client: LLMClient
+) -> tuple[str, dict, dict]:
+    """Returns (fixed_article, updated_links_extension, autofix_log)"""
+```
+
+**Tillåtna fixes (välj EN):**
+- Flytta länk inom sektion
+- Byta ankartyp (exact → generic)
+- Injicera saknade LSI-termer
+- Lägga till disclaimer
+
+**Aldrig:**
+- Ändra H1, titel
+- Ta bort sektioner
+- Fabricera citat
+
+**Logga:** Vad som fixades i `autofix_log`
+
+**Test:** Skapa en artikel med känt problem, verifiera att autofix fixar det
+
+---
+
+### STEG 10: STATE MACHINE
+
+**Fil:** `src/state/machine.py`
+
+Orkestrera hela flödet:
+
+**States:**
+```
+RECEIVE → PREFLIGHT → WRITE → QC → DELIVER
+             ↓ (vid WARNING)
+          RESCUE (AutoFixOnce)
+             ↓
+         QC → DELIVER
+             ↓ (vid BLOCKED)
+          ABORT
+```
+
+**Huvudklass:**
+```python
+class BacklinkJobStateMachine:
+    def __init__(self, job_id: str, llm_client: LLMClient, config: dict)
+
+    def run(
+        self,
+        publisher_domain: str,
+        target_url: str,
+        anchor_text: str
+    ) -> dict:
+        """Kör hela pipelinen"""
+```
+
+**State transitions:** Se `BUILDER_PROMPT.md` STEG 10
+
+**Execution log:** Logga varje state transition med timestamp + data
+
+**Loop-skydd:** Om RESCUE inte ändrar något → ABORT
+
+**Test:** Kör en fullständig pipeline och inspektera execution_log
+
+---
+
+### STEG 11: API & CLI
+
+**Fil:** `src/api.py`
+
+Public API-funktion:
 ```python
 def run_backlink_job(
     publisher_domain: str,
     target_url: str,
     anchor_text: str,
-    llm_provider: Optional[str] = None
-) -> Dict[str, Any]:
-    pass
-```
-
-### Error Handling
-
-**Comprehensive error handling:**
-```python
-try:
-    result = dangerous_operation()
-except SpecificException as e:
-    logger.error(f"Operation failed: {e}", exc_info=True)
-    # Graceful degradation or re-raise
-    raise
-finally:
-    cleanup_resources()
-```
-
-**Never:**
-- Silent failures
-- Bare `except:` clauses
-- Swallowing exceptions
-- Missing error context
-
-### Logging
-
-**Structured logging with context:**
-```python
-import logging
-
-logger = logging.getLogger(__name__)
-
-logger.info("Starting job", extra={
-    "job_id": job_id,
-    "publisher": publisher_domain,
-    "target": target_url
-})
-```
-
-**Log levels:**
-- `DEBUG`: Detailed diagnostic info
-- `INFO`: Important milestones
-- `WARNING`: Recoverable issues
-- `ERROR`: Failures requiring attention
-- `CRITICAL`: System-level failures
-
-### Documentation
-
-**Every module needs docstring:**
-```python
-"""
-Page profiling module for extracting content and metadata.
-
-This module provides PageProfiler class for analyzing web pages
-and extracting key information needed for content generation.
-
-Main classes:
-    PageProfiler: Extracts structured data from URLs
-    LLMEnhancer: Adds LLM-powered semantic analysis
-
-Example:
-    >>> profiler = PageProfiler()
-    >>> profile = profiler.profile_url("https://example.com")
-    >>> print(profile['page_meta']['title'])
-"""
-```
-
-**Public functions need docstrings:**
-```python
-def profile_url(self, url: str) -> Dict[str, Any]:
+    config: dict = None
+) -> dict:
     """
-    Extract comprehensive profile data from a URL.
-
-    Args:
-        url: Full URL to profile
-
     Returns:
-        Dict containing page_meta, content_analysis, and entity_extraction
-
-    Raises:
-        URLError: If URL is invalid or unreachable
-        ParseError: If page content cannot be parsed
+    {
+      "job_id": str,
+      "status": "DELIVERED | ABORTED",
+      "output_dir": str,
+      "job_package": dict,
+      "article": str,
+      "qc_report": dict,
+      "execution_log": list
+    }
     """
 ```
 
----
+**Fil:** `main.py`
 
-## Testing Requirements
-
-### Test Coverage
-
-**Minimum 80% code coverage** for all production code.
-
-### Test Organization
-
-```
-tests/
-├── test_schema_validation.py      # JSON Schema tests
-├── test_qc_system.py               # QC system tests
-├── test_state_machine.py           # State machine tests
-├── test_page_profiler.py           # Profiling tests
-├── test_serp_researcher.py         # SERP tests
-├── test_intent_analyzer.py         # Intent tests
-├── test_writer_engine.py           # Writer tests
-└── test_e2e_mock.py                # End-to-end tests
-```
-
-### Test Structure
-
+CLI med argparse:
 ```python
-import pytest
-
-class TestPageProfiler:
-    """Test suite for PageProfiler class."""
-
-    def setup_method(self):
-        """Setup test fixtures before each test."""
-        self.profiler = PageProfiler()
-
-    def test_profile_url_success(self):
-        """Test successful URL profiling."""
-        profile = self.profiler.profile_url("https://example.com")
-        assert 'page_meta' in profile
-        assert profile['page_meta']['title']
-
-    def test_profile_url_invalid_url(self):
-        """Test error handling for invalid URL."""
-        with pytest.raises(URLError):
-            self.profiler.profile_url("not-a-url")
+python main.py \
+  --publisher example-publisher.com \
+  --target https://client.com/product-x \
+  --anchor "bästa valet för X" \
+  --output ./storage/output
 ```
 
-### Mock vs Real Tests
-
-**Mock tests:** Fast, no external dependencies
-```python
-@patch('requests.get')
-def test_with_mock(mock_get):
-    mock_get.return_value.text = "<html>Mock content</html>"
-    result = fetch_page("http://example.com")
-    assert "Mock content" in result
-```
-
-**Integration tests:** Real APIs (optional, slower)
-```python
-@pytest.mark.integration
-@pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="No API key")
-def test_real_llm():
-    result = generate_with_llm("test prompt")
-    assert len(result) > 0
-```
+**Test:** Kör CLI och verifiera output
 
 ---
 
-## LLM Integration Guidelines
+### STEG 12: SCHEMA & VALIDATION TESTS
 
-### Provider Abstraction
+**Fil:** `schemas/backlink_job_package.schema.json`
 
-**Always code against interface, not implementation:**
-```python
-from src.writer.production_writer import ProductionWriter
+Skapa JSON Schema enligt Next-A1 spec.
 
-# Good - provider agnostic
-writer = ProductionWriter(provider="anthropic")
-article = writer.write(job_package)
+**Fil:** `tests/test_schema_validation.py`
 
-# Bad - hard-coded provider
-from anthropic import Anthropic
-client = Anthropic()
-```
+Testa att exempel validerar mot schema.
 
-### Cost Awareness
+**Fil:** `tests/test_live_validation.py`
 
-**Track costs for every LLM call:**
-```python
-result = llm_call(prompt)
-metrics['cost_usd'] += calculate_cost(
-    provider=provider,
-    model=model,
-    input_tokens=result.usage.input_tokens,
-    output_tokens=result.usage.output_tokens
-)
-```
+E2E test som kör full pipeline och validerar output.
 
-### Fallback Strategy
-
-**Implement graceful degradation:**
-```python
-providers = ['anthropic', 'openai', 'google']
-for provider in providers:
-    try:
-        result = generate_content(provider=provider)
-        break
-    except ProviderError as e:
-        logger.warning(f"Provider {provider} failed: {e}")
-        continue
-else:
-    raise AllProvidersFailedError()
-```
+**Test:** `pytest tests/ -v`
 
 ---
 
-## Security Requirements
+### STEG 13: CONFIG & DOCUMENTATION
 
-### API Keys
+**Fil:** `config/thresholds.yaml`
 
-**Never hardcode API keys:**
-```python
-# Good
-api_key = os.environ.get("ANTHROPIC_API_KEY")
-if not api_key:
-    raise ConfigurationError("ANTHROPIC_API_KEY not set")
+Se `BUILDER_PROMPT.md` STEG 8 för exempel.
 
-# Bad
-api_key = "sk-ant-xxx..."  # NEVER DO THIS
-```
+**Fil:** `config/policies.yaml`
 
-### Input Validation
+Trust policy, anchor policy, compliance rules.
 
-**Validate all external inputs:**
-```python
-def validate_url(url: str) -> str:
-    """Validate and sanitize URL input."""
-    parsed = urlparse(url)
-    if not parsed.scheme in ['http', 'https']:
-        raise ValueError(f"Invalid URL scheme: {parsed.scheme}")
-    if not parsed.netloc:
-        raise ValueError("URL missing domain")
-    return url
-```
+**Fil:** `config/publisher_voices.yaml`
 
-### SQL Injection Prevention
+Se STEG 7 ovan för exempel.
 
-**Always use parameterized queries:**
-```python
-# Good
-cursor.execute(
-    "SELECT * FROM jobs WHERE user_id = ?",
-    (user_id,)
-)
+**Fil:** `README.md`
 
-# Bad
-cursor.execute(
-    f"SELECT * FROM jobs WHERE user_id = {user_id}"
-)
-```
+Innehåll:
+1. Projektöversikt
+2. Installation
+3. Snabbstart
+4. Användning (CLI + Python API)
+5. Output-förklaring
+6. Konfiguration
+7. Tester
+8. Felsökning
+
+**Fil:** `examples/example_job_package.json`
+
+Exempel på komplett output.
 
 ---
 
-## Performance Optimization
+## VIKTIGA PRINCIPER
 
-### Caching Strategy
+### 1. BYGG INKREMENTELLT
+- Implementera ett steg i taget
+- Testa varje komponent isolerat
+- Få något att fungera end-to-end tidigt, förfina sedan
 
-**Cache expensive operations:**
-```python
-from functools import lru_cache
+### 2. LLM PROMPTS ÄR KRITISKA
+- Var extremt tydlig i prompts
+- Begär strukturerad JSON när möjligt
+- Inkludera exempel i prompts
+- Testa prompts iterativt
 
-@lru_cache(maxsize=100)
-def get_serp_data(query: str) -> Dict:
-    """Cached SERP lookup."""
-    return expensive_serp_api_call(query)
-```
+### 3. ÅTERANVÄND CHATGPT:S KOD
+- `src/preflight/extract.py` - HTML parsing (redan bra!)
+- `src/preflight/serp_providers.py` - SERP fetching (redan bra!)
+- `src/preflight/intent_policy.py` - Heuristiker (förstärk med LLM)
+- `src/preflight/policy.py` - Extensions builder (använd direkt)
 
-### Batch Processing
+### 4. FELHANTERING
+- Logga allt (API-calls, state transitions, beslut)
+- Fånga exceptions gracefully
+- Ge meningsfulla felmeddelanden
 
-**Process multiple jobs efficiently:**
-```python
-# Parallel processing with rate limiting
-from concurrent.futures import ThreadPoolExecutor
-import time
-
-def process_batch(jobs, max_workers=3, rate_limit=10):
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = []
-        for job in jobs:
-            future = executor.submit(process_job, job)
-            futures.append(future)
-            time.sleep(1/rate_limit)  # Rate limiting
-
-        results = [f.result() for f in futures]
-    return results
-```
-
-### Resource Management
-
-**Always clean up resources:**
-```python
-from contextlib import contextmanager
-
-@contextmanager
-def get_db_connection():
-    conn = create_connection()
-    try:
-        yield conn
-    finally:
-        conn.close()
-```
+### 5. CONFIGURATION ÖVER HARDCODING
+- Använd YAML-config för policies, thresholds, voices
+- Gör det lätt att justera utan kodändringar
 
 ---
 
-## Git Workflow
+## ACCEPTANCE CRITERIA
 
-### Branching Strategy
+Systemet är klart när:
 
-- `main` - Production-ready code
-- `develop` - Integration branch
-- `feature/*` - New features
-- `bugfix/*` - Bug fixes
-- `hotfix/*` - Emergency fixes
-
-### Commit Messages
-
-**Format:**
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation
-- `refactor`: Code refactoring
-- `test`: Test additions/changes
-- `perf`: Performance improvement
-- `chore`: Maintenance tasks
-
-**Example:**
-```
-feat(writer): add multi-stage generation strategy
-
-Implement three-stage content generation:
-1. Outline generation
-2. Content expansion
-3. Polish and refinement
-
-This improves article quality by 30% in testing.
-
-Closes #123
-```
+- [ ] CLI fungerar
+- [ ] Alla profilers fungerar
+- [ ] SERP research fungerar
+- [ ] Intent modeler fungerar
+- [ ] Writer genererar 900+ ord artikel
+- [ ] QC validerar artikel
+- [ ] Output genereras korrekt (JSON + MD)
+- [ ] Schema validation test passerar
+- [ ] README är komplett
+- [ ] Manuell test: Kör ett riktigt case och inspektera output
 
 ---
 
-## Deployment
+## EXEMPEL PÅ TESTKÖRNING
 
-### Environment Configuration
-
-**Use `.env` for configuration:**
 ```bash
-# LLM APIs
-ANTHROPIC_API_KEY=sk-ant-xxx
-OPENAI_API_KEY=sk-xxx
-GOOGLE_API_KEY=xxx
+# Setup
+pip install -r requirements.txt
+cp .env.example .env
+# Lägg till ANTHROPIC_API_KEY i .env
 
-# SERP
-AHREFS_API_KEY=xxx
+# Testkörning
+python main.py \
+  --publisher konsumenternas.se \
+  --target https://www.ica.se/recept/ \
+  --anchor "hitta goda recept" \
+  --output ./storage/output
 
-# Database
-DATABASE_URL=postgresql://user:pass@host/db
-
-# Application
-LOG_LEVEL=INFO
-MAX_WORKERS=5
-RATE_LIMIT=10
+# Inspektera output
+ls storage/output/  # Se job_id directory
+cat storage/output/{job_id}/{job_id}_article.md
+cat storage/output/{job_id}/{job_id}_qc_report.json
 ```
 
-### Health Checks
-
-**Implement health check endpoints:**
-```python
-@app.get("/health")
-def health_check():
-    """Health check endpoint for load balancers."""
-    return {
-        "status": "healthy",
-        "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat()
-    }
-```
-
-### Monitoring
-
-**Key metrics to track:**
-- Job success rate
-- Average generation time
-- Cost per article
-- QC pass/fail rates
-- API error rates
-- Resource utilization
+**Verifiera:**
+1. Artikeln är 900+ ord
+2. Artikeln matchar publisher tone (konsumenternas.se → consumer_magazine style)
+3. Länken är placerad korrekt (ej i H1/H2, mittsektion)
+4. 6-10 LSI-termer finns i närfönster
+5. Minst 1 trust-källa finns
+6. QC-rapporten visar PASS eller rimliga WARNINGs
+7. Execution log visar alla state transitions
 
 ---
 
-## Critical Reminders
+## ARBETSSÄTT
 
-### 1. This is Production Code
+**För varje steg:**
+1. Läs relevant sektion i `BUILDER_PROMPT.md`
+2. Implementera koden
+3. Förklara kort vad du gjort
+4. Testa komponenten isolerat
+5. Visa testresultat
+6. Vänta på min bekräftelse innan nästa steg
 
-Every line of code you write will run in production. Act accordingly:
-- Handle all error cases
-- Log important events
-- Validate all inputs
-- Test thoroughly
-- Document clearly
+**Fråga mig om:**
+- Design-beslut som är oklara
+- Implementationsdetaljer som saknas
+- Val mellan alternativ
+- Test-resultat som ser konstiga ut
 
-### 2. Quality Over Speed
-
-**Never sacrifice quality for speed:**
-- Write comprehensive tests
-- Add proper error handling
-- Document complex logic
-- Review before committing
-
-### 3. User Trust
-
-Users depend on this system for their business. Respect that trust:
-- Never lose data
-- Never expose API keys
-- Never skip validation
-- Never ignore errors
-
-### 4. Cost Awareness
-
-LLM API calls cost money. Optimize ruthlessly:
-- Use cheap models where possible
-- Cache aggressively
-- Batch efficiently
-- Track costs meticulously
+**Viktigt:**
+- Skriv ren, läsbar kod med kommentarer
+- Följ Python best practices (PEP 8)
+- Hantera errors gracefully
+- Logga viktiga beslut
 
 ---
 
-## Development Workflow
+## STARTKOMMANDO
 
-### Before Starting Work
+**Börja med:**
 
-1. Pull latest code: `git pull origin main`
-2. Create feature branch: `git checkout -b feature/my-feature`
-3. Review relevant docs and tests
-4. Plan implementation approach
+"Jag har läst alla dokument. Jag börjar nu med STEG 0: Setup & struktur.
 
-### During Development
+Jag kommer att:
+1. Skapa filstrukturen enligt specifikationen
+2. Kopiera `utkast-till-api-lösning/app/` till `src/preflight/`
+3. Skapa `requirements.txt` och `.env.example`
+4. Skapa alla `__init__.py` filer
 
-1. Write tests first (TDD)
-2. Implement feature
-3. Run tests: `pytest tests/`
-4. Check code quality: `pylint src/`
-5. Update documentation
-6. Commit with clear message
-
-### Before Pushing
-
-1. Run full test suite
-2. Check test coverage
-3. Review changed files
-4. Update CHANGELOG.md
-5. Push and create PR
+Väntar på din bekräftelse innan jag kör."
 
 ---
 
-## Questions to Ask
+**LYCKA TILL! 🚀**
 
-When implementing new features, always ask:
-
-1. **Error handling**: What can go wrong? How do we handle it?
-2. **Testing**: How do we test this? What edge cases exist?
-3. **Performance**: Is this efficient? Can it handle production load?
-4. **Security**: Are there security implications?
-5. **Cost**: Does this add LLM costs? Can we optimize?
-6. **Logging**: What do we need to log for debugging?
-7. **Documentation**: Is this clear to other developers?
-8. **Backwards compatibility**: Does this break existing code?
+**Du har all information du behöver. Följ stegen metodiskt, testa inkrementellt, och du kommer ha ett fungerande system.**
 
 ---
 
-## Resources
-
-### Internal Documentation
-
-- `README.md` - Project overview
-- `PRODUCTION_GUIDE.md` - Production usage guide
-- `BATCH_GUIDE.md` - Batch processing guide
-- `API_BACKEND_COMPLETE.md` - API documentation
-- `backlink_engine_ideal_flow.md` - System flow
-- `NEXT-A1-ENGINE-ADDENDUM.md` - Formal requirements
-
-### External Resources
-
-- [Anthropic API Docs](https://docs.anthropic.com/)
-- [OpenAI API Docs](https://platform.openai.com/docs)
-- [FastAPI Docs](https://fastapi.tiangolo.com/)
-- [SQLAlchemy Docs](https://docs.sqlalchemy.org/)
-
----
-
-## Contact & Support
-
-For questions or issues:
-- GitHub Issues: https://github.com/robwestz/BACOWR/issues
-- Documentation: See `/docs` directory
-- Tests: See `/tests` directory for examples
-
----
-
-**Version:** 1.0.0
-**Status:** Production
-**Last Updated:** 2025-11-12
-
-**Remember:** This is production code. Write it like your business depends on it—because someone's does.
+**END OF PROMPT**
