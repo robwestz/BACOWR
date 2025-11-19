@@ -1,0 +1,60 @@
+{
+  "_meta": {
+    "description": "Live-status för BACOWR-projektet. Alla LLM-sessioner ska läsa denna fil innan de gör ändringar som påverkar andra delar av systemet.",
+    "last_updated_at": "2025-11-19T00:00:00Z",
+    "last_updated_by": "INIT"
+  },
+  "rules": {
+    "stable_means": "API-kontrakt, domänmodeller och huvudsakligt beteende får INTE ändras utan att checklistan uppdateras. Endast intern implementation/refaktor är tillåtet.",
+    "tweak_ok_means": "Det är tillåtet att förbättra intern implementation, prestanda och loggning, så länge input/output-kontraktet inte ändras.",
+    "in_progress_means": "Modulen är under aktiv utveckling. Andra team ska anta att beteende kan ändras och inte bygga hårda beroenden utan att dubbelkolla.",
+    "blocked_means": "Modulen är pausad p.g.a. oklarheter, beslut eller externa beroenden. Andra team ska inte anta att den fungerar.",
+    "llm_usage": "Alla LLM-sessioner ska läsa denna fil först. Om de gör förändringar som påverkar andra moduler (kontrakt, flöden, beteende) ska de uppdatera status/notes här."
+  },
+  "modules": {
+    "API": {
+      "status": "in_progress",
+      "notes": "POST /jobs/full-run är huvudentrypoint. Kontraktet är på väg att stabiliseras under Phase 2 / Wave 1."
+    },
+    "PreflightLight": {
+      "status": "tweak_ok",
+      "notes": "Light preflight används i Wave 1. Struktur (PreflightResult-fält) ska hållas stabil. Innehåll får förbättras."
+    },
+    "LLMClient": {
+      "status": "in_progress",
+      "notes": "LLM-klient ska stödja både real mode och mock mode. Mock mode används för lokala tester utan API-nyckel."
+    },
+    "OrchestratorSingleJob": {
+      "status": "in_progress",
+      "notes": "run_single_job ansvarar för end-to-end-flödet för en länk. Måste vara stabil innan batch byggs ovanpå."
+    },
+    "BatchEngine": {
+      "status": "planned",
+      "notes": "Batch-orchestrering för 175+ jobb planeras efter fungerande single-run. Andra team ska inte anta att den är färdig."
+    },
+    "Storage": {
+      "status": "tweak_ok",
+      "notes": "Filesystem-storage används som v1. Filstruktur kan justeras så länge API/Orchestrator ser samma abstraktion."
+    },
+    "QA_Day1": {
+      "status": "tweak_ok",
+      "notes": "Initial QA (minst ordlängd, anchor-check, auto_flags) används redan. Kan förfinas utan att ändra core-kontrakt."
+    },
+    "QA_Day2": {
+      "status": "planned",
+      "notes": "Day 2 QA-workflow för 175-länksbatch är inte implementerat ännu. Bygg inte beroenden på färdig Day 2-logik."
+    },
+    "FrontendGUI": {
+      "status": "in_progress",
+      "notes": "Minimal GUI (publisher/target/anchor + visa artikel) är på väg att kopplas mot API. Inte kritiskt för backendroboten."
+    },
+    "VisionAndQualityDoc": {
+      "status": "present",
+      "notes": "docs/bacowr_vision_and_quality.md finns eller håller på att skapas. Alla LLM:er bör läsa den före större designbeslut."
+    },
+    "FutureIdeas": {
+      "status": "present",
+      "notes": "future.md används som idé-inkubator. Nya stora features/projekt-idéer ska först landa där innan de påverkar checklistan."
+    }
+  }
+}
