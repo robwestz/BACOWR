@@ -239,7 +239,25 @@ def run_production_job(
         # Generate article with ProductionWriter
         logger.log_info(f"Generating article with {writing_strategy} strategy", {})
 
+        # Check if we should use mock mode
+        use_mock_mode = os.getenv('BACOWR_LLM_MODE', '').lower() == 'mock'
+
+        # Auto-detect if no LLM API keys are available
+        has_api_keys = any([
+            os.getenv('ANTHROPIC_API_KEY'),
+            os.getenv('OPENAI_API_KEY'),
+            os.getenv('GOOGLE_API_KEY')
+        ])
+
+        if not has_api_keys and not use_mock_mode:
+            logger.log_warning("No LLM API keys found - automatically enabling mock mode")
+            use_mock_mode = True
+
+        if use_mock_mode:
+            logger.log_info("Using MOCK mode for article generation", {'reason': 'no_api_keys' if not has_api_keys else 'explicit'})
+
         writer = ProductionWriter(
+            mock_mode=use_mock_mode,
             auto_fallback=True,
             enable_cost_tracking=True
         )
