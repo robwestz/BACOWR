@@ -1,139 +1,80 @@
-# QC Thresholds Configuration - Next-A1 BacklinkContent Engine
-# Version: A1
-#
-# These thresholds define quality requirements for backlink content.
-# Adjust based on project needs and empirical results.
+# BACOWR QC Thresholds
+# Per NEXT-A1-ENGINE-ADDENDUM.md § 3
 
-version: "A1"
+lsi_requirements:
+  min_count: 6
+  max_count: 10
+  placement_radius_sentences: 2
+  description: "LSI-termer ska vara 6-10 st inom ±2 meningar från länk"
 
-# LSI (Latent Semantic Indexing) requirements
-lsi:
-  min_terms: 6
-  max_terms: 10
-  near_window_radius: 2  # sentences around the link
-  unit: "sentence"
-  quality:
-    require_entity_cluster: true
-    avoid_synonym_only: true
-    min_diversity: 0.6  # At least 60% of terms should be distinct concepts
-
-# Anchor placement and risk
-anchor:
-  forbidden_elements:
-    - "H1"
-    - "H2"
-  preferred_section: "middle"  # first-third, middle, last-third
-  preferred_paragraph_in_section: [1, 2]  # First or second paragraph
-  max_repetitions: 2
-  risk_thresholds:
-    high:
-      - "Exact match in weak context"
-      - "Multiple exact matches in same section"
-      - "Anchor in forbidden element"
-    medium:
-      - "Generic anchor without trust nearby"
-      - "Partial anchor with weak semantic fit"
-    low:
-      - "Brand/generic in natural context with LSI"
-      - "Well-integrated partial match"
-
-# Trust source requirements
-trust:
-  min_sources: 1
-  preferred_sources: 2
-  priority_order:
-    - "T1_public"  # Government, standards bodies
-    - "T2_academic"  # Universities, research
-    - "T3_industry"  # Trade organizations, whitepapers
-    - "T4_media"  # Reputable news (only if T1-T3 unavailable)
-  constraints:
-    - "Never link to direct competitors"
-    - "Avoid user-generated content as primary trust"
-    - "Prefer Swedish sources for SE markets"
-  fallback_policy: "placeholder"  # Use PLATSFÖRSLAG with rationale
-  tier_1_examples:
+trust_sources:
+  tier_1:
     - ".gov"
     - ".edu"
     - "konsumentverket.se"
     - "riksbanken.se"
     - "skatteverket.se"
-  tier_2_examples:
+  tier_2:
     - "wikipedia.org"
     - "dn.se"
     - "svd.se"
     - "aftonbladet.se"
     - "expressen.se"
+  tier_3:
+    - "branschorganisationer"
+    - "certifierade experter"
+  tier_4:
+    - "övriga källor"
+  min_tier_1_count: 1
+  min_total_count: 2
+  description: "Minst 1 T1-källa, minst 2 totalt"
 
-# Intent alignment requirements
-intent:
-  alignment_threshold: "partial"  # Minimum: partial (aligned is better)
-  fail_conditions:
-    - "overall=off without wrapper strategy"
-    - "All three dimensions (anchor, target, publisher) off"
-  require_bridge_type_match: true  # intent_extension.recommended must match links_extension
-  aligned_threshold: 0.8
-  partial_threshold: 0.5
+anchor_risk:
+  high_risk_patterns:
+    - "exact match commercial queries"
+    - "över-optimerade keyword-stuffing"
+    - "money keywords + exact match"
+  medium_risk_patterns:
+    - "partial match med modifiers"
+    - "branded + keyword"
+  low_risk_patterns:
+    - "brand mentions"
+    - "generic descriptive"
+    - "informational phrases"
+  description: "Klassificering av ankarrisk baserat på mönster"
 
-# Readability requirements (LIX for Swedish, similar for other languages)
-readability:
-  target_range:
-    min: 35
-    max: 50
-  preferred: 40
-  language_specific:
-    sv:
-      measure: "lix"
-      target_range: [35, 50]
-    en:
-      measure: "flesch_reading_ease"
-      target_range: [60, 70]
-
-# Content length requirements
-content:
-  min_word_count: 900
-  recommended_word_count: 1200
-  max_word_count: 2500
-  min_paragraphs: 5
-  min_sections: 3  # H2 sections
-
-# Link placement requirements
 link_placement:
+  forbidden_locations:
+    - "H1"
+    - "H2"
+  preferred_location: "mittsektion, första relevanta stycke"
   min_context_sentences: 2
   max_links_in_paragraph: 1
+  description: "Länkplaceringsregler enligt Next-A1"
 
-# Compliance requirements (industry-specific)
+word_count:
+  minimum: 900
+  recommended: 1200
+  maximum: 2500
+  description: "Ordkrav för backlink-artiklar"
+
 compliance:
-  gambling:
-    require_disclaimer: true
-    min_age_mention: true
-    responsible_gaming_link: true
-    disclaimer_text_sv: "Spela ansvarsfullt. 18+. Stödlinjen.se"
-  finance:
-    require_disclaimer: true
-    risk_warning: true
-    regulatory_mention: recommended
-    disclaimer_text_sv: "Finansiella tjänster innebär risker. Sök alltid rådgivning."
-  health:
-    require_disclaimer: true
-    not_medical_advice: true
-    consult_professional: true
-    disclaimer_text_sv: "Detta är inte medicinsk rådgivning. Kontakta läkare vid symtom."
-  legal:
-    require_disclaimer: true
-    not_legal_advice: true
-    jurisdiction_specific: true
-    disclaimer_text_sv: "Detta är generell information, inte juridisk rådgivning."
-  crypto:
-    require_disclaimer: true
-    volatility_warning: true
-    not_investment_advice: true
+  regulated_verticals:
+    gambling:
+      disclaimer_required: true
+      disclaimer_text: "Spela ansvarsfullt. 18+. Stödlinjen.se"
+    finance:
+      disclaimer_required: true
+      disclaimer_text: "Finansiella tjänster innebär risker. Sök alltid rådgivning."
+    health:
+      disclaimer_required: true
+      disclaimer_text: "Detta är inte medicinsk rådgivning. Kontakta läkare vid symtom."
+    legal:
+      disclaimer_required: true
+      disclaimer_text: "Detta är generell information, inte juridisk rådgivning."
+  description: "Compliance-krav för reglerade vertikaler"
 
-# Human sign-off triggers
-human_signoff_required:
-  conditions:
-    - "anchor_risk=high"
-    - "intent_alignment.overall=off"
-    - "No trust sources found"
-    - "Compliance violation"
-    - "Bridge type mismatch"
-    - "Multiple autofix attempts failed"
+intent_alignment:
+  aligned_threshold: 0.8
+  partial_threshold: 0.5
+  description: "Tröskelvärden för intent-alignment scoring"

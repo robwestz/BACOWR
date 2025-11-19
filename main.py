@@ -1,242 +1,184 @@
 #!/usr/bin/env python3
 """
-BacklinkContent Engine - Next-A1 SERP-First Implementation
-
-CLI entrypoint for generating backlink content.
+BACOWR BacklinkContent Engine CLI
+Per NEXT-A1-ENGINE-ADDENDUM.md § 6
 
 Usage:
-    python main.py --publisher example.com --target https://target.com/page --anchor "best solution"
+    python main.py --publisher domain.com --target URL --anchor "text"
+    python main.py --publisher example.com --target https://client.com --anchor "best choice" --mock
 
-Environment Variables:
-    ANTHROPIC_API_KEY: Required for content generation
-    SERP_API_KEY: Optional for real SERP fetching
+Example:
+    python main.py \\
+        --publisher example-publisher.com \\
+        --target https://client.com/product-x \\
+        --anchor "bästa valet för [tema]" \\
+        --mock
 """
 
 import argparse
 import sys
+import json
 from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent))
 
-from src.pipeline.state_machine import BacklinkPipeline
-from src.utils.logger import configure_logging, get_logger
-
-logger = get_logger(__name__)
+from src.api import run_backlink_job
 
 
 def main():
-    """Main CLI entrypoint."""
     parser = argparse.ArgumentParser(
-        description="BacklinkContent Engine - Next-A1 SERP-First Implementation",
+        description="BACOWR - BacklinkContent Engine (Next-A1)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Generate backlink content with mock SERP data
-  python main.py --publisher example-publisher.com \\
-                 --target https://client.com/product \\
-                 --anchor "bästa valet för produktkategori"
-
-  # Use real SERP API
-  python main.py --publisher example.com --target https://target.com \\
-                 --anchor "best choice" --serp-mode api
+  # Run in mock mode (no external APIs)
+  python main.py --publisher example.com --target https://client.com --anchor "best choice" --mock
 
   # Specify output directory
-  python main.py --publisher example.com --target https://target.com \\
-                 --anchor "check this out" --output ./output/
+  python main.py --publisher test.com --target https://example.com --anchor "test" --output ./my_output/
 
-Environment Variables:
-  ANTHROPIC_API_KEY - Required for Writer Engine
-  SERP_API_KEY - Optional for real SERP fetching
-
-More info: See README.md
-        """
+  # Real mode (requires implementation)
+  python main.py --publisher real.com --target https://target.com --anchor "anchor"
+"""
     )
 
-    # Required arguments
     parser.add_argument(
-        "--publisher",
+        '--publisher',
         required=True,
-        help="Publisher domain where content will be published (e.g., example-publisher.com)"
+        help='Publisher domain where content will be published'
     )
+
     parser.add_argument(
-        "--target",
+        '--target',
         required=True,
-        help="Target URL that will receive the backlink (e.g., https://client.com/product)"
+        help='Target URL to link to'
     )
+
     parser.add_argument(
-        "--anchor",
+        '--anchor',
         required=True,
-        help="Anchor text for the backlink (e.g., 'best solution for X')"
+        help='Anchor text for the link'
     )
 
-    # Optional arguments
     parser.add_argument(
-        "--anchor-type",
-        choices=["exact", "partial", "brand", "generic"],
-        help="Optional hint about anchor type"
-    )
-    parser.add_argument(
-        "--min-words",
-        type=int,
-        default=900,
-        help="Minimum word count for generated content (default: 900)"
-    )
-    parser.add_argument(
-        "--language",
-        help="Language override (e.g., 'sv', 'en'). If not specified, detected from target"
-    )
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=Path("./storage/output"),
-        help="Output directory for generated files (default: ./storage/output)"
+        '--output',
+        default='./storage/output/',
+        help='Output directory for generated files (default: ./storage/output/)'
     )
 
-    # SERP configuration
     parser.add_argument(
-        "--serp-mode",
-        choices=["mock", "api"],
-        default="mock",
-        help="SERP fetch mode: 'mock' for testing, 'api' for real data (default: mock)"
-    )
-    parser.add_argument(
-        "--serp-api-key",
-        help="SERP API key (can also use SERP_API_KEY env var)"
+        '--mock',
+        action='store_true',
+        help='Run in mock mode (no external API calls)'
     )
 
-    # Writer configuration
     parser.add_argument(
-        "--writer-api-key",
-        help="Anthropic API key (can also use ANTHROPIC_API_KEY env var)"
-    )
-    parser.add_argument(
-        "--writer-model",
-        default="claude-sonnet-4-5-20250929",
-        help="Claude model to use (default: claude-sonnet-4-5-20250929)"
-    )
-
-    # Logging
-    parser.add_argument(
-        "--log-level",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-        default="INFO",
-        help="Logging level (default: INFO)"
-    )
-    parser.add_argument(
-        "--json-logs",
-        action="store_true",
-        help="Output logs in JSON format"
+        '--verbose',
+        '-v',
+        action='store_true',
+        help='Verbose output'
     )
 
     args = parser.parse_args()
 
-    # Configure logging
-    configure_logging(level=args.log_level, json_output=args.json_logs)
-
-    logger.info("BacklinkContent Engine starting")
-    logger.info(
-        "Input parameters",
-        publisher=args.publisher,
-        target=args.target[:50] + "..." if len(args.target) > 50 else args.target,
-        anchor=args.anchor[:30] + "..." if len(args.anchor) > 30 else args.anchor,
-        serp_mode=args.serp_mode
-    )
-
-    # Initialize pipeline
-    try:
-        pipeline = BacklinkPipeline(
-            serp_mode=args.serp_mode,
-            serp_api_key=args.serp_api_key,
-            writer_api_key=args.writer_api_key,
-            writer_model=args.writer_model
-        )
-    except Exception as e:
-        logger.error("Failed to initialize pipeline", error=str(e), exc_info=True)
-        print(f"\n❌ ERROR: Failed to initialize pipeline: {e}")
-        print("\nCheck that you have:")
-        print("  - ANTHROPIC_API_KEY environment variable set")
-        print("  - All dependencies installed (pip install -r requirements.txt)")
-        return 1
-
-    # Execute pipeline
-    print("\n🚀 Starting pipeline execution...")
-    print(f"   Publisher: {args.publisher}")
-    print(f"   Target: {args.target}")
-    print(f"   Anchor: {args.anchor}")
-    print(f"   SERP Mode: {args.serp_mode}")
+    # Print header
+    print("=" * 70)
+    print("BACOWR - BacklinkContent Engine (Next-A1)")
+    print("=" * 70)
+    print()
+    print(f"Publisher:  {args.publisher}")
+    print(f"Target:     {args.target}")
+    print(f"Anchor:     {args.anchor}")
+    print(f"Mode:       {'MOCK' if args.mock else 'REAL'}")
+    print(f"Output:     {args.output}")
+    print()
+    print("-" * 70)
     print()
 
     try:
-        result = pipeline.execute(
+        # Run the job
+        result = run_backlink_job(
             publisher_domain=args.publisher,
             target_url=args.target,
             anchor_text=args.anchor,
-            anchor_type_hint=args.anchor_type,
-            min_word_count=args.min_words,
-            language=args.language,
+            mock=args.mock,
             output_dir=args.output
         )
 
-        # Print result summary
-        print("\n" + "="*80)
-        if result.success:
-            print("✅ SUCCESS - Pipeline completed")
-            print(f"   Final State: {result.final_state.value}")
-            print(f"   Job ID: {result.job_id}")
+        # Print results
+        print(f"Job ID: {result['job_id']}")
+        print(f"Status: {result['status']}")
+        print()
 
-            if result.qc_report:
-                print(f"   QC Status: {result.qc_report.status}")
-                print(f"   QC Issues: {len(result.qc_report.issues)}")
-                if result.qc_report.anchor_risk:
-                    print(f"   Anchor Risk: {result.qc_report.anchor_risk}")
+        if result['status'] == 'DELIVERED':
+            print("✅ Job completed successfully!")
+            print()
 
-            if result.article_text:
-                word_count = len(result.article_text.split())
-                print(f"   Article Length: {word_count} words")
+            # QC summary
+            qc = result.get('qc_report', {})
+            print("QC Report:")
+            print(f"  Status: {qc.get('status')}")
+            print(f"  Issues: {len(qc.get('issues', []))}")
+            print(f"  AutoFix: {'Yes' if qc.get('autofix_done') else 'No'}")
+            print(f"  Human Signoff Required: {'Yes' if qc.get('human_signoff_required') else 'No'}")
+            print()
 
-            print(f"\n📁 Output saved to: {args.output}/")
-            print(f"   - {result.job_id}_article.md")
-            print(f"   - {result.job_id}_job_package.json")
-            print(f"   - {result.job_id}_extensions.json")
-            print(f"   - {result.job_id}_qc_report.json")
-            print(f"   - {result.job_id}_execution_log.json")
+            # Output files
+            if 'output_files' in result:
+                print("Output Files:")
+                for file_type, file_path in result['output_files'].items():
+                    print(f"  - {file_type}: {file_path}")
+                print()
 
-            if result.qc_report and result.qc_report.status == "needs_signoff":
-                print("\n⚠️  HUMAN REVIEW REQUIRED")
-                print("   This content requires human sign-off before publication.")
-                if result.qc_report.recommendations:
-                    print("\n   Recommendations:")
-                    for rec in result.qc_report.recommendations[:3]:
-                        print(f"   - {rec}")
+            # Article preview
+            if args.verbose and 'article' in result:
+                print("Article Preview (first 500 chars):")
+                print("-" * 70)
+                print(result['article'][:500])
+                print("...")
+                print("-" * 70)
+                print()
 
-        else:
-            print("❌ FAILURE - Pipeline aborted")
-            print(f"   Final State: {result.final_state.value}")
-            if result.error_message:
-                print(f"   Error: {result.error_message}")
+        elif result['status'] == 'BLOCKED':
+            print("⚠️  Job blocked by QC")
+            print()
+            print(f"Reason: {result.get('reason', 'Unknown')}")
+            print()
 
-        print("="*80)
+            qc = result.get('qc_report', {})
+            if qc:
+                print("QC Issues:")
+                for issue in qc.get('issues', []):
+                    print(f"  - [{issue['severity']}] {issue['message']}")
+                print()
 
-        # Print execution trace
-        if args.log_level == "DEBUG":
-            print("\n📊 Execution Trace:")
-            for log_entry in result.execution_log:
-                status = "✓" if log_entry.success else "✗"
-                print(f"   {status} {log_entry.from_state} → {log_entry.to_state}: {log_entry.message}")
+        elif result['status'] == 'ABORTED':
+            print("❌ Job aborted")
+            print()
+            print(f"Reason: {result.get('reason', 'Unknown')}")
+            if 'error' in result:
+                print(f"Error: {result['error']}")
+            print()
 
-        return 0 if result.success else 1
+        # Execution log summary
+        if args.verbose and 'execution_log' in result:
+            exec_log = result['execution_log']
+            print("Execution Log Summary:")
+            print(f"  Transitions: {exec_log.get('total_transitions', 0)}")
+            print(f"  RESCUE count: {exec_log.get('rescue_count', 0)}")
+            print()
 
-    except KeyboardInterrupt:
-        print("\n\n⚠️  Pipeline interrupted by user")
-        logger.warning("Pipeline interrupted by user")
-        return 130
+        # Exit code
+        sys.exit(0 if result['status'] == 'DELIVERED' else 1)
 
     except Exception as e:
-        print(f"\n\n❌ FATAL ERROR: {e}")
-        logger.error("Pipeline execution failed", error=str(e), exc_info=True)
-        return 1
+        print(f"❌ Error: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

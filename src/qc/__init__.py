@@ -1,5 +1,5 @@
 """
-Quality Control module for BacklinkContent Engine.
+BACOWR Quality Control Module
 """
 
 from .models import (
