@@ -16,5 +16,11 @@ anthropic>=0.18.0      # Anthropic Claude API client
 openai>=1.12.0         # OpenAI API client
 google-generativeai>=0.3.0  # Google Gemini API client
 
+# Google API Integration (for export to Sheets/Docs)
+google-api-python-client>=2.100.0  # Google Sheets & Docs API
+google-auth>=2.23.0               # Google authentication
+google-auth-oauthlib>=1.1.0       # OAuth 2.0 for Google
+google-auth-httplib2>=0.1.1       # HTTP client for Google Auth
+
 # Testing
 pytest>=7.4.0          # Test framework for CI/CD
