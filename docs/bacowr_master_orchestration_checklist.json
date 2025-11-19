@@ -94,9 +94,21 @@
         },
         "B4_migrations": {
           "description": "Alembic database migrations",
-          "status": "missing",
-          "needed_files": ["alembic/", "alembic.ini", "migrations/"],
-          "priority": "high"
+          "status": "present",
+          "files": [
+            "api/alembic/",
+            "api/alembic.ini",
+            "api/alembic/env.py",
+            "api/DATABASE_MIGRATIONS.md"
+          ],
+          "features": [
+            "Alembic configured for BACOWR models",
+            "Environment-based DATABASE_URL",
+            "Initial migration with all models",
+            "Documentation with workflows"
+          ],
+          "quality": "excellent",
+          "completed": "2025-11-19"
         },
         "B5_config_yaml": {
           "description": "QC thresholds and policies in YAML",
@@ -494,20 +506,40 @@
 
       "tasks": {
         "J1_openapi_export": {
-          "description": "Export OpenAPI spec to JSON",
-          "status": "partial",
-          "notes": "Available at /docs but not exported",
-          "needed_files": ["docs/api/openapi.json"]
+          "description": "Export OpenAPI spec to JSON and YAML",
+          "status": "present",
+          "files": [
+            "docs/api/openapi.json",
+            "docs/api/openapi.yaml",
+            "tools/export_openapi.py"
+          ],
+          "features": [
+            "Automatic export from FastAPI app",
+            "JSON and YAML formats",
+            "32 endpoints documented",
+            "28 schemas defined"
+          ],
+          "quality": "excellent",
+          "completed": "2025-11-19"
         },
         "J2_hoppscotch_collections": {
           "description": "Hoppscotch collections for all endpoints",
-          "status": "missing",
-          "needed_files": [
-            "hoppscotch/jobs.json",
-            "hoppscotch/backlinks.json",
-            "hoppscotch/batches.json",
-            "hoppscotch/analytics.json"
-          ]
+          "status": "present",
+          "files": [
+            "hoppscotch/BACOWR_Jobs.json",
+            "hoppscotch/BACOWR_Batches.json",
+            "hoppscotch/BACOWR_Analytics_Audit.json",
+            "hoppscotch/README.md"
+          ],
+          "features": [
+            "3 pre-configured collections",
+            "23 ready-to-use requests",
+            "Environment variable support",
+            "Complete testing workflows",
+            "Compatible with Postman/Insomnia"
+          ],
+          "quality": "excellent",
+          "completed": "2025-11-19"
         },
         "J3_api_examples": {
           "description": "Example requests and responses",
@@ -937,20 +969,31 @@
     "wave_4_documentation_polish": {
       "goal": "Complete documentation and API contracts",
       "priority": "medium",
-      "status": "not_started",
-      "modules": ["A_repo_docs", "J_api_contract", "O_orchestration_meta"],
+      "status": "in_progress",
+      "modules": ["A_repo_docs", "J_api_contract", "O_orchestration_meta", "B_domain_models"],
       "parallel_tasks": {
+        "alpha_team": ["B4_migrations"],
         "theta_team": ["A2_docs_structure", "A4_api_reference"],
         "beta_team": ["J1_openapi_export", "J2_hoppscotch_collections"],
         "orchestrator": ["O2_orchestration_framework", "O3_team_manifest"]
       },
+      "completion_status": {
+        "alpha_team": "complete",
+        "beta_team": "complete",
+        "theta_team": "not_started (can be done in parallel)",
+        "orchestrator": "not_started (can be done in parallel)"
+      },
       "completion_criteria": [
-        "Docs/ directory organized",
-        "OpenAPI spec exported",
-        "Hoppscotch collections ready",
-        "Orchestration framework documented"
+        "❌ Docs/ directory organized (pending - parallel work)",
+        "✅ OpenAPI spec exported (JSON + YAML)",
+        "✅ Hoppscotch collections ready (3 collections, 23 requests)",
+        "✅ Database migrations configured (Alembic)",
+        "❌ Orchestration framework documented (pending)"
       ],
-      "estimated_hours": 12
+      "estimated_hours": 12,
+      "hours_completed": 6,
+      "hours_remaining": 6,
+      "notes": "Backend documentation complete (OpenAPI, Hoppscotch, Migrations). Frontend docs can be done in parallel session."
     },
 
     "wave_5_enterprise_features": {
