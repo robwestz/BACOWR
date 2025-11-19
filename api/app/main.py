@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 from .database import engine, get_db, init_db, Base
 from .auth import create_default_user
-from .routes import jobs, backlinks, analytics, websocket, users, batches, audit, export
+from .routes import jobs, backlinks, analytics, websocket, users, batches, audit, export, auth, user_management
 from .middleware.prometheus import setup_metrics
 from .middleware.rate_limit import setup_rate_limiting
 from .middleware.audit import AuditMiddleware
@@ -111,6 +111,10 @@ app.include_router(users.router, prefix="/api/v1")
 app.include_router(audit.router, prefix="/api/v1")
 app.include_router(websocket.router, prefix="/api/v1")
 app.include_router(export.router, prefix="/api/v1")  # Google Sheets/Docs export
+
+# Wave 5: Enterprise features
+app.include_router(auth.router, prefix="/api/v1")  # JWT authentication
+app.include_router(user_management.router, prefix="/api/v1")  # User management
 
 
 # Error handlers
