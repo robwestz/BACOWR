@@ -84,14 +84,15 @@ class BacklinkPipeline:
             writer_model: Claude model to use
         """
         self.assembler = BacklinkJobAssembler(serp_mode=serp_mode, serp_api_key=serp_api_key)
-        self.writer = WriterEngine(api_key=writer_api_key, model=writer_model)
+        # Use mock_mode when no API key provided
+        self.writer = WriterEngine(mock_mode=(writer_api_key is None))
         self.qc = QualityController()
 
         self.current_state = State.RECEIVE
         self.execution_log: List[ExecutionLog] = []
         self.payload_hashes: set = set()  # For loop detection
 
-        logger.info("BacklinkPipeline initialized", serp_mode=serp_mode, writer_model=writer_model)
+        logger.info("BacklinkPipeline initialized", serp_mode=serp_mode, mock_mode=(writer_api_key is None))
 
     def execute(
         self,
