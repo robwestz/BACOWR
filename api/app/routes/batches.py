@@ -145,7 +145,7 @@ async def get_batch_items(
     review_status: Optional[str] = Query(None),
     min_qc_score: Optional[float] = Query(None, ge=0, le=1),
     max_qc_score: Optional[float] = Query(None, ge=0, le=1),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -188,19 +188,9 @@ async def get_batch_items(
         offset=offset
     )
 
-    # Eagerly load job data for each item
-    items_with_jobs = []
-    for item in items:
-        item_dict = BatchItemResponse.from_orm(item).dict()
-
-        # Load job details
-        job = db.query(Job).filter(Job.id == item.job_id).first()
-        if job:
-            item_dict['job'] = JobDetailResponse.from_orm(job)
-
-        items_with_jobs.append(BatchItemResponse(**item_dict))
-
-    return items_with_jobs
+    # Jobs are already eager loaded via joinedload in service layer
+    # Pydantic handles nested serialization automatically
+    return items
 
 
 @router.post("/{batch_id}/items/{item_id}/review", response_model=BatchItemResponse)
@@ -308,7 +298,7 @@ async def execute_regeneration(
 @router.post("/{batch_id}/export", response_model=BatchExportResponse)
 async def export_batch(
     batch_id: str,
-    export_format: str = Query("json", regex="^(json|csv)$"),
+    export_format: str = Query("json", pattern="^(json|csv)$"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

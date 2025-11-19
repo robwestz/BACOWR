@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 
-from ..database import get_db
+from ..database import get_db, SessionLocal
 from ..models.database import User, Job, JobResult
 from ..models.schemas import (
     JobCreate, JobResponse, JobDetailResponse,
@@ -21,15 +21,21 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 async def run_job_background(
     job_id: str,
-    job_create: JobCreate,
-    db: Session
+    job_create: JobCreate
 ):
-    """Background task to run BACOWR job."""
-    job = db.query(Job).filter(Job.id == job_id).first()
-    if not job:
-        return
+    """
+    Background task to run BACOWR job.
+
+    Creates its own database session to avoid DetachedInstanceError.
+    """
+    # Create new session for background task
+    db = SessionLocal()
 
     try:
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if not job:
+            return
+
         # Update status to processing
         job.status = JobStatus.PROCESSING
         job.started_at = datetime.utcnow()
@@ -86,10 +92,16 @@ async def run_job_background(
             db.commit()
 
     except Exception as e:
-        job.status = JobStatus.ABORTED
-        job.error_message = str(e)
-        job.completed_at = datetime.utcnow()
-        db.commit()
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if job:
+            job.status = JobStatus.ABORTED
+            job.error_message = str(e)
+            job.completed_at = datetime.utcnow()
+            db.commit()
+
+    finally:
+        # Always close the session
+        db.close()
 
 
 @router.post("", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
@@ -129,7 +141,7 @@ async def create_job(
     db.refresh(job)
 
     # Schedule background task
-    background_tasks.add_task(run_job_background, job.id, job_create, db)
+    background_tasks.add_task(run_job_background, job.id, job_create)
 
     return job
 

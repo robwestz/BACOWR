@@ -195,8 +195,12 @@ class BatchReviewService:
         # Get total count
         total = query.count()
 
-        # Get items with pagination
-        items = query.order_by(
+        # Get items with pagination (eager load job to prevent N+1 queries)
+        from sqlalchemy.orm import joinedload
+
+        items = query.options(
+            joinedload(BatchReviewItem.job)
+        ).order_by(
             BatchReviewItem.qc_score.desc().nullslast(),
             BatchReviewItem.created_at
         ).limit(limit).offset(offset).all()

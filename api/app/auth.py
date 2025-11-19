@@ -6,10 +6,13 @@ from fastapi import Depends, HTTPException, status, Security
 from fastapi.security import APIKeyHeader
 from sqlalchemy.orm import Session
 import secrets
+import logging
 from passlib.context import CryptContext
 
 from .database import get_db
 from .models.database import User
+
+logger = logging.getLogger(__name__)
 
 # API Key header
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -19,8 +22,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def generate_api_key() -> str:
-    """Generate a secure API key."""
-    return f"bacowr_{secrets.token_urlsafe(32)}"
+    """
+    Generate a secure API key.
+
+    Uses 40 bytes of entropy (no predictable prefix for security).
+    """
+    return secrets.token_urlsafe(40)
 
 
 def hash_password(password: str) -> str:
@@ -114,13 +121,13 @@ def create_default_user(db: Session) -> User:
     db.commit()
     db.refresh(user)
 
-    print("=" * 70)
-    print("DEFAULT ADMIN USER CREATED")
-    print("=" * 70)
-    print(f"Email:   {user.email}")
-    print(f"API Key: {user.api_key}")
-    print("=" * 70)
-    print("⚠️  SAVE THIS API KEY - IT WON'T BE SHOWN AGAIN!")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("DEFAULT ADMIN USER CREATED")
+    logger.info("=" * 70)
+    logger.info(f"Email:   {user.email}")
+    logger.warning(f"API Key: {user.api_key}")
+    logger.info("=" * 70)
+    logger.warning("⚠️  SAVE THIS API KEY - IT WON'T BE SHOWN AGAIN!")
+    logger.info("=" * 70)
 
     return user

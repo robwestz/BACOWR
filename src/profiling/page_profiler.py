@@ -48,8 +48,16 @@ class PageProfiler:
             (http_status, html_content)
 
         Raises:
+            ValueError: If URL scheme is not http or https (SSRF protection)
             requests.RequestException: On HTTP errors
         """
+        # SSRF protection: Only allow http and https schemes
+        from urllib.parse import urlparse
+
+        parsed = urlparse(url)
+        if parsed.scheme not in ('http', 'https'):
+            raise ValueError(f"Invalid URL scheme: {parsed.scheme}. Only http and https are allowed.")
+
         response = self.session.get(url, timeout=self.timeout, allow_redirects=True)
         return response.status_code, response.text
 

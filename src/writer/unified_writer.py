@@ -17,9 +17,12 @@ Provides a single, unified interface for content generation with:
 
 import os
 import time
+import logging
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 class LLMProvider(Enum):
@@ -176,7 +179,7 @@ class UnifiedWriterEngine:
                     api_key=os.getenv('ANTHROPIC_API_KEY')
                 )
             except ImportError:
-                print("Warning: anthropic package not installed")
+                logger.warning("anthropic package not installed, skipping Anthropic provider")
 
         # OpenAI
         if os.getenv('OPENAI_API_KEY'):
@@ -186,7 +189,7 @@ class UnifiedWriterEngine:
                     api_key=os.getenv('OPENAI_API_KEY')
                 )
             except ImportError:
-                print("Warning: openai package not installed")
+                logger.warning("openai package not installed, skipping OpenAI provider")
 
         # Google Gemini
         if os.getenv('GOOGLE_API_KEY'):
@@ -195,7 +198,7 @@ class UnifiedWriterEngine:
                 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
                 self._clients[LLMProvider.GOOGLE] = genai
             except ImportError:
-                print("Warning: google-generativeai package not installed")
+                logger.warning("google-generativeai package not installed, skipping Google provider")
 
     def generate(
         self,
@@ -418,8 +421,8 @@ Understanding {entity} requires considering multiple dimensions. With the right 
 
             return article, metrics.__dict__
 
-        except Exception as e:
-            print(f"Generation failed with {self.primary_provider.value}: {e}")
+        except (ConnectionError, TimeoutError, ValueError, KeyError) as e:
+            logger.error(f"Generation failed with {self.primary_provider.value}: {e}", exc_info=True)
 
             # Try fallback providers if enabled
             if self.auto_fallback:
@@ -439,7 +442,8 @@ Understanding {entity} requires considering multiple dimensions. With the right 
 
                         return article, metrics.__dict__
 
-                    except Exception:
+                    except (ConnectionError, TimeoutError, ValueError, KeyError):
+                        logger.debug(f"Fallback provider {fallback_provider.value} also failed")
                         continue
 
             # All providers failed
@@ -497,10 +501,11 @@ Understanding {entity} requires considering multiple dimensions. With the right 
 
                 return article, metrics.__dict__
 
-            except Exception as e:
-                print(f"Multi-stage generation failed with {provider.value}: {e}")
+            except (ConnectionError, TimeoutError, ValueError, KeyError) as e:
+                logger.error(f"Multi-stage generation failed with {provider.value}: {e}", exc_info=True)
                 if not self.auto_fallback:
                     raise
+                logger.debug(f"Trying next provider due to error: {e}")
                 continue
 
         # All providers failed
