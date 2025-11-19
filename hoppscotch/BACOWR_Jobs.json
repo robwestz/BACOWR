@@ -1,0 +1,91 @@
+{
+  "v": 1,
+  "name": "BACOWR - Jobs",
+  "folders": [],
+  "requests": [
+    {
+      "v": "1",
+      "name": "Create Job",
+      "method": "POST",
+      "endpoint": "http://localhost:8000/api/v1/jobs",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "contentType": "application/json",
+        "body": "{\n  \"publisher_domain\": \"aftonbladet.se\",\n  \"target_url\": \"https://sv.wikipedia.org/wiki/Artificiell_intelligens\",\n  \"anchor_text\": \"AI och maskininlärning\",\n  \"llm_provider\": \"auto\",\n  \"writing_strategy\": \"multi_stage\",\n  \"country\": \"se\",\n  \"use_ahrefs\": false,\n  \"enable_llm_profiling\": false\n}"
+      }
+    },
+    {
+      "v": "1",
+      "name": "List Jobs",
+      "method": "GET",
+      "endpoint": "http://localhost:8000/api/v1/jobs?limit=20&offset=0",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    },
+    {
+      "v": "1",
+      "name": "Get Job by ID",
+      "method": "GET",
+      "endpoint": "http://localhost:8000/api/v1/jobs/{{JOB_ID}}",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    },
+    {
+      "v": "1",
+      "name": "Get Job Article",
+      "method": "GET",
+      "endpoint": "http://localhost:8000/api/v1/jobs/{{JOB_ID}}/article",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    },
+    {
+      "v": "1",
+      "name": "Delete Job",
+      "method": "DELETE",
+      "endpoint": "http://localhost:8000/api/v1/jobs/{{JOB_ID}}",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    }
+  ]
+}

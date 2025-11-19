@@ -46,7 +46,7 @@ class AuditLogDetailResponse(AuditLogResponse):
     """Detailed audit log with request/response data."""
     request_data: Optional[dict]
     response_data: Optional[dict]
-    metadata: Optional[dict]
+    extra_data: Optional[dict]
     user_agent: Optional[str]
 
     class Config:

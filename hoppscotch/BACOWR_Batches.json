@@ -1,0 +1,183 @@
+{
+  "v": 1,
+  "name": "BACOWR - Batches (Day 2 QA)",
+  "folders": [],
+  "requests": [
+    {
+      "v": "1",
+      "name": "Create Batch",
+      "method": "POST",
+      "endpoint": "http://localhost:8000/api/v1/batches",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "contentType": "application/json",
+        "body": "{\n  \"name\": \"Test Batch 2025-11-19\",\n  \"description\": \"Testing batch review workflow\",\n  \"job_ids\": [\"JOB_ID_1\", \"JOB_ID_2\"],\n  \"batch_config\": {\n    \"auto_approve_threshold\": 0.95\n  }\n}"
+      }
+    },
+    {
+      "v": "1",
+      "name": "List Batches",
+      "method": "GET",
+      "endpoint": "http://localhost:8000/api/v1/batches?limit=20",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    },
+    {
+      "v": "1",
+      "name": "Get Batch Details",
+      "method": "GET",
+      "endpoint": "http://localhost:8000/api/v1/batches/{{BATCH_ID}}",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    },
+    {
+      "v": "1",
+      "name": "Get Batch Items",
+      "method": "GET",
+      "endpoint": "http://localhost:8000/api/v1/batches/{{BATCH_ID}}/items",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    },
+    {
+      "v": "1",
+      "name": "Approve Item",
+      "method": "POST",
+      "endpoint": "http://localhost:8000/api/v1/batches/{{BATCH_ID}}/items/{{ITEM_ID}}/review",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "contentType": "application/json",
+        "body": "{\n  \"decision\": \"approved\",\n  \"reviewer_notes\": \"Quality looks good, approved for publication\"\n}"
+      }
+    },
+    {
+      "v": "1",
+      "name": "Reject Item",
+      "method": "POST",
+      "endpoint": "http://localhost:8000/api/v1/batches/{{BATCH_ID}}/items/{{ITEM_ID}}/review",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "contentType": "application/json",
+        "body": "{\n  \"decision\": \"rejected\",\n  \"reviewer_notes\": \"Quality issues detected\"\n}"
+      }
+    },
+    {
+      "v": "1",
+      "name": "Request Regeneration",
+      "method": "POST",
+      "endpoint": "http://localhost:8000/api/v1/batches/{{BATCH_ID}}/items/{{ITEM_ID}}/review",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "contentType": "application/json",
+        "body": "{\n  \"decision\": \"needs_regeneration\",\n  \"reviewer_notes\": \"Needs improvement, please regenerate\"\n}"
+      }
+    },
+    {
+      "v": "1",
+      "name": "Execute Regeneration",
+      "method": "POST",
+      "endpoint": "http://localhost:8000/api/v1/batches/{{BATCH_ID}}/items/{{ITEM_ID}}/regenerate",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    },
+    {
+      "v": "1",
+      "name": "Export Batch",
+      "method": "POST",
+      "endpoint": "http://localhost:8000/api/v1/batches/{{BATCH_ID}}/export?export_format=json",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    },
+    {
+      "v": "1",
+      "name": "Get Batch Stats",
+      "method": "GET",
+      "endpoint": "http://localhost:8000/api/v1/batches/{{BATCH_ID}}/stats",
+      "headers": [
+        {
+          "key": "X-API-Key",
+          "value": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "body": {
+        "contentType": null,
+        "body": null
+      }
+    }
+  ]
+}

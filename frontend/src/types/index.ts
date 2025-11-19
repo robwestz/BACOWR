@@ -199,6 +199,100 @@ export interface BatchJob {
   jobs: JobPackage[]
 }
 
+// Batch Review Types (Day 2 QA Workflow)
+export type BatchReviewStatus =
+  | 'pending'
+  | 'processing'
+  | 'ready_for_review'
+  | 'in_review'
+  | 'completed'
+  | 'failed'
+
+export type ReviewItemStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'needs_regeneration'
+  | 'regenerating'
+  | 'regenerated'
+
+export interface BatchReview {
+  id: string
+  name: string
+  description?: string
+  status: BatchReviewStatus
+  created_at: string
+  updated_at: string
+  user_id: string
+  job_ids: string[]
+  batch_config?: Record<string, any>
+  stats: {
+    total_items: number
+    pending: number
+    approved: number
+    rejected: number
+    needs_regeneration: number
+    regenerating: number
+    regenerated: number
+  }
+}
+
+export interface BatchReviewItem {
+  id: string
+  batch_id: string
+  job_id: string
+  review_status: ReviewItemStatus
+  qc_snapshot: {
+    article_text: string
+    qc_score: number
+    qc_status: QCStatus
+    word_count: number
+    issues_found: number
+  }
+  reviewer_notes?: string
+  reviewed_at?: string
+  regeneration_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface BatchReviewListResponse {
+  batches: BatchReview[]
+  total: number
+  page: number
+  per_page: number
+}
+
+export interface BatchReviewItemsResponse {
+  items: BatchReviewItem[]
+  total: number
+}
+
+export interface ReviewDecision {
+  decision: 'approve' | 'reject' | 'needs_regeneration'
+  reviewer_notes?: string
+}
+
+export interface BatchExportResponse {
+  batch_id: string
+  batch_name: string
+  export_format: string
+  export_date: string
+  approved_items: Array<{
+    job_id: string
+    article_text: string
+    publisher_domain: string
+    target_url: string
+    anchor_text: string
+    qc_score: number
+  }>
+  stats: {
+    total_approved: number
+    total_items: number
+    approval_rate: number
+  }
+}
+
 // WebSocket Event Types
 export interface WSJobUpdate {
   job_id: string
