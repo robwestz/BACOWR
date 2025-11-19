@@ -12,6 +12,7 @@ BACOWR är en produktionsklar motor för att skapa högkvalitativa backlink-arti
 - ✅ **Profilerar** målsida och publisher automatiskt
 - ✅ **Genererar** backlink-innehåll som naturligt passar SERP-landskapet
 - ✅ **Validerar** kvalitet med inbyggd QC (Quality Control)
+- ✅ **Exporterar** till Google Sheets/Docs för enkel delning och överblick
 - ✅ **Loggar** hela processen för spårbarhet
 
 ### Tre-input-paradigm
@@ -60,10 +61,16 @@ BACOWR/
 │   ├── analysis/
 │   │   ├── __init__.py
 │   │   └── intent_analyzer.py          # ✅ Intent alignment analysis
-│   └── writer/
+│   ├── writer/
+│   │   ├── __init__.py
+│   │   ├── writer_engine.py            # ✅ Mock writer for testing
+│   │   └── production_writer.py        # ✅ Multi-LLM production writer
+│   └── export/
 │       ├── __init__.py
-│       ├── writer_engine.py            # ✅ Mock writer for testing
-│       └── production_writer.py        # ✅ Multi-LLM production writer
+│       ├── README.md                    # ✅ Complete export documentation
+│       ├── google_auth.py               # ✅ Google OAuth & Service Account auth
+│       ├── google_sheets_exporter.py    # ✅ Export to Google Sheets
+│       └── google_docs_exporter.py      # ✅ Export to Google Docs
 ├── tests/
 │   ├── test_schema_validation.py       # ✅ JSON Schema-validering
 │   ├── test_live_validation.py         # ✅ Live E2E-validering
@@ -73,10 +80,24 @@ BACOWR/
 │   ├── test_serp_researcher.py         # ✅ SERP tests (14/14)
 │   ├── test_intent_analyzer.py         # ✅ Intent tests (26/26)
 │   └── test_writer_engine.py           # ✅ Writer tests (12/12)
+├── api/
+│   ├── app/
+│   │   ├── main.py                      # ✅ FastAPI application
+│   │   ├── database.py                  # ✅ SQLAlchemy database setup
+│   │   ├── models/                      # ✅ Database models & schemas
+│   │   ├── routes/                      # ✅ API endpoints
+│   │   │   ├── jobs.py                  # ✅ Job management
+│   │   │   ├── backlinks.py             # ✅ Backlink tracking
+│   │   │   ├── analytics.py             # ✅ Analytics & metrics
+│   │   │   ├── export.py                # ✅ Google Sheets/Docs export
+│   │   │   └── ...
+│   │   └── services/                    # ✅ Business logic services
+│   └── README.md                        # ✅ API documentation
 ├── examples/
 │   ├── example_job_package.json        # ✅ Referens-implementation
 │   ├── batch_jobs_example.csv          # ✅ Example batch CSV
-│   └── batch_jobs_example.json         # ✅ Example batch JSON
+│   ├── batch_jobs_example.json         # ✅ Example batch JSON
+│   └── export_integration_example.py   # ✅ Google export integration demo
 ├── storage/
 │   ├── output/                         # ✅ Single job outputs
 │   ├── batch_output/                   # ✅ Batch processing outputs
