@@ -5,6 +5,12 @@ import type {
   JobListResponse,
   BacklinkRecord,
   BatchJob,
+  BatchReview,
+  BatchReviewListResponse,
+  BatchReviewItem,
+  BatchReviewItemsResponse,
+  ReviewDecision,
+  BatchExportResponse,
   UserSettings,
 } from '@/types'
 
@@ -140,6 +146,121 @@ export const batchAPI = {
   cancel: async (batchId: string): Promise<void> => {
     return fetchAPI<void>(`/api/batch/${batchId}/cancel`, {
       method: 'POST',
+    })
+  },
+}
+
+// Batch Review API (Day 2 QA Workflow)
+export const batchReviewAPI = {
+  // Create batch from completed jobs
+  create: async (data: {
+    name: string
+    description?: string
+    job_ids: string[]
+    batch_config?: Record<string, any>
+  }): Promise<BatchReview> => {
+    return fetchAPI<BatchReview>('/api/v1/batches', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
+  // List all batches with pagination
+  list: async (params?: {
+    page?: number
+    per_page?: number
+    status?: string
+  }): Promise<BatchReviewListResponse> => {
+    const searchParams = new URLSearchParams()
+    if (params?.page) searchParams.set('page', params.page.toString())
+    if (params?.per_page) searchParams.set('per_page', params.per_page.toString())
+    if (params?.status) searchParams.set('status', params.status)
+
+    const query = searchParams.toString()
+    return fetchAPI<BatchReviewListResponse>(
+      `/api/v1/batches${query ? `?${query}` : ''}`
+    )
+  },
+
+  // Get batch by ID
+  get: async (batchId: string): Promise<BatchReview> => {
+    return fetchAPI<BatchReview>(`/api/v1/batches/${batchId}`)
+  },
+
+  // Get batch items
+  getItems: async (batchId: string, params?: {
+    status?: string
+    limit?: number
+    offset?: number
+  }): Promise<BatchReviewItemsResponse> => {
+    const searchParams = new URLSearchParams()
+    if (params?.status) searchParams.set('status', params.status)
+    if (params?.limit) searchParams.set('limit', params.limit.toString())
+    if (params?.offset) searchParams.set('offset', params.offset.toString())
+
+    const query = searchParams.toString()
+    return fetchAPI<BatchReviewItemsResponse>(
+      `/api/v1/batches/${batchId}/items${query ? `?${query}` : ''}`
+    )
+  },
+
+  // Review an item (approve/reject/regenerate)
+  reviewItem: async (
+    batchId: string,
+    itemId: string,
+    decision: ReviewDecision
+  ): Promise<{ message: string; item: BatchReviewItem }> => {
+    return fetchAPI(`/api/v1/batches/${batchId}/items/${itemId}/review`, {
+      method: 'POST',
+      body: JSON.stringify(decision),
+    })
+  },
+
+  // Regenerate item content
+  regenerateItem: async (
+    batchId: string,
+    itemId: string
+  ): Promise<{ message: string; job_id: string }> => {
+    return fetchAPI(`/api/v1/batches/${batchId}/items/${itemId}/regenerate`, {
+      method: 'POST',
+    })
+  },
+
+  // Export approved batch
+  exportBatch: async (
+    batchId: string,
+    format: string = 'json'
+  ): Promise<BatchExportResponse> => {
+    return fetchAPI<BatchExportResponse>(`/api/v1/batches/${batchId}/export`, {
+      method: 'POST',
+      body: JSON.stringify({ export_format: format }),
+    })
+  },
+
+  // Get batch statistics
+  getStats: async (
+    batchId: string
+  ): Promise<{
+    batch_id: string
+    total_items: number
+    review_progress: {
+      pending: number
+      approved: number
+      rejected: number
+      needs_regeneration: number
+    }
+    quality_metrics: {
+      average_qc_score: number
+      approval_rate: number
+    }
+  }> => {
+    return fetchAPI(`/api/v1/batches/${batchId}/stats`)
+  },
+
+  // Delete batch
+  delete: async (batchId: string): Promise<void> => {
+    return fetchAPI<void>(`/api/v1/batches/${batchId}`, {
+      method: 'DELETE',
     })
   },
 }
