@@ -9,6 +9,7 @@
     "tweak_ok_means": "Det är tillåtet att förbättra intern implementation, prestanda och loggning, så länge input/output-kontraktet inte ändras.",
     "in_progress_means": "Modulen är under aktiv utveckling. Andra team ska anta att beteende kan ändras och inte bygga hårda beroenden utan att dubbelkolla.",
     "blocked_means": "Modulen är pausad p.g.a. oklarheter, beslut eller externa beroenden. Andra team ska inte anta att den fungerar.",
+    "planned_means": "Modulen är planerad men inte implementerad. Andra team ska inte anta att den finns.",
     "llm_usage": "Alla LLM-sessioner ska läsa denna fil först. Om de gör förändringar som påverkar andra moduler (kontrakt, flöden, beteende) ska de uppdatera status/notes här."
   },
   "modules": {
