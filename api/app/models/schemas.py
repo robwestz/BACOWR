@@ -33,6 +33,26 @@ class WritingStrategy(str, Enum):
     SINGLE_SHOT = "single_shot"
 
 
+class BatchStatus(str, Enum):
+    """Batch status enumeration."""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    READY_FOR_REVIEW = "ready_for_review"
+    IN_REVIEW = "in_review"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ReviewStatus(str, Enum):
+    """Review status enumeration."""
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    NEEDS_REGENERATION = "needs_regeneration"
+    REGENERATING = "regenerating"
+    REGENERATED = "regenerated"
+
+
 # Job Schemas
 
 class JobCreate(BaseModel):
@@ -271,3 +291,118 @@ class PaginatedResponse(BaseModel):
             page_size=page_size,
             total_pages=(total + page_size - 1) // page_size
         )
+
+
+# Batch Schemas
+
+class BatchCreate(BaseModel):
+    """Schema for creating a batch."""
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+    job_ids: List[str] = Field(..., min_length=1, max_length=1000)
+    batch_config: Optional[Dict[str, Any]] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "Daily batch 2025-11-19",
+                "description": "175 backlinks for review",
+                "job_ids": ["job-uuid-1", "job-uuid-2"],
+                "batch_config": {
+                    "auto_approve_threshold": 0.95,
+                    "require_manual_review": True
+                }
+            }
+        }
+
+
+class BatchResponse(BaseModel):
+    """Schema for batch response."""
+    id: str
+    user_id: str
+    name: str
+    description: Optional[str]
+    status: str
+    total_items: int
+    items_completed: int
+    items_approved: int
+    items_rejected: int
+    items_pending_review: int
+    estimated_total_cost: Optional[float]
+    actual_total_cost: Optional[float]
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    review_started_at: Optional[datetime]
+    review_completed_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class BatchItemResponse(BaseModel):
+    """Schema for batch review item response."""
+    id: str
+    batch_id: str
+    job_id: str
+    review_status: str
+    reviewer_notes: Optional[str]
+    reviewed_by: Optional[str]
+    reviewed_at: Optional[datetime]
+    qc_score: Optional[float]
+    qc_status: Optional[str]
+    qc_issues_count: int
+    regeneration_count: int
+    original_job_id: Optional[str]
+    created_at: datetime
+
+    # Include job details for convenience
+    job: Optional[JobDetailResponse] = None
+
+    class Config:
+        from_attributes = True
+
+
+class BatchDetailResponse(BatchResponse):
+    """Schema for detailed batch response with items."""
+    items: List[BatchItemResponse]
+    batch_config: Optional[Dict[str, Any]]
+
+    class Config:
+        from_attributes = True
+
+
+class ReviewDecisionRequest(BaseModel):
+    """Schema for review decision."""
+    decision: ReviewStatus
+    reviewer_notes: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "decision": "approved",
+                "reviewer_notes": "Excellent quality, approved for publication"
+            }
+        }
+
+
+class BatchExportResponse(BaseModel):
+    """Schema for batch export response."""
+    batch_id: str
+    total_approved: int
+    export_format: str
+    download_url: Optional[str]
+    file_path: str
+    created_at: datetime
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "batch_id": "batch-uuid",
+                "total_approved": 142,
+                "export_format": "json",
+                "download_url": "/api/v1/batches/batch-uuid/download",
+                "file_path": "storage/exports/batch-uuid-approved.json",
+                "created_at": "2025-11-19T12:00:00Z"
+            }
+        }

@@ -1,0 +1,179 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master, "claude/**" ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install backend dependencies
+      run: |
+        cd api
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio pytest-cov
+
+    - name: Set up test environment
+      run: |
+        cd api
+        cp .env.example .env || echo "DATABASE_URL=sqlite:///./test.db" > .env
+        echo "DEBUG=true" >> .env
+        echo "HOST=0.0.0.0" >> .env
+        echo "PORT=8000" >> .env
+
+    - name: Run pytest
+      run: |
+        cd api
+        pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=xml
+      env:
+        DATABASE_URL: sqlite:///./test.db
+        BACOWR_LLM_MODE: mock
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        file: ./api/coverage.xml
+        fail_ci_if_error: false
+
+  test-core:
+    name: Core Engine Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install core dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio pytest-cov
+
+    - name: Run core tests
+      run: |
+        pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=xml
+      env:
+        BACOWR_LLM_MODE: mock
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+
+  smoke-test:
+    name: Smoke Test (End-to-End)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r api/requirements.txt
+
+    - name: Run smoke test
+      run: |
+        python tools/smoke_test_wave1.py
+      env:
+        BACOWR_LLM_MODE: mock
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install linting tools
+      run: |
+        pip install --upgrade pip
+        pip install flake8 black isort mypy
+
+    - name: Run Black (check only)
+      run: |
+        black --check . || echo "Black formatting issues found (non-blocking)"
+      continue-on-error: true
+
+    - name: Run isort (check only)
+      run: |
+        isort --check-only . || echo "Import sorting issues found (non-blocking)"
+      continue-on-error: true
+
+    - name: Run flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: true
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+      env:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+        NEXT_PUBLIC_WS_URL: ws://localhost:8000
+
+    - name: TypeScript type check
+      run: |
+        cd frontend
+        npx tsc --noEmit || echo "TypeScript errors found (non-blocking for now)"
+      continue-on-error: true

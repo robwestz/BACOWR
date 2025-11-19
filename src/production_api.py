@@ -239,24 +239,54 @@ def run_production_job(
         # Generate article with ProductionWriter
         logger.log_info(f"Generating article with {writing_strategy} strategy", {})
 
+        # Check if we should use mock mode
+        use_mock_mode = os.getenv('BACOWR_LLM_MODE', '').lower() == 'mock'
+
+        # Auto-detect if no LLM API keys are available
+        has_api_keys = any([
+            os.getenv('ANTHROPIC_API_KEY'),
+            os.getenv('OPENAI_API_KEY'),
+            os.getenv('GOOGLE_API_KEY')
+        ])
+
+        if not has_api_keys and not use_mock_mode:
+            logger.log_warning("No LLM API keys found - automatically enabling mock mode")
+            use_mock_mode = True
+
+        if use_mock_mode:
+            logger.log_info("Using MOCK mode for article generation", {'reason': 'no_api_keys' if not has_api_keys else 'explicit'})
+
         writer = ProductionWriter(
+            mock_mode=use_mock_mode,
             auto_fallback=True,
             enable_cost_tracking=True
         )
 
         article, generation_metrics = writer.generate(job_package, strategy=writing_strategy)
 
-        metrics['generation'] = {
-            'provider': generation_metrics.provider,
-            'model': generation_metrics.model,
-            'stages_completed': generation_metrics.stages_completed,
-            'duration_seconds': generation_metrics.duration_seconds,
-            'retries': generation_metrics.retries
-        }
+        # Handle both GenerationMetrics object and dict
+        if hasattr(generation_metrics, 'provider'):
+            # GenerationMetrics object
+            metrics['generation'] = {
+                'provider': generation_metrics.provider,
+                'model': generation_metrics.model,
+                'stages_completed': generation_metrics.stages_completed,
+                'duration_seconds': generation_metrics.duration_seconds,
+                'retries': generation_metrics.retries
+            }
+            provider = generation_metrics.provider
+            stages = generation_metrics.stages_completed
+            duration = generation_metrics.duration_seconds
+        else:
+            # Dict (mock mode or legacy)
+            metrics['generation'] = generation_metrics
+            provider = generation_metrics.get('provider', 'unknown')
+            stages = generation_metrics.get('stages_completed', 0)
+            duration = generation_metrics.get('duration_seconds', 0)
 
-        logger.log_info(f"Article generated successfully with {generation_metrics.provider}", {
-            'stages': generation_metrics.stages_completed,
-            'duration': generation_metrics.duration_seconds
+        logger.log_info(f"Article generated successfully with {provider}", {
+            'stages': stages,
+            'duration': duration
         })
 
         # Check for payload loop
