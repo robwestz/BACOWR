@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 from .database import engine, get_db, init_db, Base
 from .auth import create_default_user
-from .routes import jobs, backlinks, analytics, websocket, users, batches
+from .routes import jobs, backlinks, analytics, websocket, users, batches, audit
 from .middleware.rate_limit import setup_rate_limiting
 
 # Load environment variables
@@ -100,6 +100,7 @@ app.include_router(backlinks.router, prefix="/api/v1")
 app.include_router(batches.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
+app.include_router(audit.router, prefix="/api/v1")
 app.include_router(websocket.router, prefix="/api/v1")
 
 

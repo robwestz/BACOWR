@@ -66,4 +66,6 @@ def get_db():
 
 def init_db():
     """Initialize database tables."""
+    # Import models to ensure they're registered with Base
+    from .models import database, audit
     Base.metadata.create_all(bind=engine)
