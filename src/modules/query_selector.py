@@ -15,7 +15,7 @@ This module can be reused for:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 
 from .target_profiler import TargetProfile
 from .anchor_classifier import AnchorProfile

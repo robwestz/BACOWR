@@ -133,7 +133,7 @@ industry_policies:
       - "Consult healthcare professional"
     forbidden_claims:
       - "Cures disease"
-      - "FDA approved" (without verification)
+      - "FDA approved (without verification)"
       - "Guaranteed results"
     required_sources:
       - "Medical/scientific sources for health claims"

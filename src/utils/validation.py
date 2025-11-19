@@ -6,7 +6,7 @@ Provides validation against Next-A1 schemas for BacklinkJobPackage and extension
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Optional
 
 import jsonschema
 from jsonschema import Draft202012Validator

@@ -19,7 +19,14 @@ from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
-from langdetect import detect, LangDetectException
+
+# Optional language detection
+try:
+    from langdetect import detect, LangDetectException
+    HAS_LANGDETECT = True
+except ImportError:
+    HAS_LANGDETECT = False
+    LangDetectException = Exception  # Fallback
 
 from ..utils.logger import get_logger
 
@@ -251,6 +258,10 @@ class PageProfiler:
             return None
 
         combined_text = ' '.join(text_parts)[:1000]  # Use first 1000 chars
+
+        if not HAS_LANGDETECT:
+            logger.debug("langdetect not available, using fallback")
+            return "en"  # Default fallback
 
         try:
             return detect(combined_text)
