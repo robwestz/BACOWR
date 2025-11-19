@@ -29,6 +29,18 @@ httpx==0.26.0
 pydantic==2.5.3
 pydantic-settings==2.1.0
 
+# Monitoring & Logging
+structlog>=24.1.0
+rich>=13.7.0
+prometheus-client>=0.18.0
+prometheus-fastapi-instrumentator>=6.1.0
+
+# Google API Integration (for export to Sheets/Docs)
+google-api-python-client>=2.100.0
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.1.1
+
 # Existing BACOWR dependencies
 requests>=2.31.0
 beautifulsoup4>=4.12.0
