@@ -1,0 +1,248 @@
+{
+  "metadata": {
+    "job_id": "job_20251119_173921_d0c0b425",
+    "started_at": "2025-11-19T17:39:21.830104",
+    "completed_at": "2025-11-19T17:39:22.002144",
+    "final_state": "DELIVER",
+    "final_status": "success",
+    "total_log_entries": 17
+  },
+  "log_entries": [
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.830315",
+      "message": "Starting production job job_20251119_173921_d0c0b425",
+      "details": {
+        "publisher": "konsumenternas.se",
+        "target": "https://sv.wikipedia.org/wiki/Artificiell_intelligens",
+        "anchor": "läs mer om AI",
+        "llm_provider": null,
+        "strategy": "multi_stage"
+      }
+    },
+    {
+      "type": "state_transition",
+      "timestamp": "2025-11-19T17:39:21.830332",
+      "from_state": "RECEIVE",
+      "to_state": "PREFLIGHT",
+      "metadata": {
+        "mode": "production"
+      }
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.830334",
+      "message": "Initializing components",
+      "details": {}
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.830471",
+      "message": "Profiling publisher",
+      "details": {
+        "domain": "konsumenternas.se"
+      }
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.911419",
+      "message": "Profiling target",
+      "details": {
+        "url": "https://sv.wikipedia.org/wiki/Artificiell_intelligens"
+      }
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.992384",
+      "message": "Performing SERP research",
+      "details": {
+        "use_ahrefs": false
+      }
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.992438",
+      "message": "SERP research completed via medium confidence",
+      "details": {}
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.992440",
+      "message": "Analyzing intent alignment",
+      "details": {}
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.992481",
+      "message": "Job package built",
+      "details": {
+        "mode": "production"
+      }
+    },
+    {
+      "type": "state_transition",
+      "timestamp": "2025-11-19T17:39:21.992502",
+      "from_state": "PREFLIGHT",
+      "to_state": "WRITE",
+      "metadata": {}
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.992505",
+      "message": "Generating article with multi_stage strategy",
+      "details": {}
+    },
+    {
+      "type": "warning",
+      "timestamp": "2025-11-19T17:39:21.992521",
+      "message": "No LLM API keys found - automatically enabling mock mode",
+      "details": {}
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.992523",
+      "message": "Using MOCK mode for article generation",
+      "details": {
+        "reason": "no_api_keys"
+      }
+    },
+    {
+      "type": "info",
+      "timestamp": "2025-11-19T17:39:21.992546",
+      "message": "Article generated successfully with mock",
+      "details": {
+        "stages": 0,
+        "duration": 0.0
+      }
+    },
+    {
+      "type": "state_transition",
+      "timestamp": "2025-11-19T17:39:21.992578",
+      "from_state": "WRITE",
+      "to_state": "QC",
+      "metadata": {}
+    },
+    {
+      "type": "qc_result",
+      "timestamp": "2025-11-19T17:39:22.002125",
+      "status": "WARNING",
+      "issues_count": 2,
+      "human_signoff_required": false,
+      "details": {
+        "job_id": "job_20251119_173921_d0c0b425",
+        "status": "WARNING",
+        "issues": [
+          {
+            "category": "LSI",
+            "severity": "MEDIUM",
+            "message": "LSI count 4 outside range 6-10",
+            "details": {
+              "lsi_count": 4,
+              "within_radius": true,
+              "pass": false,
+              "details": {
+                "min_required": 6,
+                "max_allowed": 10,
+                "link_sentence_index": 8
+              }
+            },
+            "auto_fixable": true,
+            "fix_suggestion": "inject_missing_lsi or trim_excess_lsi"
+          },
+          {
+            "category": "TRUST_SOURCES",
+            "severity": "HIGH",
+            "message": "Insufficient trust sources: 1 found, 2 required",
+            "details": {
+              "tier_1_count": 0,
+              "tier_2_count": 1,
+              "total_count": 1,
+              "pass": false,
+              "sources_found": [
+                {
+                  "domain": "sv.wikipedia.org",
+                  "tier": 2
+                }
+              ],
+              "min_t1_required": 1,
+              "min_total_required": 2
+            },
+            "auto_fixable": false,
+            "fix_suggestion": null
+          }
+        ],
+        "autofix_done": false,
+        "autofix_logs": [],
+        "human_signoff_required": false,
+        "human_signoff_reason": null,
+        "timestamp": "2025-11-19T17:39:22.001784",
+        "checks": {
+          "lsi": {
+            "lsi_count": 4,
+            "within_radius": true,
+            "pass": false,
+            "details": {
+              "min_required": 6,
+              "max_allowed": 10,
+              "link_sentence_index": 8
+            }
+          },
+          "trust_sources": {
+            "tier_1_count": 0,
+            "tier_2_count": 1,
+            "total_count": 1,
+            "pass": false,
+            "sources_found": [
+              {
+                "domain": "sv.wikipedia.org",
+                "tier": 2
+              }
+            ],
+            "min_t1_required": 1,
+            "min_total_required": 2
+          },
+          "anchor": {
+            "risk_level": "medium",
+            "anchor_text": "läs mer om AI",
+            "anchor_type": "partial",
+            "pass": true
+          },
+          "placement": {
+            "in_forbidden_location": false,
+            "forbidden_locations_found": [],
+            "pass": true
+          },
+          "compliance": {
+            "regulated_vertical": null,
+            "disclaimer_required": false,
+            "disclaimer_present": false,
+            "pass": true
+          },
+          "intent": {
+            "overall_alignment": "partial",
+            "pass": true
+          }
+        }
+      }
+    },
+    {
+      "type": "state_transition",
+      "timestamp": "2025-11-19T17:39:22.002141",
+      "from_state": "QC",
+      "to_state": "DELIVER",
+      "metadata": {
+        "qc_status": "WARNING"
+      }
+    }
+  ],
+  "summary": {
+    "total_entries": 17,
+    "entry_types": {
+      "info": 11,
+      "state_transition": 4,
+      "warning": 1,
+      "qc_result": 1
+    },
+    "duration_seconds": 0.17
+  }
+}
