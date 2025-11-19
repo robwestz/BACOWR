@@ -251,33 +251,6 @@ bacowr-publisher-configs/
 
 ---
 
-### Idea: Intent Confidence Scoring
-
-- **Description**: Instead of binary intent classification (informational/commercial/transactional), add confidence scores. "85% informational, 15% commercial" → Helps QC decide when intent is ambiguous.
-- **Impact**: Medium-High (reduces false QC blocks for mixed-intent queries)
-- **Effort**: Low-Medium (2-3 days - update intent analyzer, adjust QC logic)
-- **Risk**: Low (improves existing feature)
-- **Depends On**: Module C (Intent Analyzer), Module G (QC)
-- **Proposed By**: Claude (Iteration 10 - analyzing QC block patterns)
-- **Date Added**: 2025-11-19 (Iteration 10)
-- **Status**: Quick win, should implement soon
-
-**Example Output**:
-```json
-{
-  "intent_scores": {
-    "informational": 0.65,
-    "commercial_research": 0.30,
-    "transactional": 0.05
-  },
-  "primary_intent": "informational",
-  "confidence": "medium",  // high > 0.8, medium 0.5-0.8, low < 0.5
-  "qc_recommendation": "allow_if_content_leans_informational"
-}
-```
-
----
-
 ### Idea: Anchor Text A/B Testing Framework
 
 - **Description**: Generate 3-5 anchor variations for same article, track which performs best (CTR, rankings). Build feedback loop to improve anchor generation over time.
@@ -288,25 +261,6 @@ bacowr-publisher-configs/
 - **Proposed By**: Claude (Iteration 13 - inspired by SEO A/B testing tools)
 - **Date Added**: 2025-11-19 (Iteration 13)
 - **Status**: Incubator → Backlog (high agency interest)
-
----
-
-### Idea: LLM Output Caching (Reduce Costs by 40%)
-
-- **Description**: Cache LLM responses for identical preflight inputs. If user generates article for same publisher+target+anchor combination twice, reuse cached LLM output (with freshness check).
-- **Impact**: **VERY HIGH** - Cuts costs by 30-40% for repeat jobs, 10x speedup
-- **Effort**: Low-Medium (2-3 days - cache key generation, Redis/file cache, TTL logic)
-- **Risk**: Low (opt-in feature, users can disable)
-- **Depends On**: Module D (Writer), Module F (Storage/Cache)
-- **Proposed By**: Claude (Iteration 14 - cost optimization analysis)
-- **Date Added**: 2025-11-19 (Iteration 14)
-- **Status**: **PRIORITY 3** - Easy win, massive ROI
-
-**Cache Strategy**:
-```python
-cache_key = hash(publisher_domain + target_url + anchor_text + llm_model + strategy)
-cache_ttl = 7 days  # Configurable per user
-```
 
 ---
 
@@ -454,25 +408,7 @@ Action: Generate updated version → "Best Project Management Tools 2024"
 
 ---
 
-### Idea: SEO Campaign Manager (Platform Pivot)
-
-- **Description**: Full campaign management platform. Track backlinks across clients, monitor rankings, measure ROI, alert on rank drops, visualize link graphs, team management.
-- **Impact**: **TRANSFORMATIONAL** - Turns BACOWR from tool → platform, new revenue streams
-- **Effort**: Massive (30-60 days MVP, ongoing development)
-- **Risk**: Very High (scope creep, market fit uncertain, competes with Ahrefs/SEMrush)
-- **Depends On**: BACOWR v1.5+ must be stable and mature first
-- **Proposed By**: Claude Team Q (Iteration 1)
-- **Date Added**: 2025-11-19 (Iteration 1)
-- **Iteration 12 Update**: User interviews show demand is REAL - 5 agencies want this
-- **Status**: **STRATEGIC PRIORITY** - Requires C-level decision, potential v3.0 or spin-off
-
-**Market Research (Iterations 10-12)**:
-- Interviewed 5 SEO agencies, all want campaign management
-- Willing to pay $200-500/month for integrated solution
-- Main competitors: Ahrefs ($99-999/mo), SEMrush ($119-449/mo)
-- Differentiator: BACOWR is **content creation + tracking**, competitors are tracking-only
-
-**Recommendation**: Green-light as v3.0 roadmap item. Start with minimal tracking (backlink library + ranking integration) in v2.0, expand to full platform in v3.0.
+*Note: SEO Campaign Manager has been promoted to Official v3.0 Roadmap (see above). This Incubator entry is archived.*
 
 ---
 

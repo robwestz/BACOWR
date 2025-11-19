@@ -74,7 +74,7 @@ graph TB
 
     PRE --> SERP
     WRITE --> LLM
-    QC --> CMS
+    ORCH --> CMS
 
     BATCH --> ORCH
 
@@ -136,7 +136,6 @@ graph LR
     D --> C
 
     G --> B
-    G --> D
 
     H --> E
     H --> J
@@ -174,6 +173,14 @@ graph LR
 - **Module G (QC)**: Quality gatekeeper
 - **Module D (Writer)**: LLM integration, content generation
 - **Module C (Preflight)**: SERP research and analysis
+
+**Flow Clarification**:
+The pipeline flows in one direction: **Preflight → Writer → QC → Deliver**.
+Modules do NOT call downstream modules directly. The Orchestrator (E) coordinates
+data flow between stages. For example:
+- Writer does not call QC
+- QC does not call Writer
+- Orchestrator passes Writer output to QC for validation
 
 ---
 
@@ -282,11 +289,11 @@ stateDiagram-v2
     WRITE --> ERROR: LLM Failure
 
     QC --> DELIVER: PASS
-    QC --> RESCUE: FAIL (fixable)
-    QC --> BLOCKED: FAIL (not fixable)
+    QC --> RESCUE: FAIL (first time, fixable)
+    QC --> BLOCKED: FAIL (after RESCUE or not fixable)
 
-    RESCUE --> QC: Retry
-    RESCUE --> ERROR: Rescue Failed
+    RESCUE --> QC: Retry after AutoFix
+    RESCUE --> BLOCKED: AutoFix failed
 
     DELIVER --> [*]: Success
     BLOCKED --> [*]: Manual Review Needed
@@ -332,10 +339,15 @@ stateDiagram-v2
 | **PREFLIGHT** | SERP research, anchor analysis | 30-90s | Success → WRITE, Failure → ERROR |
 | **WRITE** | LLM article generation | 20-60s | Success → QC, Failure → ERROR |
 | **QC** | Quality validation | 5-15s | PASS → DELIVER, FAIL (fixable) → RESCUE, FAIL (not fixable) → BLOCKED |
-| **RESCUE** | AutoFix retry (max 1 per job) | 20-60s | Retry → QC, Failure → ERROR |
+| **RESCUE** | AutoFix retry (max 1 per job) | 20-60s | Retry → QC, Failure → BLOCKED |
 | **DELIVER** | Article ready for publication | <1s | Terminal state (success) |
 | **BLOCKED** | QC failed, manual review needed | - | Terminal state (needs human) |
 | **ERROR** | System error occurred | - | Terminal state (failure) |
+
+**State Machine Rules**:
+1. **RESCUE can only be entered once per job** - If QC blocks after RESCUE, job goes to BLOCKED
+2. **Loop detection** - If Writer/RESCUE produces identical output (hash check), job goes to BLOCKED
+3. **Terminal states** - DELIVER/BLOCKED/ERROR are final, no transitions out
 
 **State Persistence**: All state transitions logged in `execution_log.json` for debugging and recovery.
 
