@@ -195,3 +195,5 @@ db.sqlite3
 .dmypy.json
 dmypy.json
 .pyre/
+.api_key
+*.db
