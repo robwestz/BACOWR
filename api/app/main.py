@@ -13,7 +13,8 @@ from dotenv import load_dotenv
 
 from .database import engine, get_db, init_db, Base
 from .auth import create_default_user
-from .routes import jobs, backlinks, analytics, websocket, users, batches, audit
+from .routes import jobs, backlinks, analytics, websocket, users, batches, audit, export
+from .middleware.prometheus import setup_metrics
 from .middleware.rate_limit import setup_rate_limiting
 from .middleware.audit import AuditMiddleware
 
@@ -39,6 +40,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Setup Prometheus metrics
+setup_metrics(app)
 
 # Setup rate limiting
 setup_rate_limiting(app)
@@ -106,6 +110,7 @@ app.include_router(analytics.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(audit.router, prefix="/api/v1")
 app.include_router(websocket.router, prefix="/api/v1")
+app.include_router(export.router, prefix="/api/v1")  # Google Sheets/Docs export
 
 
 # Error handlers
