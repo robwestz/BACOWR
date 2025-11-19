@@ -22,14 +22,12 @@ python-engineio==4.9.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.0
+slowapi==0.1.9
 
 # HTTP & Utils
 httpx==0.26.0
 pydantic==2.5.3
 pydantic-settings==2.1.0
-
-# CORS
-python-cors==1.0.0
 
 # Existing BACOWR dependencies
 requests>=2.31.0

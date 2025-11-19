@@ -3,6 +3,8 @@ Middleware package for BACOWR API.
 
 Contains middleware components for:
 - Prometheus metrics export
+- Rate limiting
+- Audit logging
 - Request logging
 - Error handling
 """

@@ -1,0 +1,21 @@
+{
+  "job_id": "job_20251119_173921_d0c0b425",
+  "started_at": "2025-11-19T17:39:21.830311",
+  "llm_provider": "auto",
+  "writing_strategy": "multi_stage",
+  "serp_source": "mock",
+  "generation": {
+    "provider": "mock",
+    "model": "mock",
+    "strategy": "mock",
+    "total_tokens": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "cost_usd": 0.0,
+    "duration_seconds": 0.0,
+    "stages_completed": 0,
+    "retries": 0,
+    "success": true
+  },
+  "completed_at": "2025-11-19T17:39:22.003996"
+}

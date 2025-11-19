@@ -33,6 +33,7 @@ class User(Base):
     # Relationships
     jobs = relationship("Job", back_populates="user", cascade="all, delete-orphan")
     backlinks = relationship("Backlink", back_populates="user", cascade="all, delete-orphan")
+    batches = relationship("Batch", back_populates="user", cascade="all, delete-orphan")
 
 
 class Job(Base):
@@ -131,6 +132,104 @@ class Backlink(Base):
         Index('idx_backlink_publisher_domain', 'publisher_domain'),
         Index('idx_backlink_category', 'category'),
         Index('idx_backlink_user_created', 'user_id', 'created_at'),
+    )
+
+
+class Batch(Base):
+    """
+    Batch of jobs for Day 2 QA review workflow.
+
+    Enables processing 175+ links with human review on "Day 2".
+    """
+
+    __tablename__ = "batches"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Batch metadata
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+
+    # Status tracking
+    status = Column(String, nullable=False, default="pending", index=True)
+    # Statuses: pending, processing, ready_for_review, in_review, completed, failed
+
+    # Batch statistics
+    total_items = Column(Integer, default=0)
+    items_completed = Column(Integer, default=0)
+    items_approved = Column(Integer, default=0)
+    items_rejected = Column(Integer, default=0)
+    items_pending_review = Column(Integer, default=0)
+
+    # Cost tracking
+    estimated_total_cost = Column(Float, nullable=True)
+    actual_total_cost = Column(Float, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    review_started_at = Column(DateTime(timezone=True), nullable=True)
+    review_completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Configuration
+    batch_config = Column(JSON, nullable=True)  # LLM provider, strategy, etc.
+
+    # Relationships
+    user = relationship("User", back_populates="batches")
+    items = relationship("BatchReviewItem", back_populates="batch", cascade="all, delete-orphan")
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_batch_user_status', 'user_id', 'status'),
+        Index('idx_batch_status_created', 'status', 'created_at'),
+    )
+
+
+class BatchReviewItem(Base):
+    """
+    Individual item in a batch for Day 2 review.
+
+    Links a Job to a Batch with review status and notes.
+    """
+
+    __tablename__ = "batch_review_items"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    batch_id = Column(String, ForeignKey("batches.id"), nullable=False, index=True)
+    job_id = Column(String, ForeignKey("jobs.id"), nullable=False, index=True)
+
+    # Review status
+    review_status = Column(String, nullable=False, default="pending", index=True)
+    # Statuses: pending, approved, rejected, needs_regeneration, regenerating, regenerated
+
+    # Review metadata
+    reviewer_notes = Column(Text, nullable=True)
+    reviewed_by = Column(String, ForeignKey("users.id"), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # QC snapshot (at batch creation time)
+    qc_score = Column(Float, nullable=True)
+    qc_status = Column(String, nullable=True)
+    qc_issues_count = Column(Integer, default=0)
+
+    # Regeneration tracking
+    regeneration_count = Column(Integer, default=0)
+    original_job_id = Column(String, nullable=True)  # If regenerated, link to original
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    batch = relationship("Batch", back_populates="items")
+    job = relationship("Job")
+    reviewer = relationship("User", foreign_keys=[reviewed_by])
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_batch_review_status', 'batch_id', 'review_status'),
+        Index('idx_batch_qc_score', 'batch_id', 'qc_score'),
     )
 
 

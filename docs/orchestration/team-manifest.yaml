@@ -1,0 +1,484 @@
+# BACOWR Team Manifest
+# Defines all teams, responsibilities, and coordination rules
+
+project: BACOWR
+version: 1.0.0
+last_updated: 2025-11-19
+
+teams:
+  - name: Orchestrator
+    code: ORCH
+    responsibility: Master planning, coordination, wave sequencing
+    scope:
+      - Wave planning and prioritization
+      - Team coordination
+      - Progress tracking
+      - Checklist management
+      - Conflict resolution
+    dependencies: []
+    typical_files:
+      - docs/bacowr_master_orchestration_checklist.json
+      - docs/orchestration/framework.md
+    skills:
+      - Project management
+      - System architecture
+      - Technical planning
+    outputs:
+      - Master checklist
+      - Wave plans
+      - Progress reports
+
+  - name: Alpha Team
+    code: A
+    responsibility: Foundation & Database
+    scope:
+      - Database schema design
+      - SQLAlchemy model definitions
+      - Alembic migrations
+      - Core configuration
+      - Database initialization
+    dependencies: []
+    typical_files:
+      - api/app/database.py
+      - api/app/models/database.py
+      - api/app/models/audit.py
+      - api/alembic/versions/*.py
+      - api/alembic/env.py
+    skills:
+      - Database design
+      - SQLAlchemy ORM
+      - Data modeling
+      - Schema migrations
+    outputs:
+      - Database models with relationships
+      - Migration scripts
+      - Database initialization logic
+    module_prefix: A
+    safe_parallel: false  # Migration conflicts
+
+  - name: Beta Team
+    code: B
+    responsibility: API Layer (Routes & Endpoints)
+    scope:
+      - FastAPI route definitions
+      - Request/response handling
+      - Pydantic schema definitions
+      - HTTP status codes
+      - OpenAPI documentation
+    dependencies:
+      - Alpha  # Needs database models
+    typical_files:
+      - api/app/routes/*.py
+      - api/app/models/schemas.py
+    skills:
+      - FastAPI framework
+      - REST API design
+      - HTTP protocols
+      - Pydantic validation
+    outputs:
+      - REST endpoints
+      - Request/response schemas
+      - API documentation
+    module_prefix: B
+    safe_parallel: false  # Route conflicts
+
+  - name: Gamma Team
+    code: G
+    responsibility: Business Logic (Services & Workflows)
+    scope:
+      - Service layer implementation
+      - Business rule enforcement
+      - Workflow orchestration
+      - Data transformation
+      - Domain logic
+    dependencies:
+      - Alpha  # Uses database models
+    typical_files:
+      - api/app/services/*.py
+    skills:
+      - Domain modeling
+      - Design patterns
+      - Python programming
+      - Business analysis
+    outputs:
+      - Service classes
+      - Workflow implementations
+      - Business logic unit tests
+    module_prefix: G
+    safe_parallel: false  # Service conflicts
+
+  - name: Delta Team
+    code: D
+    responsibility: External Integrations
+    scope:
+      - LLM provider integration (Claude, GPT, Gemini)
+      - External API clients
+      - Webhook handlers
+      - Error handling and retries
+      - Circuit breakers
+    dependencies: []
+    typical_files:
+      - api/app/services/llm_service.py
+      - api/app/services/backlink_service.py
+    skills:
+      - API integration
+      - Async Python
+      - Error handling
+      - HTTP clients
+    outputs:
+      - Multi-provider LLM support
+      - External service integrations
+      - Retry and fallback logic
+    module_prefix: D
+    safe_parallel: true  # Separate from core backend
+
+  - name: Epsilon Team
+    code: E
+    responsibility: Frontend (UI & UX)
+    scope:
+      - React component development
+      - Next.js page implementation
+      - UI/UX design
+      - State management
+      - Client-side routing
+    dependencies:
+      - Beta  # Needs API contracts
+    typical_files:
+      - frontend/src/app/**/*.tsx
+      - frontend/src/components/**/*.tsx
+    skills:
+      - React & TypeScript
+      - Next.js framework
+      - Tailwind CSS
+      - UI/UX design
+    outputs:
+      - UI components
+      - Application pages
+      - Interactive forms
+      - Real-time updates
+    module_prefix: E
+    safe_parallel: true  # Separate codebase
+
+  - name: Zeta Team
+    code: Z
+    responsibility: Testing & QA
+    scope:
+      - Unit test implementation
+      - Integration tests
+      - E2E workflow tests
+      - Smoke tests
+      - Test coverage analysis
+    dependencies:
+      - All teams  # Tests everything
+    typical_files:
+      - api/tests/**/*.py
+      - tests/e2e/**/*.py
+      - tools/smoke_test_*.py
+    skills:
+      - pytest framework
+      - Testing patterns
+      - QA methodology
+      - Test automation
+    outputs:
+      - Unit tests (>80% coverage)
+      - Integration tests
+      - E2E test suites
+      - Smoke test scripts
+    module_prefix: Z
+    safe_parallel: false  # Tests depend on all other work
+
+  - name: Eta Team
+    code: H
+    responsibility: DevOps & Deployment
+    scope:
+      - CI/CD pipeline configuration
+      - Docker containerization
+      - Deployment automation
+      - Infrastructure as code
+      - Environment management
+    dependencies:
+      - All teams  # Deploys everything
+    typical_files:
+      - .github/workflows/*.yml
+      - docker-compose.yml
+      - Dockerfile
+      - railway.json
+    skills:
+      - GitHub Actions
+      - Docker
+      - CI/CD best practices
+      - Cloud platforms (Railway, AWS)
+    outputs:
+      - Automated test pipeline
+      - Deployment workflows
+      - Health checks
+      - Environment configs
+    module_prefix: H
+    safe_parallel: false  # CI/CD conflicts
+
+  - name: Theta Team
+    code: T
+    responsibility: Documentation
+    scope:
+      - Architecture documentation
+      - API documentation
+      - Deployment guides
+      - Developer setup guides
+      - User documentation
+    dependencies:
+      - All teams  # Documents everything
+    typical_files:
+      - docs/**/*.md
+      - README.md
+      - docs/api/openapi.yaml
+      - hoppscotch/**/*.json
+    skills:
+      - Technical writing
+      - Documentation tools
+      - Markdown
+      - API specifications
+    outputs:
+      - Architecture docs
+      - Deployment guides
+      - API documentation
+      - Developer guides
+    module_prefix: J
+    safe_parallel: true  # Separate documentation files
+
+  - name: Iota Team
+    code: I
+    responsibility: Security & Compliance
+    scope:
+      - Authentication implementation
+      - Authorization (RBAC)
+      - Audit logging
+      - Rate limiting
+      - Security hardening
+    dependencies:
+      - Alpha  # Uses database
+      - Beta   # Integrates with API
+    typical_files:
+      - api/app/auth.py
+      - api/app/middleware/rate_limit.py
+      - api/app/middleware/audit.py
+      - api/app/routes/audit.py
+      - api/app/services/audit_service.py
+    skills:
+      - Security best practices
+      - JWT & OAuth
+      - Cryptography
+      - Compliance requirements
+    outputs:
+      - JWT authentication
+      - Rate limiting system
+      - Audit logging
+      - Security middleware
+    module_prefix: P
+    safe_parallel: false  # Integrates deeply with backend
+
+  - name: Kappa Team
+    code: K
+    responsibility: Observability (Monitoring & Logging)
+    scope:
+      - Prometheus metrics
+      - Grafana dashboards
+      - Structured logging
+      - Application monitoring
+      - Alerting rules
+    dependencies:
+      - All teams  # Monitors everything
+    typical_files:
+      - api/app/middleware/prometheus.py
+      - monitoring/prometheus.yml
+      - monitoring/grafana/dashboards/*.json
+    skills:
+      - Prometheus
+      - Grafana
+      - Observability patterns
+      - Monitoring best practices
+    outputs:
+      - Metrics collection
+      - Monitoring dashboards
+      - Alert rules
+      - Logging infrastructure
+    module_prefix: K
+    safe_parallel: true  # Separate infrastructure
+    optional: true  # Not required for MVP
+
+coordination_rules:
+  # Teams must complete in order within a wave
+  execution_order:
+    - Orchestrator  # Always first (planning)
+    - Alpha         # Foundation first
+    - parallel:
+        - Beta      # API can run parallel with...
+        - Gamma     # Business logic
+        - Delta     # Integrations
+        - Iota      # Security (if needed)
+    - Epsilon       # Frontend depends on API
+    - Zeta          # Testing after implementation
+    - parallel:
+        - Eta       # DevOps can run with...
+        - Theta     # Documentation
+        - Kappa     # Monitoring
+
+  # Teams safe for parallel sessions
+  parallel_safe_teams:
+    - Epsilon  # Frontend (separate codebase)
+    - Theta    # Documentation (separate files)
+    - Kappa    # Monitoring (separate infrastructure)
+
+  # Teams requiring sequential execution
+  sequential_teams:
+    - Alpha    # Database changes cause migration conflicts
+    - Beta     # Route definitions conflict
+    - Gamma    # Service layer conflicts
+    - Eta      # CI/CD pipeline conflicts
+
+  # Conflict zones (avoid parallel work)
+  conflict_zones:
+    - zone: backend_core
+      teams: [Alpha, Beta, Gamma, Iota]
+      files:
+        - api/app/models/*.py
+        - api/app/routes/*.py
+        - api/app/services/*.py
+        - api/alembic/versions/*.py
+
+    - zone: ci_cd
+      teams: [Eta]
+      files:
+        - .github/workflows/*.yml
+        - docker-compose.yml
+
+    - zone: tests
+      teams: [Zeta]
+      files:
+        - tests/**/*.py
+        - api/tests/**/*.py
+
+module_naming_convention:
+  format: "{team_code}{wave_number}_{module_name}"
+  examples:
+    - A1_database_models       # Alpha Team, Wave 1
+    - B1_job_api              # Beta Team, Wave 1
+    - G2_batch_service        # Gamma Team, Wave 2
+    - E2_batch_review_ui      # Epsilon Team, Wave 2
+    - P4_audit_logging        # Iota Team (P=Protection), Wave 4
+    - J1_openapi_export       # Theta Team (J=doJumentation), Wave 1
+
+wave_structure:
+  definition: |
+    Each wave represents a complete vertical slice of functionality
+    that can be developed, tested, and deployed independently.
+
+  typical_waves:
+    - wave: 1
+      name: MVP (Minimal Viable Product)
+      goal: Core workflow working end-to-end
+      teams: [Alpha, Beta, Gamma, Delta, Epsilon, Zeta]
+      deliverable: User can complete primary workflow
+
+    - wave: 2
+      name: Extended Features
+      goal: Additional workflows and features
+      teams: [Alpha, Beta, Gamma, Epsilon, Zeta]
+      deliverable: Secondary workflows implemented
+
+    - wave: 3
+      name: Production Hardening
+      goal: Security, reliability, deployment
+      teams: [Iota, Eta, Zeta, Kappa]
+      deliverable: Production-ready system
+
+    - wave: 4
+      name: Documentation & Polish
+      goal: Complete documentation and refinement
+      teams: [Theta, Beta, Eta]
+      deliverable: Fully documented system
+
+    - wave: 5
+      name: Enterprise Features
+      goal: Advanced features and scalability
+      teams: [All teams as needed]
+      deliverable: Enterprise-ready platform
+
+communication_protocols:
+  status_updates:
+    frequency: After each team completes work
+    format: Update master checklist with module status
+    location: docs/bacowr_master_orchestration_checklist.json
+
+  dependency_tracking:
+    method: Check checklist before starting dependent module
+    blocker_handling: Mark module status as "blocked", document dependency
+    resolution: Prioritize unblocking modules
+
+  progress_reporting:
+    metrics:
+      - Modules completed per wave
+      - Wave completion percentage
+      - Overall project completion
+      - Estimated time to completion
+    frequency: After each wave completion
+
+quality_gates:
+  before_wave_completion:
+    - All module tests pass
+    - Smoke test successful
+    - No critical security issues
+    - Documentation updated
+
+  before_production:
+    - >80% test coverage
+    - All E2E tests pass
+    - Security audit complete
+    - Deployment tested
+    - Documentation complete
+
+rollback_procedure:
+  if_wave_fails:
+    1. Identify failing module
+    2. Revert changes for that module
+    3. Mark module as "blocked" with reason
+    4. Continue with independent modules
+    5. Fix blocker and retry
+
+  database_rollback:
+    - Use alembic downgrade -1
+    - Document rollback in checklist
+    - Re-test after fix
+
+success_metrics:
+  velocity:
+    - Target: 5-10 modules per day
+    - Target: 1-3 days per wave
+    - Target: 80%+ completion in 4-5 days
+
+  quality:
+    - Test coverage: >80%
+    - Bug density: <10 per 1000 LOC
+    - Security issues: 0 critical
+
+  efficiency:
+    - Context switches: <3 team switches per hour
+    - Merge conflicts: <5% of commits
+    - Rework rate: <10% of modules
+
+tools:
+  master_checklist: docs/bacowr_master_orchestration_checklist.json
+  team_manifest: docs/orchestration/team-manifest.yaml
+  wave_plans: docs/orchestration/waves/*.yaml
+  progress_dashboard: Generated from checklist (optional)
+
+notes: |
+  This manifest defines the complete organizational structure for
+  BACOWR development. It serves as the single source of truth for:
+
+  - Team responsibilities and boundaries
+  - Coordination and sequencing rules
+  - Module naming conventions
+  - Quality gates and success criteria
+
+  Teams should reference this manifest when planning work to ensure
+  proper coordination and avoid conflicts.

@@ -125,6 +125,7 @@ interface CreateJobRequest {
   publisher_domain: string;          // Required: e.g., "aftonbladet.se"
   target_url: string;                // Required: URL to link to
   anchor_text: string;               // Required: 3-150 chars
+  idempotency_key?: string;          // Optional: max 255 chars, for safe retries
   options?: {
     llm_provider?: "anthropic" | "openai" | "google"; // Default: "anthropic"
     strategy?: "single_stage" | "multi_stage";         // Default: "multi_stage"
@@ -325,7 +326,8 @@ Authorization: Bearer {token}
       "total": 347,
       "limit": 20,
       "offset": 0,
-      "has_more": true
+      "has_more": true,
+      "next_offset": 20
     }
   }
 }
@@ -590,7 +592,7 @@ X-RateLimit-Reset: 1700580000
 
 ### Pagination
 
-All list endpoints support cursor-based pagination:
+All list endpoints support offset-based pagination:
 
 **Request**:
 ```http
@@ -795,7 +797,11 @@ def verify_webhook(payload, signature, secret):
 ```python
 import bacowr
 
-client = bacowr.Client(api_key="sk_live_abc123")
+# Using JWT token (recommended for v1.8+)
+client = bacowr.Client(token="eyJhbGciOiJIUzI1NiIs...")
+
+# Or using legacy API key (deprecated, for backward compatibility)
+# client = bacowr.Client(api_key="sk_live_abc123")
 
 # Create job
 job = client.jobs.create(
@@ -821,7 +827,11 @@ else:
 ```javascript
 import { BacowrClient } from 'bacowr-js';
 
-const client = new BacowrClient({ apiKey: 'sk_live_abc123' });
+// Using JWT token (recommended for v1.8+)
+const client = new BacowrClient({ token: 'eyJhbGciOiJIUzI1NiIs...' });
+
+// Or using legacy API key (deprecated, for backward compatibility)
+// const client = new BacowrClient({ apiKey: 'sk_live_abc123' });
 
 // Create job
 const job = await client.jobs.create({
@@ -907,14 +917,33 @@ client.batches.create(jobs=jobs)  # Fast, 1 API call
 
 ### 4. Idempotency
 
-Use idempotency keys for safe retries:
+Use `idempotency_key` to safely retry job creation without creating duplicates:
 
 ```python
-client.jobs.create(
-    ...,
-    idempotency_key="unique_key_per_job_abc123"  # Prevents duplicates
+# First request - creates new job, returns 201
+job = client.jobs.create(
+    publisher_domain="example.com",
+    target_url="https://target.com",
+    anchor_text="test",
+    idempotency_key="unique-request-id-12345"
 )
+# Returns: status=201, job_id="job_abc123"
+
+# Retry same request (e.g., after network error)
+# Returns existing job, not a duplicate
+job = client.jobs.create(
+    publisher_domain="example.com",
+    target_url="https://target.com",
+    anchor_text="test",
+    idempotency_key="unique-request-id-12345"  # Same key
+)
+# Returns: status=200, job_id="job_abc123" (same job)
 ```
+
+**Notes:**
+- Idempotency keys expire after 24 hours
+- Use unique keys per logical job (e.g., UUID, hash of inputs)
+- Retries with same key return existing job, not 409 Conflict
 
 ---
 

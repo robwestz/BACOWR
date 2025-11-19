@@ -1,0 +1,271 @@
+{
+  "job_meta": {
+    "job_id": "job_20251119_173921_d0c0b425",
+    "created_at": "2025-11-19T17:39:21.992477",
+    "spec_version": "Next-A1-SERP-First-v1",
+    "mode": "production",
+    "llm_provider": "auto",
+    "serp_source": "mock"
+  },
+  "input_minimal": {
+    "publisher_domain": "konsumenternas.se",
+    "target_url": "https://sv.wikipedia.org/wiki/Artificiell_intelligens",
+    "anchor_text": "läs mer om AI"
+  },
+  "publisher_profile": {
+    "domain": "konsumenternas.se",
+    "sample_urls": [
+      "https://konsumenternas.se"
+    ],
+    "about_excerpt": null,
+    "detected_language": "en",
+    "topic_focus": [],
+    "tone_class": "consumer_magazine",
+    "allowed_commerciality": "low",
+    "brand_safety_notes": "Auto-generated profile - review recommended"
+  },
+  "target_profile": {
+    "url": "https://sv.wikipedia.org/wiki/Artificiell_intelligens",
+    "http_status": 403,
+    "title": "Untitled",
+    "meta_description": null,
+    "h1": null,
+    "h2_h3_sample": [],
+    "main_content_excerpt": "Access denied",
+    "detected_language": "en",
+    "core_entities": [
+      "Untitled"
+    ],
+    "core_topics": [],
+    "core_offer": "Provides information about: Untitled",
+    "candidate_main_queries": [
+      "untitled",
+      "untitled jämförelse",
+      "untitled recension"
+    ]
+  },
+  "anchor_profile": {
+    "proposed_text": "läs mer om AI",
+    "type_hint": null,
+    "llm_classified_type": "partial",
+    "llm_intent_hint": null
+  },
+  "serp_research_extension": {
+    "main_query": "untitled",
+    "cluster_queries": [
+      "untitled jämförelse",
+      "untitled test",
+      "untitled recension"
+    ],
+    "queries_rationale": "Queries derived from target entities (Untitled) and topics (). Cluster queries explore commercial research intent variations.",
+    "serp_sets": [
+      {
+        "query": "untitled",
+        "query_type": "main",
+        "intent_primary": "commercial_research",
+        "intent_secondary": [
+          "info_primary"
+        ],
+        "results_count": 10,
+        "top_results": [
+          {
+            "position": 1,
+            "title": "Result 1: Untitled",
+            "url": "https://example1.com/untitled",
+            "snippet": "Information about untitled",
+            "domain": "example1.com",
+            "type": "informational"
+          },
+          {
+            "position": 2,
+            "title": "Result 2: Untitled",
+            "url": "https://example2.com/untitled",
+            "snippet": "Information about untitled",
+            "domain": "example2.com",
+            "type": "informational"
+          },
+          {
+            "position": 3,
+            "title": "Result 3: Untitled",
+            "url": "https://example3.com/untitled",
+            "snippet": "Information about untitled",
+            "domain": "example3.com",
+            "type": "informational"
+          }
+        ],
+        "subtopics": [
+          "comparison",
+          "reviews",
+          "guide"
+        ],
+        "fetched_at": "2025-11-19T17:39:21.992412",
+        "data_source": "mock"
+      },
+      {
+        "query": "untitled jämförelse",
+        "query_type": "cluster",
+        "intent_primary": "commercial_research",
+        "intent_secondary": [
+          "info_primary"
+        ],
+        "results_count": 10,
+        "top_results": [
+          {
+            "position": 1,
+            "title": "Result 1: Untitled Jämförelse",
+            "url": "https://example1.com/untitled-jämförelse",
+            "snippet": "Information about untitled jämförelse",
+            "domain": "example1.com",
+            "type": "informational"
+          },
+          {
+            "position": 2,
+            "title": "Result 2: Untitled Jämförelse",
+            "url": "https://example2.com/untitled-jämförelse",
+            "snippet": "Information about untitled jämförelse",
+            "domain": "example2.com",
+            "type": "informational"
+          },
+          {
+            "position": 3,
+            "title": "Result 3: Untitled Jämförelse",
+            "url": "https://example3.com/untitled-jämförelse",
+            "snippet": "Information about untitled jämförelse",
+            "domain": "example3.com",
+            "type": "informational"
+          }
+        ],
+        "subtopics": [
+          "comparison",
+          "reviews",
+          "guide"
+        ],
+        "fetched_at": "2025-11-19T17:39:21.992421",
+        "data_source": "mock"
+      },
+      {
+        "query": "untitled test",
+        "query_type": "cluster",
+        "intent_primary": "commercial_research",
+        "intent_secondary": [
+          "info_primary"
+        ],
+        "results_count": 10,
+        "top_results": [
+          {
+            "position": 1,
+            "title": "Result 1: Untitled Test",
+            "url": "https://example1.com/untitled-test",
+            "snippet": "Information about untitled test",
+            "domain": "example1.com",
+            "type": "informational"
+          },
+          {
+            "position": 2,
+            "title": "Result 2: Untitled Test",
+            "url": "https://example2.com/untitled-test",
+            "snippet": "Information about untitled test",
+            "domain": "example2.com",
+            "type": "informational"
+          },
+          {
+            "position": 3,
+            "title": "Result 3: Untitled Test",
+            "url": "https://example3.com/untitled-test",
+            "snippet": "Information about untitled test",
+            "domain": "example3.com",
+            "type": "informational"
+          }
+        ],
+        "subtopics": [
+          "comparison",
+          "reviews",
+          "guide"
+        ],
+        "fetched_at": "2025-11-19T17:39:21.992428",
+        "data_source": "mock"
+      },
+      {
+        "query": "untitled recension",
+        "query_type": "cluster",
+        "intent_primary": "commercial_research",
+        "intent_secondary": [
+          "info_primary"
+        ],
+        "results_count": 10,
+        "top_results": [
+          {
+            "position": 1,
+            "title": "Result 1: Untitled Recension",
+            "url": "https://example1.com/untitled-recension",
+            "snippet": "Information about untitled recension",
+            "domain": "example1.com",
+            "type": "informational"
+          },
+          {
+            "position": 2,
+            "title": "Result 2: Untitled Recension",
+            "url": "https://example2.com/untitled-recension",
+            "snippet": "Information about untitled recension",
+            "domain": "example2.com",
+            "type": "informational"
+          },
+          {
+            "position": 3,
+            "title": "Result 3: Untitled Recension",
+            "url": "https://example3.com/untitled-recension",
+            "snippet": "Information about untitled recension",
+            "domain": "example3.com",
+            "type": "informational"
+          }
+        ],
+        "subtopics": [
+          "comparison",
+          "reviews",
+          "guide"
+        ],
+        "fetched_at": "2025-11-19T17:39:21.992433",
+        "data_source": "mock"
+      }
+    ],
+    "serp_intent_primary": "commercial_research",
+    "serp_intent_secondary": [],
+    "data_confidence": "medium"
+  },
+  "intent_extension": {
+    "serp_intent_primary": "commercial_research",
+    "serp_intent_secondary": [],
+    "target_page_intent": "info_primary",
+    "anchor_implied_intent": "info_primary",
+    "publisher_role_intent": "commercial_research",
+    "intent_alignment": {
+      "anchor_vs_serp": "partial",
+      "target_vs_serp": "partial",
+      "publisher_vs_serp": "aligned",
+      "overall": "partial"
+    },
+    "recommended_bridge_type": "pivot",
+    "recommended_article_angle": "Informational guide about Untitled that establishes context and naturally introduces the target as a relevant solution.",
+    "required_subtopics": [
+      "reviews",
+      "background information",
+      "context and overview",
+      "guide",
+      "comparison"
+    ],
+    "forbidden_angles": [
+      "direct product promotion",
+      "call-to-action language"
+    ],
+    "notes": {
+      "rationale": "SERP shows commercial_research intent, target is info_primary, publisher role is commercial_research. Overall alignment: partial. Recommended pivot bridge to connect all elements naturally.",
+      "data_confidence": "medium"
+    }
+  },
+  "generation_constraints": {
+    "language": "en",
+    "min_word_count": 900,
+    "max_anchor_usages": 2,
+    "anchor_policy": "Ingen anchor i H1/H2, mittsektion"
+  }
+}
