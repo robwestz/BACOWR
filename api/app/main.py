@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from .database import engine, get_db, init_db, Base
 from .auth import create_default_user
 from .routes import jobs, backlinks, analytics, websocket, users, export
+from .middleware.prometheus import setup_metrics
 
 # Load environment variables
 load_dotenv()
@@ -37,6 +38,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Setup Prometheus metrics
+setup_metrics(app)
 
 
 # Startup event

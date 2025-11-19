@@ -22,5 +22,9 @@ google-auth>=2.23.0               # Google authentication
 google-auth-oauthlib>=1.1.0       # OAuth 2.0 for Google
 google-auth-httplib2>=0.1.1       # HTTP client for Google Auth
 
+# Monitoring and Metrics (Prometheus + Grafana)
+prometheus-client>=0.18.0                    # Prometheus client library
+prometheus-fastapi-instrumentator>=6.1.0     # FastAPI metrics instrumentation
+
 # Testing
 pytest>=7.4.0          # Test framework for CI/CD

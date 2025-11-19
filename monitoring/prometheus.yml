@@ -1,0 +1,42 @@
+# Prometheus Configuration for BACOWR
+# Scrapes metrics from FastAPI application and monitors system health
+
+global:
+  scrape_interval: 15s      # Scrape targets every 15 seconds
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+  external_labels:
+    cluster: 'bacowr-production'
+    environment: 'production'
+
+# Alertmanager configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - 'alertmanager:9093'  # Uncomment when Alertmanager is deployed
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - '/etc/prometheus/alert_rules.yml'
+
+# Scrape configurations
+scrape_configs:
+  # BACOWR FastAPI Application
+  - job_name: 'bacowr-api'
+    static_configs:
+      - targets: ['host.docker.internal:8000']  # FastAPI app
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+
+  # Node Exporter (system metrics) - optional
+  # - job_name: 'node'
+  #   static_configs:
+  #     - targets: ['node-exporter:9100']
+  #   scrape_interval: 30s
