@@ -358,14 +358,28 @@
         },
         "G5_batch_review_ui": {
           "description": "Frontend page for batch review",
-          "status": "missing",
-          "needed_files": [
+          "status": "present",
+          "files": [
+            "frontend/src/app/batches/page.tsx",
             "frontend/src/app/batches/[id]/review/page.tsx",
             "frontend/src/components/batch/BatchReviewTable.tsx",
             "frontend/src/components/batch/BatchFilters.tsx",
-            "frontend/src/components/batch/BulkActions.tsx"
+            "frontend/src/components/batch/BulkActions.tsx",
+            "frontend/src/components/batch/ArticlePreviewModal.tsx"
           ],
-          "priority": "critical",
+          "features": [
+            "Batch list page with filtering",
+            "Complete batch review interface",
+            "Expandable table with QC visualization",
+            "Inline approve/reject/regenerate actions",
+            "Bulk operations (approve, reject, export)",
+            "Article preview modal with full content",
+            "Real-time statistics and progress tracking",
+            "Export approved items to JSON",
+            "Responsive design with Tailwind CSS"
+          ],
+          "quality": "excellent",
+          "completed": "2025-11-19",
           "owner": "Epsilon"
         }
       },
@@ -598,13 +612,13 @@
         },
         "K6_batch_review_page": {
           "description": "Batch review interface for Day 2 QA",
-          "status": "missing",
-          "needed_files": [
+          "status": "present",
+          "files": [
             "frontend/src/app/batches/page.tsx",
             "frontend/src/app/batches/[id]/review/page.tsx"
           ],
-          "priority": "critical",
-          "depends_on": ["G5_batch_review_ui"]
+          "quality": "excellent",
+          "completed": "2025-11-19"
         },
         "K7_components": {
           "description": "Reusable UI components",
@@ -935,7 +949,7 @@
     "wave_2_batch_qa": {
       "goal": "Enable 175-link batch with Day 2 QA workflow",
       "priority": "critical",
-      "status": "in_progress",
+      "status": "complete",
       "modules": ["G_qa_day2"],
       "parallel_tasks": {
         "alpha_team": ["G2_batch_models"],
@@ -947,20 +961,33 @@
         "alpha_team": "complete",
         "beta_team": "complete",
         "gamma_team": "complete",
-        "epsilon_team": "not_started"
+        "epsilon_team": "complete"
       },
       "completion_criteria": [
         "✅ Batch model in database",
         "✅ API endpoints for batch review",
-        "❌ Frontend page for reviewing batch results",
-        "✅ Can approve/reject/regenerate articles in batch (via API)",
-        "✅ Can export approved batch (via API)"
+        "✅ Frontend page for reviewing batch results",
+        "✅ Can approve/reject/regenerate articles in batch (via UI and API)",
+        "✅ Can export approved batch (via UI and API)",
+        "✅ Bulk operations support",
+        "✅ Real-time statistics and progress tracking"
       ],
       "estimated_hours": 16,
-      "hours_completed": 12,
-      "hours_remaining": 4,
-      "blocks_removed": ["Backend for 175-link batch production use case"],
-      "notes": "Backend complete and tested. Frontend UI pending (Epsilon team)."
+      "hours_completed": 16,
+      "hours_remaining": 0,
+      "deliverables": [
+        "Database models (Batch, BatchReviewItem)",
+        "7 REST API endpoints for batch review",
+        "BatchReviewService with complete business logic",
+        "Frontend batch list page with filtering",
+        "Frontend batch review interface with all features",
+        "4 reusable batch review components",
+        "Bulk operations (approve, reject, export)",
+        "Article preview modal",
+        "Type-safe API client integration",
+        "Real-time stats and progress tracking"
+      ],
+      "notes": "Wave 2 complete! Full Day 2 QA workflow implemented end-to-end. Reviewers can now efficiently process 175-link batches with approve/reject/regenerate actions, bulk operations, and export functionality. Production-ready for agency use."
     },
 
     "wave_3_production_hardening": {
