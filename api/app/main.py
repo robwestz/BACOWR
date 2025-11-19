@@ -15,6 +15,7 @@ from .database import engine, get_db, init_db, Base
 from .auth import create_default_user
 from .routes import jobs, backlinks, analytics, websocket, users, batches, audit
 from .middleware.rate_limit import setup_rate_limiting
+from .middleware.audit import AuditMiddleware
 
 # Load environment variables
 load_dotenv()
@@ -41,6 +42,9 @@ app.add_middleware(
 
 # Setup rate limiting
 setup_rate_limiting(app)
+
+# Setup audit logging middleware
+app.add_middleware(AuditMiddleware)
 
 
 # Startup event

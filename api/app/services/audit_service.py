@@ -76,7 +76,7 @@ class AuditService:
         error_message: Optional[str] = None,
         request_data: Optional[Dict[str, Any]] = None,
         response_data: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        extra_data: Optional[Dict[str, Any]] = None,
         method: Optional[str] = None,
         endpoint: Optional[str] = None,
         ip_address: Optional[str] = None,
@@ -97,7 +97,7 @@ class AuditService:
             error_message: Error message if failed
             request_data: Request payload (will be sanitized)
             response_data: Response data (will be sanitized)
-            metadata: Additional context
+            extra_data: Additional context
             method: HTTP method
             endpoint: API endpoint
             ip_address: Client IP address
@@ -127,7 +127,7 @@ class AuditService:
             error_message=error_message,
             request_data=sanitized_request,
             response_data=sanitized_response,
-            metadata=metadata,
+            extra_data=extra_data,
             duration_ms=str(duration_ms) if duration_ms else None
         )
 
@@ -147,7 +147,7 @@ class AuditService:
         status_code: Optional[int] = None,
         error_message: Optional[str] = None,
         response_data: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        extra_data: Optional[Dict[str, Any]] = None,
         duration_ms: Optional[int] = None
     ) -> AuditLog:
         """
@@ -199,7 +199,7 @@ class AuditService:
             error_message=error_message,
             request_data=request_data,
             response_data=response_data,
-            metadata=metadata,
+            extra_data=extra_data,
             method=request.method,
             endpoint=str(request.url.path),
             ip_address=ip_address,

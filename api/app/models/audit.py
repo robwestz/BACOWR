@@ -45,7 +45,7 @@ class AuditLog(Base):
     # Additional data
     request_data = Column(JSON, nullable=True)  # Request payload (sanitized)
     response_data = Column(JSON, nullable=True)  # Response data (sanitized)
-    metadata = Column(JSON, nullable=True)  # Additional context
+    extra_data = Column(JSON, nullable=True)  # Additional context (renamed from metadata to avoid SQLAlchemy conflict)
 
     # Performance
     duration_ms = Column(String, nullable=True)  # Request duration in milliseconds
