@@ -1,0 +1,149 @@
+{
+  "v": 1,
+  "name": "BACOWR - Analytics & Audit",
+  "folders": [
+    {
+      "name": "Analytics",
+      "requests": [
+        {
+          "v": "1",
+          "name": "Cost Estimate",
+          "method": "POST",
+          "endpoint": "http://localhost:8000/api/v1/analytics/cost/estimate",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "YOUR_API_KEY_HERE"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"llm_provider\": \"anthropic\",\n  \"writing_strategy\": \"multi_stage\",\n  \"num_jobs\": 100\n}"
+          }
+        },
+        {
+          "v": "1",
+          "name": "Get Analytics Summary",
+          "method": "GET",
+          "endpoint": "http://localhost:8000/api/v1/analytics",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "YOUR_API_KEY_HERE"
+            }
+          ],
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "1",
+          "name": "Get Provider Stats",
+          "method": "GET",
+          "endpoint": "http://localhost:8000/api/v1/analytics/providers",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "YOUR_API_KEY_HERE"
+            }
+          ],
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit (Admin Only)",
+      "requests": [
+        {
+          "v": "1",
+          "name": "List Audit Logs",
+          "method": "GET",
+          "endpoint": "http://localhost:8000/api/v1/audit/logs?limit=100&hours=24",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "YOUR_ADMIN_API_KEY_HERE"
+            }
+          ],
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "1",
+          "name": "Get User Activity",
+          "method": "GET",
+          "endpoint": "http://localhost:8000/api/v1/audit/users/{{USER_ID}}/activity?hours=24",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "YOUR_ADMIN_API_KEY_HERE"
+            }
+          ],
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "1",
+          "name": "Get Security Events",
+          "method": "GET",
+          "endpoint": "http://localhost:8000/api/v1/audit/security-events?hours=24",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "YOUR_ADMIN_API_KEY_HERE"
+            }
+          ],
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "1",
+          "name": "Get Failed Actions",
+          "method": "GET",
+          "endpoint": "http://localhost:8000/api/v1/audit/failed-actions?hours=24",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "YOUR_ADMIN_API_KEY_HERE"
+            }
+          ],
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "1",
+          "name": "Get Audit Stats",
+          "method": "GET",
+          "endpoint": "http://localhost:8000/api/v1/audit/stats?hours=24",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "YOUR_ADMIN_API_KEY_HERE"
+            }
+          ],
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        }
+      ]
+    }
+  ],
+  "requests": []
+}
