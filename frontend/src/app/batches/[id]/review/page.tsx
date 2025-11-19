@@ -11,6 +11,9 @@ import { BatchReviewTable } from '@/components/batch/BatchReviewTable'
 import { BatchFilters } from '@/components/batch/BatchFilters'
 import { BulkActions } from '@/components/batch/BulkActions'
 import { ArticlePreviewModal } from '@/components/batch/ArticlePreviewModal'
+import { useToast } from '@/components/ui/toast'
+import { SkeletonStats, SkeletonTable } from '@/components/ui/skeleton'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
   ArrowLeft,
   Download,
@@ -22,10 +25,11 @@ import {
 import Link from 'next/link'
 import type { BatchReviewItem, ReviewItemStatus } from '@/types'
 
-export default function BatchReviewPage() {
+function BatchReviewPageContent() {
   const params = useParams()
   const router = useRouter()
   const queryClient = useQueryClient()
+  const { addToast } = useToast()
   const batchId = params.id as string
 
   const [statusFilter, setStatusFilter] = useState<ReviewItemStatus | 'all'>('all')
@@ -34,9 +38,10 @@ export default function BatchReviewPage() {
   const [previewItem, setPreviewItem] = useState<BatchReviewItem | null>(null)
 
   // Fetch batch details
-  const { data: batch, isLoading: batchLoading } = useQuery({
+  const { data: batch, isLoading: batchLoading, error: batchError } = useQuery({
     queryKey: ['batch', batchId],
     queryFn: () => batchReviewAPI.get(batchId),
+    retry: 2,
   })
 
   // Fetch batch items
@@ -46,6 +51,7 @@ export default function BatchReviewPage() {
       batchReviewAPI.getItems(batchId, {
         status: statusFilter !== 'all' ? statusFilter : undefined,
       }),
+    enabled: !!batch, // Only fetch if batch exists
   })
 
   // Fetch batch stats
@@ -53,9 +59,10 @@ export default function BatchReviewPage() {
     queryKey: ['batch-stats', batchId],
     queryFn: () => batchReviewAPI.getStats(batchId),
     refetchInterval: 10000, // Refetch every 10 seconds
+    enabled: !!batch,
   })
 
-  // Review item mutation
+  // Review item mutation with optimistic updates
   const reviewMutation = useMutation({
     mutationFn: ({
       itemId,
@@ -70,10 +77,52 @@ export default function BatchReviewPage() {
         decision,
         reviewer_notes: notes,
       }),
-    onSuccess: () => {
+    onMutate: async ({ itemId, decision }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['batch-items', batchId] })
+
+      // Snapshot previous value
+      const previousItems = queryClient.getQueryData(['batch-items', batchId, statusFilter])
+
+      // Optimistically update
+      queryClient.setQueryData(['batch-items', batchId, statusFilter], (old: any) => {
+        if (!old) return old
+        return {
+          ...old,
+          items: old.items.map((item: BatchReviewItem) =>
+            item.id === itemId
+              ? { ...item, review_status: decision }
+              : item
+          ),
+        }
+      })
+
+      return { previousItems }
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousItems) {
+        queryClient.setQueryData(['batch-items', batchId, statusFilter], context.previousItems)
+      }
+      addToast({
+        type: 'error',
+        title: 'Review failed',
+        message: 'Failed to update item status. Please try again.',
+      })
+    },
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['batch-items', batchId] })
       queryClient.invalidateQueries({ queryKey: ['batch', batchId] })
       queryClient.invalidateQueries({ queryKey: ['batch-stats', batchId] })
+
+      const actionLabel = variables.decision === 'approve' ? 'approved' :
+                         variables.decision === 'reject' ? 'rejected' : 'requested regeneration for'
+      addToast({
+        type: 'success',
+        title: `Item ${actionLabel}`,
+        message: 'The batch has been updated.',
+        duration: 3000,
+      })
     },
   })
 
@@ -93,6 +142,20 @@ export default function BatchReviewPage() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+
+      addToast({
+        type: 'success',
+        title: 'Export successful',
+        message: `Downloaded ${data.stats.total_approved} approved items`,
+        duration: 5000,
+      })
+    },
+    onError: () => {
+      addToast({
+        type: 'error',
+        title: 'Export failed',
+        message: 'Failed to export batch. Please try again.',
+      })
     },
   })
 
@@ -146,23 +209,59 @@ export default function BatchReviewPage() {
   }
 
   const handleBulkApprove = async () => {
+    let successCount = 0
+    let errorCount = 0
+
     for (const itemId of selectedItems) {
-      await reviewMutation.mutateAsync({
-        itemId,
-        decision: 'approve',
+      try {
+        await reviewMutation.mutateAsync({
+          itemId,
+          decision: 'approve',
+        })
+        successCount++
+      } catch (error) {
+        errorCount++
+      }
+    }
+
+    setSelectedItems(new Set())
+
+    if (successCount > 0) {
+      addToast({
+        type: 'success',
+        title: `Bulk approve completed`,
+        message: `${successCount} items approved${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+        duration: 5000,
       })
     }
-    setSelectedItems(new Set())
   }
 
   const handleBulkReject = async () => {
+    let successCount = 0
+    let errorCount = 0
+
     for (const itemId of selectedItems) {
-      await reviewMutation.mutateAsync({
-        itemId,
-        decision: 'reject',
+      try {
+        await reviewMutation.mutateAsync({
+          itemId,
+          decision: 'reject',
+        })
+        successCount++
+      } catch (error) {
+        errorCount++
+      }
+    }
+
+    setSelectedItems(new Set())
+
+    if (successCount > 0) {
+      addToast({
+        type: 'success',
+        title: `Bulk reject completed`,
+        message: `${successCount} items rejected${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+        duration: 5000,
       })
     }
-    setSelectedItems(new Set())
   }
 
   const handleBulkExport = () => {
@@ -191,22 +290,47 @@ export default function BatchReviewPage() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+
+    addToast({
+      type: 'success',
+      title: 'Export successful',
+      message: `Downloaded ${selectedItemsData.length} selected items`,
+      duration: 3000,
+    })
   }
 
-  if (batchLoading || itemsLoading) {
+  // Loading states
+  if (batchLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Link href="/batches">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Batches
+            </Button>
+          </Link>
+        </div>
+        <div className="space-y-4">
+          <div className="h-8 w-64 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-96 bg-muted rounded animate-pulse" />
+        </div>
+        <SkeletonStats />
+        <SkeletonTable rows={10} />
       </div>
     )
   }
 
-  if (!batch) {
+  // Error state
+  if (batchError || !batch) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <p className="text-xl font-semibold">Batch not found</p>
+          <p className="text-muted-foreground mt-2">
+            The batch you're looking for doesn't exist or you don't have access to it.
+          </p>
           <Link href="/batches">
             <Button className="mt-4">Back to Batches</Button>
           </Link>
@@ -257,15 +381,25 @@ export default function BatchReviewPage() {
           <Button
             onClick={() => exportMutation.mutate()}
             disabled={exportMutation.isPending || batch.stats.approved === 0}
+            aria-label="Export approved items"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Export Approved ({batch.stats.approved})
+            {exportMutation.isPending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Export Approved ({batch.stats.approved})
+              </>
+            )}
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      {stats && (
+      {stats ? (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
@@ -326,6 +460,8 @@ export default function BatchReviewPage() {
             </CardContent>
           </Card>
         </div>
+      ) : (
+        <SkeletonStats />
       )}
 
       {/* Filters */}
@@ -356,17 +492,21 @@ export default function BatchReviewPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <BatchReviewTable
-            items={filteredItems}
-            batchId={batchId}
-            selectedItems={selectedItems}
-            onToggleSelect={handleToggleSelect}
-            onSelectAll={handleSelectAll}
-            onViewItem={setPreviewItem}
-            onApprove={handleApprove}
-            onReject={handleReject}
-            onRequestRegeneration={handleRequestRegeneration}
-          />
+          {itemsLoading ? (
+            <SkeletonTable rows={10} />
+          ) : (
+            <BatchReviewTable
+              items={filteredItems}
+              batchId={batchId}
+              selectedItems={selectedItems}
+              onToggleSelect={handleToggleSelect}
+              onSelectAll={handleSelectAll}
+              onViewItem={setPreviewItem}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onRequestRegeneration={handleRequestRegeneration}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -380,5 +520,13 @@ export default function BatchReviewPage() {
         onRequestRegeneration={handleRequestRegeneration}
       />
     </div>
+  )
+}
+
+export default function BatchReviewPage() {
+  return (
+    <ErrorBoundary>
+      <BatchReviewPageContent />
+    </ErrorBoundary>
   )
 }
