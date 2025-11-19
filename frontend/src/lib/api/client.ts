@@ -4,7 +4,6 @@ import type {
   JobPackage,
   JobListResponse,
   BacklinkRecord,
-  BatchJob,
   BatchReview,
   BatchReviewListResponse,
   BatchReviewItem,
@@ -122,35 +121,8 @@ export const jobsAPI = {
   },
 }
 
-// Batch API
-export const batchAPI = {
-  // Create batch job
-  create: async (jobs: JobInput[]): Promise<BatchJob> => {
-    return fetchAPI<BatchJob>('/api/batch', {
-      method: 'POST',
-      body: JSON.stringify({ jobs }),
-    })
-  },
-
-  // Get batch status
-  get: async (batchId: string): Promise<BatchJob> => {
-    return fetchAPI<BatchJob>(`/api/batch/${batchId}`)
-  },
-
-  // List batches
-  list: async (): Promise<BatchJob[]> => {
-    return fetchAPI<BatchJob[]>('/api/batch')
-  },
-
-  // Cancel batch
-  cancel: async (batchId: string): Promise<void> => {
-    return fetchAPI<void>(`/api/batch/${batchId}/cancel`, {
-      method: 'POST',
-    })
-  },
-}
-
 // Batch Review API (Day 2 QA Workflow)
+// Note: This replaces the old batchAPI with a more comprehensive batch review system
 export const batchReviewAPI = {
   // Create batch from completed jobs
   create: async (data: {
