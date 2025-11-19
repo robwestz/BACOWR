@@ -264,17 +264,29 @@ def run_production_job(
 
         article, generation_metrics = writer.generate(job_package, strategy=writing_strategy)
 
-        metrics['generation'] = {
-            'provider': generation_metrics.provider,
-            'model': generation_metrics.model,
-            'stages_completed': generation_metrics.stages_completed,
-            'duration_seconds': generation_metrics.duration_seconds,
-            'retries': generation_metrics.retries
-        }
+        # Handle both GenerationMetrics object and dict
+        if hasattr(generation_metrics, 'provider'):
+            # GenerationMetrics object
+            metrics['generation'] = {
+                'provider': generation_metrics.provider,
+                'model': generation_metrics.model,
+                'stages_completed': generation_metrics.stages_completed,
+                'duration_seconds': generation_metrics.duration_seconds,
+                'retries': generation_metrics.retries
+            }
+            provider = generation_metrics.provider
+            stages = generation_metrics.stages_completed
+            duration = generation_metrics.duration_seconds
+        else:
+            # Dict (mock mode or legacy)
+            metrics['generation'] = generation_metrics
+            provider = generation_metrics.get('provider', 'unknown')
+            stages = generation_metrics.get('stages_completed', 0)
+            duration = generation_metrics.get('duration_seconds', 0)
 
-        logger.log_info(f"Article generated successfully with {generation_metrics.provider}", {
-            'stages': generation_metrics.stages_completed,
-            'duration': generation_metrics.duration_seconds
+        logger.log_info(f"Article generated successfully with {provider}", {
+            'stages': stages,
+            'duration': duration
         })
 
         # Check for payload loop

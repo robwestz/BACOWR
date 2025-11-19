@@ -1,0 +1,96 @@
+{
+  "job_id": "job_20251119_173921_d0c0b425",
+  "status": "WARNING",
+  "issues": [
+    {
+      "category": "LSI",
+      "severity": "MEDIUM",
+      "message": "LSI count 4 outside range 6-10",
+      "details": {
+        "lsi_count": 4,
+        "within_radius": true,
+        "pass": false,
+        "details": {
+          "min_required": 6,
+          "max_allowed": 10,
+          "link_sentence_index": 8
+        }
+      },
+      "auto_fixable": true,
+      "fix_suggestion": "inject_missing_lsi or trim_excess_lsi"
+    },
+    {
+      "category": "TRUST_SOURCES",
+      "severity": "HIGH",
+      "message": "Insufficient trust sources: 1 found, 2 required",
+      "details": {
+        "tier_1_count": 0,
+        "tier_2_count": 1,
+        "total_count": 1,
+        "pass": false,
+        "sources_found": [
+          {
+            "domain": "sv.wikipedia.org",
+            "tier": 2
+          }
+        ],
+        "min_t1_required": 1,
+        "min_total_required": 2
+      },
+      "auto_fixable": false,
+      "fix_suggestion": null
+    }
+  ],
+  "autofix_done": false,
+  "autofix_logs": [],
+  "human_signoff_required": false,
+  "human_signoff_reason": null,
+  "timestamp": "2025-11-19T17:39:22.001784",
+  "checks": {
+    "lsi": {
+      "lsi_count": 4,
+      "within_radius": true,
+      "pass": false,
+      "details": {
+        "min_required": 6,
+        "max_allowed": 10,
+        "link_sentence_index": 8
+      }
+    },
+    "trust_sources": {
+      "tier_1_count": 0,
+      "tier_2_count": 1,
+      "total_count": 1,
+      "pass": false,
+      "sources_found": [
+        {
+          "domain": "sv.wikipedia.org",
+          "tier": 2
+        }
+      ],
+      "min_t1_required": 1,
+      "min_total_required": 2
+    },
+    "anchor": {
+      "risk_level": "medium",
+      "anchor_text": "läs mer om AI",
+      "anchor_type": "partial",
+      "pass": true
+    },
+    "placement": {
+      "in_forbidden_location": false,
+      "forbidden_locations_found": [],
+      "pass": true
+    },
+    "compliance": {
+      "regulated_vertical": null,
+      "disclaimer_required": false,
+      "disclaimer_present": false,
+      "pass": true
+    },
+    "intent": {
+      "overall_alignment": "partial",
+      "pass": true
+    }
+  }
+}
