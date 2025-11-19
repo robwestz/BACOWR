@@ -373,6 +373,54 @@
           "dependencies": ["H2", "K1"]
         }
       ]
+    },
+    {
+      "module_id": "Q",
+      "name": "Vision, Gaps & Quality Charter",
+      "status": "present",
+      "depends_on": ["A", "E", "G", "K", "L"],
+      "tasks": [
+        {
+          "id": "Q1",
+          "title": "Project purpose & vision doc",
+          "description": "Create docs/bacowr_vision_and_quality.md that explains, in clear language, what BACOWR is, why it exists, what problems it solves for the SEO/linkbuilding workflow, and how it should feel to use it as a hosted app. This doc must be written so that any LLM (Claude, GPT) can read it once and immediately understand the high-level purpose and priorities.",
+          "status": "present",
+          "priority": "high",
+          "dependencies": ["A2", "E1", "K1"]
+        },
+        {
+          "id": "Q2",
+          "title": "Gap analysis & improvement loop",
+          "description": "In docs/bacowr_vision_and_quality.md, add a structured section 'Gap Analysis & Improvement Loop' that explicitly lists: (1) What might be missing in the current implementation, (2) How to systematically search for blind spots in architecture, UX, SEO logic and operations, (3) How future LLM passes should update this section when new insights are found.",
+          "status": "present",
+          "priority": "high",
+          "dependencies": ["Q1", "E1", "G3", "L2"]
+        },
+        {
+          "id": "Q3",
+          "title": "Quality principles for code & prompts",
+          "description": "Add a 'Quality Charter' section that defines concrete principles for: code style, modularity, testability, prompt clarity, prompt length limits, SEO correctness, robustness of SERP/intent handling, and how the system should trade off speed vs. quality. These principles must be written both for humans and for LLMs to follow.",
+          "status": "present",
+          "priority": "medium",
+          "dependencies": ["Q1", "B1", "C1", "D1"]
+        },
+        {
+          "id": "Q4",
+          "title": "LLM-reading compatibility",
+          "description": "Ensure docs/bacowr_vision_and_quality.md is structured with clear headings, numbered lists and 'LLM instructions' boxes so that it can be read by an LLM in a single request and directly used as additional context when improving existing code or writing new code. Include a short 'How to use this doc in a new session' section addressed to future LLMs.",
+          "status": "present",
+          "priority": "medium",
+          "dependencies": ["Q1", "Q2", "Q3"]
+        },
+        {
+          "id": "Q5",
+          "title": "Future idea loop & future.md",
+          "description": "Create and maintain a separate file future.md that acts as an idea incubator. Implement a loop that repeatedly generates, evaluates and categorises new feature ideas, improvements and spin-off project concepts without interfering with the main BACOWR roadmap. The vision doc must describe how this loop works and how future LLM sessions should use future.md.",
+          "status": "present",
+          "priority": "medium",
+          "dependencies": ["Q1", "Q2"]
+        }
+      ]
     }
   ]
 }
