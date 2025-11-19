@@ -109,9 +109,11 @@
         },
         "B6_batch_models": {
           "description": "Database models for Batch and BatchReviewItem",
-          "status": "missing",
-          "needed_for": "Day 2 QA workflow",
-          "priority": "critical"
+          "status": "present",
+          "files": ["api/app/models/database.py"],
+          "models": ["Batch", "BatchReviewItem"],
+          "quality": "excellent",
+          "completed": "2025-11-19"
         }
       },
 
@@ -291,7 +293,7 @@
       "name": "QA & Day 2 Review Workflow",
       "goal": "Complete Day 2 QA workflow for batch review",
       "priority": "critical",
-      "status": "missing",
+      "status": "partial",
       "owner": "Multiple Teams (Alpha, Beta, Gamma, Epsilon)",
 
       "tasks": {
@@ -303,35 +305,38 @@
         },
         "G2_batch_models": {
           "description": "Batch and BatchReviewItem database models",
-          "status": "missing",
-          "needed_files": ["api/app/models/database.py (extend)"],
-          "priority": "critical",
-          "owner": "Alpha"
+          "status": "present",
+          "files": ["api/app/models/database.py"],
+          "models": ["Batch", "BatchReviewItem"],
+          "quality": "excellent",
+          "owner": "Alpha",
+          "completed": "2025-11-19"
         },
         "G3_batch_review_api": {
           "description": "API endpoints for batch review",
-          "status": "missing",
-          "needed_endpoints": [
+          "status": "present",
+          "files": ["api/app/routes/batches.py"],
+          "endpoints": [
+            "POST /api/v1/batches",
             "GET /api/v1/batches",
             "GET /api/v1/batches/:id",
             "GET /api/v1/batches/:id/items",
-            "POST /api/v1/batches/:id/items/:item_id/approve",
-            "POST /api/v1/batches/:id/items/:item_id/reject",
+            "POST /api/v1/batches/:id/items/:item_id/review",
             "POST /api/v1/batches/:id/items/:item_id/regenerate",
-            "POST /api/v1/batches/:id/export"
+            "POST /api/v1/batches/:id/export",
+            "GET /api/v1/batches/:id/stats"
           ],
-          "priority": "critical",
-          "owner": "Beta"
+          "quality": "excellent",
+          "owner": "Beta",
+          "completed": "2025-11-19"
         },
         "G4_batch_review_logic": {
           "description": "Business logic for batch aggregation and review state",
-          "status": "missing",
-          "needed_files": [
-            "api/app/services/batch_review.py",
-            "src/batch_qa/ (new module)"
-          ],
-          "priority": "critical",
-          "owner": "Gamma"
+          "status": "present",
+          "files": ["api/app/services/batch_review.py"],
+          "quality": "excellent",
+          "owner": "Gamma",
+          "completed": "2025-11-19"
         },
         "G5_batch_review_ui": {
           "description": "Frontend page for batch review",
@@ -401,10 +406,11 @@
         },
         "H7_batch_routes": {
           "description": "Batch review endpoints",
-          "status": "missing",
-          "needed_files": ["api/app/routes/batches.py"],
-          "priority": "critical",
-          "depends_on": ["G2_batch_models", "G4_batch_review_logic"]
+          "status": "present",
+          "files": ["api/app/routes/batches.py"],
+          "endpoints": 7,
+          "quality": "excellent",
+          "completed": "2025-11-19"
         },
         "H8_rate_limiting": {
           "description": "Rate limiting middleware",
@@ -830,7 +836,7 @@
     "wave_2_batch_qa": {
       "goal": "Enable 175-link batch with Day 2 QA workflow",
       "priority": "critical",
-      "status": "not_started",
+      "status": "in_progress",
       "modules": ["G_qa_day2"],
       "parallel_tasks": {
         "alpha_team": ["G2_batch_models"],
@@ -838,15 +844,24 @@
         "gamma_team": ["G4_batch_review_logic"],
         "epsilon_team": ["G5_batch_review_ui", "K6_batch_review_page"]
       },
+      "completion_status": {
+        "alpha_team": "complete",
+        "beta_team": "complete",
+        "gamma_team": "complete",
+        "epsilon_team": "not_started"
+      },
       "completion_criteria": [
-        "Batch model in database",
-        "API endpoints for batch review",
-        "Frontend page for reviewing batch results",
-        "Can approve/reject/regenerate articles in batch",
-        "Can export approved batch"
+        "✅ Batch model in database",
+        "✅ API endpoints for batch review",
+        "❌ Frontend page for reviewing batch results",
+        "✅ Can approve/reject/regenerate articles in batch (via API)",
+        "✅ Can export approved batch (via API)"
       ],
       "estimated_hours": 16,
-      "blocks_removed": ["175-link batch production use case"]
+      "hours_completed": 12,
+      "hours_remaining": 4,
+      "blocks_removed": ["Backend for 175-link batch production use case"],
+      "notes": "Backend complete and tested. Frontend UI pending (Epsilon team)."
     },
 
     "wave_3_production_hardening": {
