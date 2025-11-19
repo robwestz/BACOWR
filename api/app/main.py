@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import os
+import logging
 from dotenv import load_dotenv
 
 from .database import engine, get_db, init_db, Base
@@ -19,6 +20,9 @@ from .middleware.audit import AuditMiddleware
 
 # Load environment variables
 load_dotenv()
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
@@ -51,27 +55,27 @@ app.add_middleware(AuditMiddleware)
 @app.on_event("startup")
 async def startup_event():
     """Initialize database and create default user on startup."""
-    print("=" * 70)
-    print("BACOWR API Starting...")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("BACOWR API Starting...")
+    logger.info("=" * 70)
 
     # Initialize database
     init_db()
-    print("✓ Database initialized")
+    logger.info("✓ Database initialized")
 
     # Create default user
     db = next(get_db())
     try:
         user = create_default_user(db)
         if user:
-            print("✓ Default admin user ready")
+            logger.info("✓ Default admin user ready")
     finally:
         db.close()
 
-    print("=" * 70)
-    print("✓ BACOWR API Ready!")
-    print(f"  Docs: http://localhost:8000/docs")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("✓ BACOWR API Ready!")
+    logger.info(f"  Docs: http://localhost:8000/docs")
+    logger.info("=" * 70)
 
 
 # Health check

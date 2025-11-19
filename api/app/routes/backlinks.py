@@ -98,11 +98,19 @@ def list_backlinks(
         query = query.filter(Backlink.language == language)
 
     if search:
-        search_term = f"%{search}%"
+        # Sanitize search input to prevent SQL injection and resource exhaustion
+        if len(search) > 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Search term too long (max 100 characters)"
+            )
+        # Escape special LIKE characters
+        search_sanitized = search.replace('%', '\\%').replace('_', '\\_')
+        search_term = f"%{search_sanitized}%"
         query = query.filter(
-            (Backlink.anchor_text.ilike(search_term)) |
-            (Backlink.publisher_domain.ilike(search_term)) |
-            (Backlink.target_url.ilike(search_term))
+            (Backlink.anchor_text.ilike(search_term, escape='\\')) |
+            (Backlink.publisher_domain.ilike(search_term, escape='\\')) |
+            (Backlink.target_url.ilike(search_term, escape='\\'))
         )
 
     # Count total
