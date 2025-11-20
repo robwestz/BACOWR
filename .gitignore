@@ -76,6 +76,8 @@ credentials.json
 # Keep structure but ignore contents
 storage/output/*
 !storage/output/.gitkeep
+storage/preflight_output/*
+!storage/preflight_output/.gitkeep
 output/
 *.log
 *.pid
