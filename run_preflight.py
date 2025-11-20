@@ -44,6 +44,9 @@ def build_mock_job_package(publisher_domain: str, target_url: str, anchor_text: 
     """
     job_id = generate_job_id()
 
+    # Detect language from domain (simple heuristic)
+    lang = 'sv' if '.se' in publisher_domain else 'en'
+
     return {
         'job_meta': {
             'job_id': job_id,
@@ -58,18 +61,44 @@ def build_mock_job_package(publisher_domain: str, target_url: str, anchor_text: 
         },
         'publisher_profile': {
             'domain': publisher_domain,
-            'detected_language': 'sv',
-            'topic_focus': ['mock_topic'],
-            'tone_class': 'consumer_magazine'
+            'detected_language': lang,
+            'topic_focus': [
+                'Livsstil och inredning',
+                'Produktguider',
+                'Jämförelser och tester'
+            ],
+            'tone_class': 'consumer_magazine',
+            'target_audience': 'allmänheten',
+            'allowed_commercialization': 'high',
+            'typical_headlines': [
+                'Guide: Så hittar du bästa...',
+                'Testa själv: Vi jämför...',
+                'Expertråd: Detta bör du tänka på när...'
+            ]
         },
         'target_profile': {
             'url': target_url,
             'http_status': 200,
-            'detected_language': 'sv',
-            'title': 'Mock Target Page',
-            'core_entities': ['Mock Entity'],
-            'core_topics': ['mock_topic'],
-            'core_offer': 'Mock offer description'
+            'detected_language': lang,
+            'title': f'Utbud och erbjudanden - {target_url.split("/")[2]}',
+            'core_entities': [
+                'Produktkategori',
+                'Varumärke',
+                'Erbjudanden'
+            ],
+            'core_topics': [
+                'Produktsortiment',
+                'Priser och villkor',
+                'Kvalitet och recensioner',
+                'Leverans och support'
+            ],
+            'core_offer': 'Omfattande sortiment med konkurrenskraftiga priser och god kundservice. Flera alternativ för olika behov och budgetar.',
+            'search_queries': [
+                f'{anchor_text}',
+                f'{anchor_text} pris',
+                f'{anchor_text} test',
+                f'{anchor_text} recension'
+            ]
         },
         'anchor_profile': {
             'proposed_text': anchor_text,
@@ -78,15 +107,50 @@ def build_mock_job_package(publisher_domain: str, target_url: str, anchor_text: 
             'llm_intent_hint': 'commercial_research'
         },
         'serp_research_extension': {
-            'main_query': 'mock query',
-            'cluster_queries': ['mock cluster 1'],
-            'queries_rationale': 'Mock rationale',
-            'serp_sets': [],
+            'main_query': anchor_text,
+            'dominant_intent': 'commercial_research',
+            'cluster_queries': [
+                f'{anchor_text} jämförelse',
+                f'{anchor_text} test',
+                f'{anchor_text} guide',
+                f'{anchor_text} recension'
+            ],
+            'queries_rationale': 'Användare söker efter information för att jämföra alternativ innan köp. Kommersiell intent men informationsbehov.',
+            'serp_sets': [
+                {
+                    'query': anchor_text,
+                    'result_count': 10,
+                    'dominant_intent': 'commercial_research'
+                },
+                {
+                    'query': f'{anchor_text} jämförelse',
+                    'result_count': 10,
+                    'dominant_intent': 'info_primary'
+                },
+                {
+                    'query': f'{anchor_text} test',
+                    'result_count': 10,
+                    'dominant_intent': 'info_primary'
+                }
+            ],
+            'page_archetypes': [
+                'Jämförelseguide',
+                'Produktrecension',
+                'How-to artikel',
+                'Kategoriöversikt',
+                'E-handel produktsida'
+            ],
+            'top_entities': [
+                'Konsumentverket',
+                'Testinstitut',
+                'Populära varumärken',
+                'Priskämförelsetjänster'
+            ],
             'data_confidence': 'medium'
         },
         'intent_extension': {
             'serp_intent_primary': 'commercial_research',
-            'serp_intent_secondary': ['info_primary'],
+            'serp_intent_secondary': ['info_primary', 'transactional'],
             'target_page_intent': 'transactional_with_info_support',
             'anchor_implied_intent': 'commercial_research',
             'publisher_role_intent': 'info_primary',
@@ -94,22 +158,52 @@ def build_mock_job_package(publisher_domain: str, target_url: str, anchor_text: 
                 'anchor_vs_serp': 'aligned',
                 'target_vs_serp': 'partial',
                 'publisher_vs_serp': 'aligned',
-                'overall': 'aligned'
+                'overall': 'partial'
             },
             'recommended_bridge_type': 'pivot',
-            'recommended_article_angle': 'Mock angle',
-            'required_subtopics': ['subtopic1'],
-            'forbidden_angles': [],
+            'recommended_article_angle': 'Informativ guide med jämförelser som naturligt leder till target som ett av de bättre alternativen',
+            'required_subtopics': [
+                'Vad ska du tänka på vid valet',
+                'Jämförelse av alternativ',
+                'Fördelar och nackdelar',
+                'Prissammanställning',
+                'Expertråd och rekommendationer',
+                'Vanliga frågor och svar'
+            ],
+            'forbidden_angles': [
+                'Ren produktpitch utan kontext',
+                'Enbart fokus på ett enda alternativ',
+                'Aggressiv säljtext'
+            ],
             'notes': {
-                'rationale': 'Mock rationale',
+                'rationale': 'Pivot bridge passar bäst eftersom publisher är informativ medan target är kommersiell. Läsaren vill ha objektiv information men kan guidas mot target som en bra lösning.',
                 'data_confidence': 'medium'
             }
         },
+        'links_extension': {
+            'bridge_type': 'pivot',
+            'anchor_text': anchor_text,
+            'anchor_type': 'partial',
+            'lsi_terms': [
+                'kvalitet',
+                'jämförelse',
+                'alternativ',
+                'pris',
+                'erbjudande',
+                'recension',
+                'test',
+                'guide',
+                'rekommendation',
+                'val'
+            ],
+            'placement_context': 'Placera i en jämförelsesektion där flera alternativ diskuteras, men target framhålls som ett av de mer fördelaktiga valen baserat på specifika kriterier.'
+        },
         'generation_constraints': {
-            'language': 'sv',
+            'language': lang,
             'min_word_count': 900,
             'max_anchor_usages': 2,
-            'anchor_policy': 'Ingen anchor i H1/H2, mittsektion'
+            'anchor_policy': 'Ingen anchor i H1/H2, mittsektion',
+            'anchor_placement': 'mittsektion'
         }
     }
 
@@ -117,16 +211,14 @@ def build_mock_job_package(publisher_domain: str, target_url: str, anchor_text: 
 def format_preflight_for_llm(job_package: dict) -> str:
     """
     Formatera job package som läsbar text för manuell LLM-användning.
+    Följer samma format som det tidigare systemet.
 
     Returns:
         Formatterad text som kan copy-pastas till ChatGPT/Claude
     """
     jp = job_package
 
-    # Extrahera viktiga delar
-    job_id = jp.get('job_meta', {}).get('job_id', 'unknown')
-    created = jp.get('job_meta', {}).get('created_at', 'unknown')
-
+    # Extrahera data
     input_data = jp.get('input_minimal', {})
     publisher = input_data.get('publisher_domain', 'N/A')
     target = input_data.get('target_url', 'N/A')
@@ -138,120 +230,257 @@ def format_preflight_for_llm(job_package: dict) -> str:
     intent_ext = jp.get('intent_extension', {})
     serp_ext = jp.get('serp_research_extension', {})
     gen_constraints = jp.get('generation_constraints', {})
+    links_ext = jp.get('links_extension', {})
 
-    # Bygg textformat
-    output = f"""
-================================================================================
-BACOWR PREFLIGHT RESULTAT
-================================================================================
+    # Språk för instruktioner
+    lang = gen_constraints.get('language', 'sv')
+    lang_name = 'Swedish' if lang == 'sv' else 'English'
 
-JOB METADATA
-------------
-Job ID:       {job_id}
-Skapad:       {created}
-Spec:         {jp.get('job_meta', {}).get('spec_version', 'N/A')}
-Mode:         {jp.get('job_meta', {}).get('mode', 'N/A')}
+    # Bridge type förklaringar
+    bridge_type = intent_ext.get('recommended_bridge_type', 'pivot').upper()
+    bridge_explanations = {
+        'STRONG': """
+**STRONG BRIDGE - Direktlänkning**
+- Direkt, tydlig länk till target
+- Target presenteras som primär lösning
+- Hög kommersiell transparens
+- Exempel: "För [behov] rekommenderar vi starkt [anchor]."
+- Använd när: Hög alignment mellan alla variabler (publisher, target, SERP, anchor)
+""",
+        'PIVOT': """
+**PIVOT BRIDGE - Informationsvinkel**
+- Informativt innehåll som leder till target
+- Target presenteras som en av flera resurser (men bäst)
+- Medium kommersiell transparens
+- Exempel: "När man utvärderar [topic], kan [anchor] ge värdefulla insikter."
+- Använd när: Publisher är info, men target är kommersiell
+""",
+        'WRAPPER': """
+**WRAPPER BRIDGE - Kontextinbäddning**
+- Target inbäddad i bredare kontext
+- Target som exempel bland flera alternativ
+- Låg kommersiell transparens
+- Exempel: "Marknaden erbjuder olika alternativ, inklusive [anchor]."
+- Använd när: Låg alignment, stor skillnad mellan publisher-ton och target-intent
+"""
+    }
 
+    bridge_explanation = bridge_explanations.get(bridge_type, bridge_explanations['PIVOT'])
 
-INPUT (MINIMAL)
----------------
-Publiceringsdomän:  {publisher}
-Målsida (URL):      {target}
-Ankartext:          {anchor}
+    # Formatera subtopics med checkboxar
+    required_subtopics = intent_ext.get('required_subtopics', [])
+    subtopics_formatted = '\n'.join([f"  ✓ {topic}" for topic in required_subtopics]) if required_subtopics else '  (inga subtopics tillgängliga)'
 
+    # Formatera forbidden angles
+    forbidden_angles = intent_ext.get('forbidden_angles', [])
+    forbidden_formatted = '\n'.join([f"  ✗ {angle}" for angle in forbidden_angles]) if forbidden_angles else '  (inga förbjudna vinklar identifierade)'
 
-PUBLISHER PROFIL
-----------------
-Domän:              {publisher_prof.get('domain', 'N/A')}
-Språk:              {publisher_prof.get('detected_language', 'N/A')}
-Topic Focus:        {', '.join(publisher_prof.get('topic_focus', []))}
-Ton:                {publisher_prof.get('tone_class', 'N/A')}
+    # LSI-termer
+    lsi_terms = links_ext.get('lsi_terms', [])
+    lsi_formatted = '\n'.join([f"  - {term}" for term in lsi_terms]) if lsi_terms else '  (inga LSI-termer tillgängliga)'
 
+    # SERP sets
+    serp_sets = serp_ext.get('serp_sets', [])
+    serp_sets_formatted = ''
+    if serp_sets:
+        for serp_set in serp_sets:
+            query = serp_set.get('query', 'N/A')
+            count = serp_set.get('result_count', 0)
+            intent = serp_set.get('dominant_intent', 'N/A')
+            serp_sets_formatted += f"  - {query}: {count} resultat, {intent} intent\n"
+    else:
+        serp_sets_formatted = '  (ingen SERP data tillgänglig)\n'
 
-TARGET PROFIL
--------------
-URL:                {target_prof.get('url', 'N/A')}
-HTTP Status:        {target_prof.get('http_status', 'N/A')}
-Språk:              {target_prof.get('detected_language', 'N/A')}
-Titel:              {target_prof.get('title', 'N/A')}
-Kärnentiteter:      {', '.join(target_prof.get('core_entities', []))}
-Ämnen:              {', '.join(target_prof.get('core_topics', []))}
-Kärnerbjudande:     {target_prof.get('core_offer', 'N/A')}
+    # Topic focus
+    topic_focus = publisher_prof.get('topic_focus', [])
+    topic_focus_formatted = '\n'.join([f"  - {topic}" for topic in topic_focus]) if topic_focus else '  (inga topics tillgängliga)'
 
+    # Typical headlines
+    typical_headlines = publisher_prof.get('typical_headlines', [])
+    headlines_formatted = '\n'.join([f"  - {headline}" for headline in typical_headlines]) if typical_headlines else '  (inga exempel tillgängliga)'
 
-ANKARTEXT PROFIL
-----------------
-Föreslagen text:    {anchor_prof.get('proposed_text', 'N/A')}
-Type hint:          {anchor_prof.get('type_hint', 'N/A')}
-LLM-klassificering: {anchor_prof.get('llm_classified_type', 'N/A')}
-LLM intent hint:    {anchor_prof.get('llm_intent_hint', 'N/A')}
+    # Core entities
+    core_entities = target_prof.get('core_entities', [])
+    entities_formatted = '\n'.join([f"  - {entity}" for entity in core_entities]) if core_entities else '  (inga entiteter tillgängliga)'
 
+    # Core topics
+    core_topics = target_prof.get('core_topics', [])
+    topics_formatted = '\n'.join([f"  - {topic}" for topic in core_topics]) if core_topics else '  (inga topics tillgängliga)'
 
-SERP RESEARCH
--------------
-Huvudfråga:         {serp_ext.get('main_query', 'N/A')}
-Klusterfrågor:      {', '.join(serp_ext.get('cluster_queries', []))}
-Rationale:          {serp_ext.get('queries_rationale', 'N/A')}
-Data Confidence:    {serp_ext.get('data_confidence', 'N/A')}
+    # Search queries
+    search_queries = target_prof.get('search_queries', [])
+    queries_formatted = '\n'.join([f"  - {query}" for query in search_queries]) if search_queries else '  (inga queries tillgängliga)'
 
+    # Page archetypes
+    page_archetypes = serp_ext.get('page_archetypes', [])
+    archetypes_formatted = '\n'.join([f"  - {archetype}" for archetype in page_archetypes]) if page_archetypes else '  (ingen data tillgänglig)'
 
-INTENT EXTENSION
-----------------
-SERP Intent (primär):        {intent_ext.get('serp_intent_primary', 'N/A')}
-SERP Intent (sekundär):      {', '.join(intent_ext.get('serp_intent_secondary', []))}
-Target Page Intent:          {intent_ext.get('target_page_intent', 'N/A')}
-Anchor Implied Intent:       {intent_ext.get('anchor_implied_intent', 'N/A')}
-Publisher Role Intent:       {intent_ext.get('publisher_role_intent', 'N/A')}
+    # Top entities in SERP
+    top_entities = serp_ext.get('top_entities', [])
+    top_entities_formatted = '\n'.join([f"  - {entity}" for entity in top_entities]) if top_entities else '  (data ej tillgänglig)'
 
-Intent Alignment:
-  - Anchor vs SERP:          {intent_ext.get('intent_alignment', {}).get('anchor_vs_serp', 'N/A')}
-  - Target vs SERP:          {intent_ext.get('intent_alignment', {}).get('target_vs_serp', 'N/A')}
-  - Publisher vs SERP:       {intent_ext.get('intent_alignment', {}).get('publisher_vs_serp', 'N/A')}
-  - Overall:                 {intent_ext.get('intent_alignment', {}).get('overall', 'N/A')}
+    # Cluster queries
+    cluster_queries = serp_ext.get('cluster_queries', [])
+    cluster_formatted = '\n'.join([f"  - {query}" for query in cluster_queries]) if cluster_queries else '  (inga kluster tillgängliga)'
 
-Rekommenderad Bridge Type:   {intent_ext.get('recommended_bridge_type', 'N/A')}
-Artikelvinkel:               {intent_ext.get('recommended_article_angle', 'N/A')}
-Nödvändiga Subämnen:         {', '.join(intent_ext.get('required_subtopics', []))}
-Förbjudna Vinklar:           {', '.join(intent_ext.get('forbidden_angles', []))}
+    # Kommersialisering
+    commercialization = publisher_prof.get('allowed_commercialization', 'medium')
 
-Notes:
-  Rationale:                 {intent_ext.get('notes', {}).get('rationale', 'N/A')}
-  Data Confidence:           {intent_ext.get('notes', {}).get('data_confidence', 'N/A')}
+    # Bygg output i samma format som exemplet
+    output = f"""# BACOWR BACKLINK ARTICLE - COMPLETE RESEARCH CONTEXT
 
+Du ska nu skriva en SEO-optimerad backlink-artikel baserad på omfattande research.
 
-GENERATION CONSTRAINTS
-----------------------
-Språk:                       {gen_constraints.get('language', 'N/A')}
-Min Word Count:              {gen_constraints.get('min_word_count', 'N/A')}
-Max Anchor Usages:           {gen_constraints.get('max_anchor_usages', 'N/A')}
-Anchor Policy:               {gen_constraints.get('anchor_policy', 'N/A')}
+---
 
+## 📋 UPPDRAG
 
-================================================================================
-NÄSTA STEG: MANUELL LLM-KÖRNING
-================================================================================
+Skriv en **{lang_name}** artikel (minimum {gen_constraints.get('min_word_count', 900)} ord) som naturligt länkar till målsidan.
 
-INSTRUKTIONER FÖR CHATGPT/CLAUDE:
+**Anchor text:** "{anchor}"
+**Target URL:** {target}
 
-Du ska nu skriva en artikel baserat på ovanstående preflight-analys.
+---
 
-VIKTIGA KRAV:
-- Bridge Type:       {intent_ext.get('recommended_bridge_type', 'N/A')}
-- Språk:             {gen_constraints.get('language', 'sv')}
-- Minst ord:         {gen_constraints.get('min_word_count', 900)}
-- Anchor placement:  {gen_constraints.get('anchor_policy', 'Ingen anchor i H1/H2, mittsektion')}
-- Max anchor:        {gen_constraints.get('max_anchor_usages', 2)} gånger
+## 🏢 PUBLIKATIONSKONTEKT (Publisher Profile)
 
-SKRIV EN ARTIKEL SOM:
-1. Följer rekommenderad artikelvinkel: {intent_ext.get('recommended_article_angle', 'N/A')}
-2. Täcker nödvändiga subämnen: {', '.join(intent_ext.get('required_subtopics', []))}
-3. Undviker förbjudna vinklar: {', '.join(intent_ext.get('forbidden_angles', [])) or 'inga'}
-4. Matchar publisher-ton: {publisher_prof.get('tone_class', 'N/A')}
-5. Inkluderar ankarlänken [{anchor}]({target}) i rätt position
+**Domain:** {publisher}
 
-Format: Markdown med H1, H2, H3 rubriker och strukturerade paragrafer.
+**Språk:** {lang_name}
 
-================================================================================
+**Ton & Stil:** {publisher_prof.get('tone_class', 'N/A')}
+- Målgrupp: {publisher_prof.get('target_audience', 'allmänheten')}
+- Tillåten kommersialisering: {commercialization}
+
+**Ämnesfokus:**
+{topic_focus_formatted}
+
+**Typiska rubriker:**
+{headlines_formatted}
+
+---
+
+## 🎯 MÅLSIDA (Target Profile)
+
+**URL:** {target}
+
+**Titel:** {target_prof.get('title', 'N/A')}
+
+**Kärnentiteter:**
+{entities_formatted}
+
+**Huvudämnen:**
+{topics_formatted}
+
+**Erbjudande/Värde:**
+{target_prof.get('core_offer', 'N/A')}
+
+**Huvudsökfrågor (från target):**
+{queries_formatted}
+
+---
+
+## 🔍 SERP RESEARCH (Search Intent Analysis)
+
+### Huvudsökning
+**Query:** {serp_ext.get('main_query', 'N/A')}
+**Dominant Intent:** {serp_ext.get('dominant_intent', 'N/A')}
+
+### Kluster-sökningar
+{cluster_formatted}
+
+### SERP-sets analyserade
+{serp_sets_formatted}
+### Sidtyper som rankar högt (Page Archetypes)
+{archetypes_formatted}
+
+### Toppentiteter i SERP
+{top_entities_formatted}
+
+---
+
+## 🎨 INNEHÅLLSSTRATEGI (Intent Extension)
+
+### Alignment-analys
+- **SERP Intent:** {intent_ext.get('serp_intent_primary', 'N/A')}
+- **Target Intent:** {intent_ext.get('target_page_intent', 'N/A')}
+- **Publisher Role:** {intent_ext.get('publisher_role_intent', 'N/A')}
+- **Overall Alignment:** {intent_ext.get('intent_alignment', {}).get('overall', 'N/A')}
+
+### Bridge Type (KRITISKT!)
+**{bridge_type}**
+
+{bridge_explanation}
+
+### Obligatoriska subtopics (från SERP)
+Dessa MÅSTE täckas för att artikeln ska vara SERP-optimerad:
+{subtopics_formatted}
+
+### Förbjudna vinklar
+Undvik dessa (ej i linje med SERP/publisher):
+{forbidden_formatted}
+
+### LSI-termer (Latent Semantic Indexing)
+Inkludera naturligt 6-10 av dessa INOM ±2 MENINGAR från länken:
+{lsi_formatted}
+
+---
+
+## 📝 GENERATIONSKRAV
+
+### Struktur
+1. **H1** - Huvudrubrik (fängslande, SERP-optimerad)
+2. **Introduktion** - 2-3 stycken som etablerar kontext
+3. **4-6 huvudsektioner** med H2-rubriker (täck required subtopics)
+4. **Subsektioner** med H3 där lämpligt
+5. **Avslutning** - Sammanfatta nyckelpunkter
+
+### Länkplacering
+- Använd anchor text: **"{anchor}"**
+- Länka till: **{target}**
+- Placera i **{gen_constraints.get('anchor_placement', 'mittsektion')}** (INTE i H1, H2 eller introduktion)
+- Kontexten måste kännas naturlig och tillföra värde
+- Använd bridge type: **{bridge_type.lower()}**
+
+### LSI-termer
+Inom ±2 meningar från länken, inkludera 6-10 av dessa termer naturligt:
+{lsi_formatted}
+
+### Ton & Stil
+- Matcha publisher-ton: **{publisher_prof.get('tone_class', 'N/A')}**
+- Skriv för målgrupp: **{publisher_prof.get('target_audience', 'allmänheten')}**
+- Kommersialisering: **{commercialization}**
+
+### Kvalitetskrav
+- ✓ Täck ALLA required subtopics från SERP
+- ✓ Undvik forbidden angles
+- ✓ Tillför genuint värde och insikter
+- ✓ Trovärdigt resonemang
+- ✓ Naturligt, engagerande språk
+- ✓ Minimum **{gen_constraints.get('min_word_count', 900)} ord**
+
+### Formatering
+- Markdown-format
+- Korrekt rubrikhierarki (H1 → H2 → H3)
+- Korta stycken (3-4 meningar)
+- Punktlistor där lämpligt
+- Ingen meta-text (inga "[X ord]" eller liknande)
+
+---
+
+## 🚀 GENERERA ARTIKELN
+
+Baserat på all research ovan, skriv nu den kompletta artikeln.
+
+**Kom ihåg:**
+1. Följ bridge type: **{bridge_type.lower()}**
+2. Täck alla required subtopics
+3. Placera länk naturligt i {gen_constraints.get('anchor_placement', 'mittsektion')}
+4. Injicera 6-10 LSI-termer nära länken
+5. Matcha publisher-ton
+6. Minimum {gen_constraints.get('min_word_count', 900)} ord
+
+**Börja nu:**
 """
 
     return output.strip()
