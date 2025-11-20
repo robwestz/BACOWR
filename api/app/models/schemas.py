@@ -2,6 +2,8 @@
 Pydantic schemas for API request/response validation.
 """
 
+from __future__ import annotations
+
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -241,19 +243,6 @@ class UserCreate(BaseModel):
     password: Optional[str] = Field(None, min_length=8, max_length=100)
 
 
-class UserResponse(BaseModel):
-    """Schema for user response."""
-    id: str
-    email: str
-    api_key: str
-    is_active: bool
-    is_admin: bool
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
 # WebSocket Schemas
 
 class JobProgressUpdate(BaseModel):
@@ -459,6 +448,47 @@ class UserLoginRequest(BaseModel):
         }
 
 
+class UserResponse(BaseModel):
+    """Schema for user response."""
+    id: str
+    email: str
+    username: Optional[str] = None
+    full_name: Optional[str] = None
+    role: str
+    account_status: str
+    is_active: bool
+    is_admin: bool
+    api_key: str
+    jobs_created_count: int = 0
+    jobs_quota: int = 1000
+    tokens_used: int = 0
+    tokens_quota: int = 1000000
+    last_login: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "id": "user-uuid",
+                "email": "john@example.com",
+                "username": "johndoe",
+                "full_name": "John Doe",
+                "role": "editor",
+                "account_status": "active",
+                "is_active": True,
+                "is_admin": False,
+                "api_key": "bacowr_xxx",
+                "jobs_created_count": 42,
+                "jobs_quota": 1000,
+                "tokens_used": 125000,
+                "tokens_quota": 1000000,
+                "last_login": "2025-11-19T12:00:00Z",
+                "created_at": "2025-11-01T10:00:00Z"
+            }
+        }
+
+
 class TokenResponse(BaseModel):
     """Schema for token response."""
     access_token: str
@@ -508,43 +538,6 @@ class PasswordResetConfirm(BaseModel):
             "example": {
                 "reset_token": "reset-token-here",
                 "new_password": "NewSecurePassword123!"
-            }
-        }
-
-
-class UserResponse(BaseModel):
-    """Schema for user response."""
-    id: str
-    email: str
-    username: Optional[str]
-    full_name: Optional[str]
-    role: str
-    account_status: str
-    is_active: bool
-    jobs_created_count: int
-    jobs_quota: int
-    tokens_used: int
-    tokens_quota: int
-    last_login: Optional[datetime]
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
-            "example": {
-                "id": "user-uuid",
-                "email": "john@example.com",
-                "username": "johndoe",
-                "full_name": "John Doe",
-                "role": "editor",
-                "account_status": "active",
-                "is_active": True,
-                "jobs_created_count": 42,
-                "jobs_quota": 1000,
-                "tokens_used": 125000,
-                "tokens_quota": 1000000,
-                "last_login": "2025-11-19T12:00:00Z",
-                "created_at": "2025-11-01T10:00:00Z"
             }
         }
 

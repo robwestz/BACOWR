@@ -13,7 +13,7 @@ from ..models.schemas import (
     JobCreate, JobResponse, JobDetailResponse,
     PaginationParams, PaginatedResponse, JobStatus
 )
-from ..auth import get_current_user
+from ..services.auth_service import get_current_user_jwt
 from ..core.bacowr_wrapper import bacowr
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -97,7 +97,7 @@ async def create_job(
     job_create: JobCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_jwt)
 ):
     """
     Create a new content generation job.
@@ -140,7 +140,7 @@ def list_jobs(
     page_size: int = 20,
     status: Optional[JobStatus] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_jwt)
 ):
     """
     List jobs for current user with pagination.
@@ -173,7 +173,7 @@ def list_jobs(
 def get_job(
     job_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_jwt)
 ):
     """
     Get detailed job information.
@@ -198,7 +198,7 @@ def get_job(
 def delete_job(
     job_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_jwt)
 ):
     """
     Delete a job.
@@ -232,7 +232,7 @@ def delete_job(
 def get_job_article(
     job_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_jwt)
 ):
     """
     Get job article text.
