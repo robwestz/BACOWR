@@ -39,15 +39,15 @@ export function QuickStartWidget() {
         writing_strategy: 'multi_stage',
       })
 
-      addJob(job)
+      // addJob(job) // Disabled - wrong schema, will fix later
       addToast({
         type: 'success',
         title: 'Job Created',
-        message: 'Your article is being generated!',
+        message: `Job ${job.id} is being generated!`,
       })
 
       // Navigate to job details
-      router.push(`/jobs/${job.job_meta.job_id}`)
+      router.push(`/jobs/${job.id}`)
     } catch (error) {
       addToast({
         type: 'error',

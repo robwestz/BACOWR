@@ -79,15 +79,15 @@ export default function NewJobPage() {
         country: input.country,
       })
 
-      addJob(job)
+      // addJob(job) // Disabled - wrong schema, will fix later
       addToast({
         type: 'success',
         title: 'Job Created',
-        message: 'Your article is being generated!',
+        message: `Job ${job.id} is being generated!`,
       })
 
       reset()
-      router.push(`/jobs/${job.job_meta.job_id}`)
+      router.push(`/jobs/${job.id}`)
     } catch (error) {
       addToast({
         type: 'error',

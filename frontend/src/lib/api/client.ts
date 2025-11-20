@@ -1,6 +1,8 @@
 import type {
   ApiResponse,
   JobInput,
+  JobResponse,
+  JobDetailResponse,
   JobPackage,
   JobListResponse,
   BacklinkRecord,
@@ -81,16 +83,16 @@ async function fetchAPI<T>(
 // Jobs API
 export const jobsAPI = {
   // Create new job
-  create: async (input: JobInput): Promise<JobPackage> => {
-    return fetchAPI<JobPackage>('/api/v1/jobs', {
+  create: async (input: JobInput): Promise<JobResponse> => {
+    return fetchAPI<JobResponse>('/api/v1/jobs', {
       method: 'POST',
       body: JSON.stringify(input),
     })
   },
 
   // Get job by ID
-  get: async (jobId: string): Promise<JobPackage> => {
-    return fetchAPI<JobPackage>(`/api/v1/jobs/${jobId}`)
+  get: async (jobId: string): Promise<JobDetailResponse> => {
+    return fetchAPI<JobDetailResponse>(`/api/v1/jobs/${jobId}`)
   },
 
   // List jobs with pagination and filters

@@ -48,7 +48,20 @@ export default function JobDetailsPage() {
     )
   }
 
-  const { job_meta, input_minimal, qc_report, metrics, article } = job
+  // Backend returns flat structure, not nested job_meta
+  const {
+    id: jobIdFromResponse,
+    status,
+    created_at,
+    started_at,
+    completed_at,
+    publisher_domain,
+    target_url,
+    anchor_text,
+    qc_report,
+    metrics,
+    article_text,
+  } = job
 
   const handleExport = async (format: 'md' | 'pdf' | 'html') => {
     const blob = await jobsAPI.export(jobId, format)
@@ -64,9 +77,9 @@ export default function JobDetailsPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{input_minimal.publisher_domain}</h1>
+          <h1 className="text-3xl font-bold">{publisher_domain}</h1>
           <p className="text-muted-foreground mt-1">
-            {formatRelativeTime(job_meta.created_at)}
+            {formatRelativeTime(created_at)}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -86,10 +99,10 @@ export default function JobDetailsPage() {
       </div>
 
       {/* Status Bar */}
-      {job_meta.status === 'RUNNING' && (
+      {status === 'processing' && (
         <JobProgressBar
           jobId={jobId}
-          status={job_meta.status}
+          status={status as any}
           progress={50}
           message="Generating article..."
         />
@@ -102,8 +115,8 @@ export default function JobDetailsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
-                <Badge variant={job_meta.status === 'DELIVERED' ? 'success' : 'secondary'}>
-                  {job_meta.status}
+                <Badge variant={status === 'delivered' ? 'success' : 'secondary'}>
+                  {status.toUpperCase()}
                 </Badge>
               </div>
               <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
@@ -169,13 +182,13 @@ export default function JobDetailsPage() {
             <CardHeader>
               <CardTitle>Generated Article</CardTitle>
               <CardDescription>
-                {article?.split(' ').length || 0} words
+                {article_text?.split(' ').length || 0} words
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {article ? (
+              {article_text ? (
                 <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <ReactMarkdown>{article}</ReactMarkdown>
+                  <ReactMarkdown>{article_text}</ReactMarkdown>
                 </div>
               ) : (
                 <p className="text-muted-foreground">Article not yet generated</p>
@@ -208,7 +221,7 @@ export default function JobDetailsPage() {
                     <div>
                       <h3 className="font-semibold mb-2">Issues Found</h3>
                       <div className="space-y-2">
-                        {qc_report.issues.map((issue, i) => (
+                        {qc_report.issues.map((issue: any, i: number) => (
                           <div
                             key={i}
                             className="p-3 rounded-lg border bg-card"
@@ -246,7 +259,7 @@ export default function JobDetailsPage() {
                     <div>
                       <h3 className="font-semibold mb-2">AutoFix Actions</h3>
                       <div className="space-y-2">
-                        {qc_report.autofix_logs.map((log, i) => (
+                        {qc_report.autofix_logs.map((log: any, i: number) => (
                           <div
                             key={i}
                             className="p-3 rounded-lg bg-muted text-sm font-mono"
@@ -286,47 +299,48 @@ export default function JobDetailsPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground w-24">Publisher:</span>
-                      <span className="font-medium">{input_minimal.publisher_domain}</span>
+                      <span className="font-medium">{publisher_domain}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground w-24">Target:</span>
                       <a
-                        href={input_minimal.target_url}
+                        href={target_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline flex items-center gap-1"
                       >
-                        {input_minimal.target_url}
+                        {target_url}
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground w-24">Anchor:</span>
-                      <span className="font-medium">{input_minimal.anchor_text}</span>
+                      <span className="font-medium">{anchor_text}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Profiles */}
+                {/* Profiles - Commented out temporarily, will parse from job_package JSON
                 <div>
                   <h3 className="font-semibold mb-2">Profiles</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-3 rounded-lg border">
                       <p className="font-medium mb-2">Publisher Profile</p>
                       <div className="text-sm space-y-1">
-                        <p>Tone: {job.publisher_profile?.tone}</p>
-                        <p>Language: {job.publisher_profile?.language}</p>
+                        <p>Tone: {job.job_package?.publisher_profile?.tone}</p>
+                        <p>Language: {job.job_package?.publisher_profile?.language}</p>
                       </div>
                     </div>
                     <div className="p-3 rounded-lg border">
                       <p className="font-medium mb-2">Target Profile</p>
                       <div className="text-sm space-y-1">
-                        <p>Intent: {job.target_profile?.intent}</p>
-                        <p>Language: {job.target_profile?.language}</p>
+                        <p>Intent: {job.job_package?.target_profile?.intent}</p>
+                        <p>Language: {job.job_package?.target_profile?.language}</p>
                       </div>
                     </div>
                   </div>
                 </div>
+                */}
 
                 {/* Full JSON */}
                 <details>
@@ -352,7 +366,7 @@ export default function JobDetailsPage() {
             <CardContent>
               {job.execution_log ? (
                 <div className="space-y-2">
-                  {job.execution_log.log_entries.map((entry, i) => (
+                  {job.execution_log.log_entries.map((entry: any, i: number) => (
                     <div
                       key={i}
                       className="flex items-start gap-3 p-2 rounded text-sm font-mono"
