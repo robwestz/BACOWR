@@ -1,8 +1,11 @@
+'use client'
+
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Moon, Sun, Bell, Search } from 'lucide-react'
 import { useUIStore } from '@/lib/store'
+import UserProfile from '@/components/UserProfile'
 
 export function Header() {
   const { darkMode, toggleDarkMode, commandPaletteOpen, toggleCommandPalette } = useUIStore()
@@ -40,6 +43,11 @@ export function Header() {
           <Badge variant="secondary" className="ml-2">
             Production
           </Badge>
+
+          {/* User Profile */}
+          <div className="ml-4">
+            <UserProfile />
+          </div>
         </div>
       </div>
     </header>

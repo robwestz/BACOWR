@@ -23,10 +23,32 @@ class User(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
     email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=True)  # Wave 5: Optional username
     api_key = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=True)  # Optional for now
+
+    # Wave 5: Enhanced user fields
+    full_name = Column(String, nullable=True)
+    role = Column(String, default="viewer", index=True)  # admin, editor, viewer
+    account_status = Column(String, default="active", index=True)  # active, suspended, deleted
+
+    # Wave 5: Usage tracking
+    jobs_created_count = Column(Integer, default=0)
+    jobs_quota = Column(Integer, default=1000)  # Monthly quota
+    tokens_used = Column(Integer, default=0)
+    tokens_quota = Column(Integer, default=1000000)  # Monthly token quota
+
+    # Wave 5: Password reset
+    reset_token = Column(String, nullable=True, index=True)
+    reset_token_expires = Column(DateTime(timezone=True), nullable=True)
+
+    # Wave 5: User metadata
+    metadata_field = Column(JSON, nullable=True)  # Renamed from metadata to avoid SQLAlchemy conflict
+    last_login = Column(DateTime(timezone=True), nullable=True)
+
+    # Original fields
     is_active = Column(Boolean, default=True)
-    is_admin = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)  # Kept for backward compatibility
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -34,6 +56,12 @@ class User(Base):
     jobs = relationship("Job", back_populates="user", cascade="all, delete-orphan")
     backlinks = relationship("Backlink", back_populates="user", cascade="all, delete-orphan")
     batches = relationship("Batch", back_populates="user", cascade="all, delete-orphan")
+
+    # Indexes for Wave 5
+    __table_args__ = (
+        Index('idx_user_role_status', 'role', 'account_status'),
+        Index('idx_user_email_status', 'email', 'account_status'),
+    )
 
 
 class Job(Base):

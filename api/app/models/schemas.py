@@ -406,3 +406,205 @@ class BatchExportResponse(BaseModel):
                 "created_at": "2025-11-19T12:00:00Z"
             }
         }
+
+
+# ==============================================================================
+# Wave 5: Authentication & User Management Schemas
+# ==============================================================================
+
+
+class UserRole(str, Enum):
+    """User role enumeration."""
+    ADMIN = "admin"
+    EDITOR = "editor"
+    VIEWER = "viewer"
+
+
+class AccountStatus(str, Enum):
+    """Account status enumeration."""
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    DELETED = "deleted"
+
+
+class UserRegistrationRequest(BaseModel):
+    """Schema for user registration request."""
+    email: str = Field(..., description="User email address")
+    password: str = Field(..., min_length=8, description="User password (min 8 chars)")
+    full_name: Optional[str] = Field(None, description="User full name")
+    username: Optional[str] = Field(None, description="Optional username")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "john@example.com",
+                "password": "SecurePassword123!",
+                "full_name": "John Doe",
+                "username": "johndoe"
+            }
+        }
+
+
+class UserLoginRequest(BaseModel):
+    """Schema for user login request."""
+    email: str
+    password: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "john@example.com",
+                "password": "SecurePassword123!"
+            }
+        }
+
+
+class TokenResponse(BaseModel):
+    """Schema for token response."""
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int  # seconds
+    user: 'UserResponse'
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+                "expires_in": 1800,
+                "user": {
+                    "id": "user-uuid",
+                    "email": "john@example.com",
+                    "role": "editor"
+                }
+            }
+        }
+
+
+class RefreshTokenRequest(BaseModel):
+    """Schema for refresh token request."""
+    refresh_token: str
+
+
+class PasswordResetRequest(BaseModel):
+    """Schema for password reset request."""
+    email: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {"email": "john@example.com"}
+        }
+
+
+class PasswordResetConfirm(BaseModel):
+    """Schema for password reset confirmation."""
+    reset_token: str
+    new_password: str = Field(..., min_length=8)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "reset_token": "reset-token-here",
+                "new_password": "NewSecurePassword123!"
+            }
+        }
+
+
+class UserResponse(BaseModel):
+    """Schema for user response."""
+    id: str
+    email: str
+    username: Optional[str]
+    full_name: Optional[str]
+    role: str
+    account_status: str
+    is_active: bool
+    jobs_created_count: int
+    jobs_quota: int
+    tokens_used: int
+    tokens_quota: int
+    last_login: Optional[datetime]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "id": "user-uuid",
+                "email": "john@example.com",
+                "username": "johndoe",
+                "full_name": "John Doe",
+                "role": "editor",
+                "account_status": "active",
+                "is_active": True,
+                "jobs_created_count": 42,
+                "jobs_quota": 1000,
+                "tokens_used": 125000,
+                "tokens_quota": 1000000,
+                "last_login": "2025-11-19T12:00:00Z",
+                "created_at": "2025-11-01T10:00:00Z"
+            }
+        }
+
+
+class UserUpdateRequest(BaseModel):
+    """Schema for user update request."""
+    full_name: Optional[str] = None
+    username: Optional[str] = None
+    role: Optional[UserRole] = None
+    jobs_quota: Optional[int] = None
+    tokens_quota: Optional[int] = None
+    account_status: Optional[AccountStatus] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "full_name": "John Smith",
+                "role": "editor",
+                "jobs_quota": 2000
+            }
+        }
+
+
+class UserListResponse(BaseModel):
+    """Schema for user list response."""
+    users: List[UserResponse]
+    total: int
+    page: int
+    page_size: int
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "users": [],
+                "total": 25,
+                "page": 1,
+                "page_size": 10
+            }
+        }
+
+
+class QuotaStatus(BaseModel):
+    """Schema for user quota status."""
+    jobs_used: int
+    jobs_quota: int
+    jobs_remaining: int
+    tokens_used: int
+    tokens_quota: int
+    tokens_remaining: int
+    quota_exceeded: bool
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "jobs_used": 42,
+                "jobs_quota": 1000,
+                "jobs_remaining": 958,
+                "tokens_used": 125000,
+                "tokens_quota": 1000000,
+                "tokens_remaining": 875000,
+                "quota_exceeded": False
+            }
+        }

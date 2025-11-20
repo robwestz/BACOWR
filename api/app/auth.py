@@ -101,11 +101,16 @@ def create_default_user(db: Session) -> User:
     if existing:
         return existing
 
-    # Create default admin user
+    # Create default admin user with password for JWT auth
     api_key = generate_api_key()
     user = User(
         email="admin@bacowr.local",
+        username="admin",
+        full_name="BACOWR Administrator",
         api_key=api_key,
+        hashed_password=hash_password("admin123"),  # Demo password
+        role="admin",
+        account_status="active",
         is_active=True,
         is_admin=True
     )
@@ -117,10 +122,15 @@ def create_default_user(db: Session) -> User:
     print("=" * 70)
     print("DEFAULT ADMIN USER CREATED")
     print("=" * 70)
-    print(f"Email:   {user.email}")
-    print(f"API Key: {user.api_key}")
+    print(f"Email:    {user.email}")
+    print(f"Password: admin123")
+    print(f"API Key:  {user.api_key}")
     print("=" * 70)
-    print("⚠️  SAVE THIS API KEY - IT WON'T BE SHOWN AGAIN!")
+    print("🎯 LOGIN CREDENTIALS:")
+    print(f"   Email:    {user.email}")
+    print(f"   Password: admin123")
+    print("=" * 70)
+    print("⚠️  CHANGE PASSWORD IN PRODUCTION!")
     print("=" * 70)
 
     return user
