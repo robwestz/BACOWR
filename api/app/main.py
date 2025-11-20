@@ -48,7 +48,8 @@ setup_metrics(app)
 setup_rate_limiting(app)
 
 # Setup audit logging middleware
-app.add_middleware(AuditMiddleware)
+# TODO: Fix AuditMiddleware body reading issue
+# app.add_middleware(AuditMiddleware)
 
 
 # Startup event
