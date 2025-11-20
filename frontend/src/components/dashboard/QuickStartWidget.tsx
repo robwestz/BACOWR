@@ -36,7 +36,7 @@ export function QuickStartWidget() {
       const job = await jobsAPI.create({
         ...input,
         llm_provider: 'auto',
-        strategy: 'multi_stage',
+        writing_strategy: 'multi_stage',
       })
 
       addJob(job)
