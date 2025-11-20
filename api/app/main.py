@@ -30,15 +30,15 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS configuration
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-
+# CORS configuration - OPEN FOR DEVELOPMENT
+# TODO: Restrict this in production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:3000", "https://*.vercel.app"],
+    allow_origins=["*"],  # Allow all origins for development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Setup Prometheus metrics
