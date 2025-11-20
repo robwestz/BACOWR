@@ -19,6 +19,7 @@ const statusConfig = {
     color: 'text-muted-foreground',
     label: 'Pending',
     variant: 'secondary' as const,
+    animate: false,
   },
   RUNNING: {
     icon: Loader2,
@@ -32,18 +33,21 @@ const statusConfig = {
     color: 'text-green-500',
     label: 'Delivered',
     variant: 'success' as const,
+    animate: false,
   },
   BLOCKED: {
     icon: AlertCircle,
     color: 'text-yellow-500',
     label: 'Blocked',
     variant: 'warning' as const,
+    animate: false,
   },
   ABORTED: {
     icon: XCircle,
     color: 'text-red-500',
     label: 'Aborted',
     variant: 'destructive' as const,
+    animate: false,
   },
 }
 

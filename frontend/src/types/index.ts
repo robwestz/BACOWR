@@ -9,18 +9,47 @@ export type IntentClassification = 'informational' | 'commercial_research' | 'tr
 export type BridgeType = 'strong' | 'pivot' | 'wrapper'
 export type AnchorType = 'exact' | 'partial' | 'brand' | 'generic'
 
-// Job Package Types
+// Job Package Types (Aligned with backend schemas)
 export interface JobInput {
   publisher_domain: string
   target_url: string
   anchor_text: string
   llm_provider?: LLMProvider
-  strategy?: WritingStrategy
+  writing_strategy?: WritingStrategy // Backend expects writing_strategy
   country?: string
   use_ahrefs?: boolean
   enable_llm_profiling?: boolean
 }
 
+// Backend JobResponse schema
+export interface JobResponse {
+  id: string
+  user_id: string
+  publisher_domain: string
+  target_url: string
+  anchor_text: string
+  llm_provider?: string
+  writing_strategy?: string
+  country: string
+  status: string
+  estimated_cost?: number
+  actual_cost?: number
+  created_at: string
+  started_at?: string
+  completed_at?: string
+  error_message?: string
+}
+
+// Backend JobDetailResponse schema
+export interface JobDetailResponse extends JobResponse {
+  article_text?: string
+  job_package?: any // JSON field
+  qc_report?: any // JSON field
+  execution_log?: any // JSON field
+  metrics?: any // JSON field
+}
+
+// Legacy JobMeta (for backward compatibility)
 export interface JobMeta {
   job_id: string
   created_at: string

@@ -1,6 +1,8 @@
 import type {
   ApiResponse,
   JobInput,
+  JobResponse,
+  JobDetailResponse,
   JobPackage,
   JobListResponse,
   BacklinkRecord,
@@ -32,9 +34,17 @@ async function fetchAPI<T>(
 ): Promise<T> {
   const url = `${API_URL}${endpoint}`
 
-  const headers = {
+  // Get access token from localStorage
+  const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...options.headers as Record<string, string>,
+  }
+
+  // Add Authorization header if token exists
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`
   }
 
   try {
@@ -45,9 +55,20 @@ async function fetchAPI<T>(
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}))
+
+      // If 401 Unauthorized, clear tokens and redirect to login
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+          localStorage.removeItem('user')
+          window.location.href = '/login'
+        }
+      }
+
       throw new APIError(
         response.status,
-        error.message || `HTTP ${response.status}`,
+        error.detail || error.message || `HTTP ${response.status}`,
         error.details
       )
     }
@@ -62,16 +83,16 @@ async function fetchAPI<T>(
 // Jobs API
 export const jobsAPI = {
   // Create new job
-  create: async (input: JobInput): Promise<JobPackage> => {
-    return fetchAPI<JobPackage>('/api/jobs', {
+  create: async (input: JobInput): Promise<JobResponse> => {
+    return fetchAPI<JobResponse>('/api/v1/jobs', {
       method: 'POST',
       body: JSON.stringify(input),
     })
   },
 
   // Get job by ID
-  get: async (jobId: string): Promise<JobPackage> => {
-    return fetchAPI<JobPackage>(`/api/jobs/${jobId}`)
+  get: async (jobId: string): Promise<JobDetailResponse> => {
+    return fetchAPI<JobDetailResponse>(`/api/v1/jobs/${jobId}`)
   },
 
   // List jobs with pagination and filters
@@ -88,34 +109,34 @@ export const jobsAPI = {
     if (params?.search) searchParams.set('search', params.search)
 
     const query = searchParams.toString()
-    return fetchAPI<JobListResponse>(`/api/jobs${query ? `?${query}` : ''}`)
+    return fetchAPI<JobListResponse>(`/api/v1/jobs${query ? `?${query}` : ''}`)
   },
 
   // Delete job
   delete: async (jobId: string): Promise<void> => {
-    return fetchAPI<void>(`/api/jobs/${jobId}`, {
+    return fetchAPI<void>(`/api/v1/jobs/${jobId}`, {
       method: 'DELETE',
     })
   },
 
   // Get job article
   getArticle: async (jobId: string): Promise<string> => {
-    return fetchAPI<string>(`/api/jobs/${jobId}/article`)
+    return fetchAPI<string>(`/api/v1/jobs/${jobId}/article`)
   },
 
   // Get job QC report
   getQCReport: async (jobId: string): Promise<any> => {
-    return fetchAPI<any>(`/api/jobs/${jobId}/qc-report`)
+    return fetchAPI<any>(`/api/v1/jobs/${jobId}/qc-report`)
   },
 
   // Get job execution log
   getExecutionLog: async (jobId: string): Promise<any> => {
-    return fetchAPI<any>(`/api/jobs/${jobId}/execution-log`)
+    return fetchAPI<any>(`/api/v1/jobs/${jobId}/execution-log`)
   },
 
   // Export job (MD, PDF, HTML)
   export: async (jobId: string, format: 'md' | 'pdf' | 'html'): Promise<Blob> => {
-    const response = await fetch(`${API_URL}/api/jobs/${jobId}/export?format=${format}`)
+    const response = await fetch(`${API_URL}/api/v1/jobs/${jobId}/export?format=${format}`)
     if (!response.ok) throw new Error('Export failed')
     return response.blob()
   },
@@ -256,7 +277,7 @@ export const backlinksAPI = {
     if (params?.status) searchParams.set('status', params.status.join(','))
 
     const query = searchParams.toString()
-    return fetchAPI(`/api/backlinks${query ? `?${query}` : ''}`)
+    return fetchAPI(`/api/v1/backlinks${query ? `?${query}` : ''}`)
   },
 
   // Get backlink analytics
@@ -267,12 +288,12 @@ export const backlinksAPI = {
     total_cost: number
     avg_qc_score: number
   }> => {
-    return fetchAPI('/api/backlinks/analytics')
+    return fetchAPI('/api/v1/backlinks/analytics')
   },
 
   // Generate similar backlink
   generateSimilar: async (backlinkId: string): Promise<JobPackage> => {
-    return fetchAPI<JobPackage>(`/api/backlinks/${backlinkId}/generate-similar`, {
+    return fetchAPI<JobPackage>(`/api/v1/backlinks/${backlinkId}/generate-similar`, {
       method: 'POST',
     })
   },
@@ -282,12 +303,12 @@ export const backlinksAPI = {
 export const settingsAPI = {
   // Get user settings
   get: async (): Promise<UserSettings> => {
-    return fetchAPI<UserSettings>('/api/settings')
+    return fetchAPI<UserSettings>('/api/v1/users/me/settings')
   },
 
   // Update user settings
   update: async (settings: Partial<UserSettings>): Promise<UserSettings> => {
-    return fetchAPI<UserSettings>('/api/settings', {
+    return fetchAPI<UserSettings>('/api/v1/users/me/settings', {
       method: 'PATCH',
       body: JSON.stringify(settings),
     })
@@ -295,7 +316,7 @@ export const settingsAPI = {
 
   // Test API key
   testAPIKey: async (provider: string, apiKey: string): Promise<boolean> => {
-    const result = await fetchAPI<{ valid: boolean }>('/api/settings/test-key', {
+    const result = await fetchAPI<{ valid: boolean }>('/api/v1/users/me/test-api-key', {
       method: 'POST',
       body: JSON.stringify({ provider, api_key: apiKey }),
     })
@@ -316,7 +337,7 @@ export const statsAPI = {
     avg_duration: number
     recent_jobs: JobPackage[]
   }> => {
-    return fetchAPI('/api/stats/dashboard')
+    return fetchAPI('/api/v1/analytics/dashboard')
   },
 
   // Get cost breakdown
@@ -336,7 +357,7 @@ export const statsAPI = {
     if (params?.group_by) searchParams.set('group_by', params.group_by)
 
     const query = searchParams.toString()
-    return fetchAPI(`/api/stats/costs${query ? `?${query}` : ''}`)
+    return fetchAPI(`/api/v1/analytics/costs${query ? `?${query}` : ''}`)
   },
 }
 

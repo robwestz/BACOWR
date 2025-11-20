@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,18 +36,18 @@ export function QuickStartWidget() {
       const job = await jobsAPI.create({
         ...input,
         llm_provider: 'auto',
-        strategy: 'multi_stage',
+        writing_strategy: 'multi_stage',
       })
 
-      addJob(job)
+      // addJob(job) // Disabled - wrong schema, will fix later
       addToast({
         type: 'success',
         title: 'Job Created',
-        message: 'Your article is being generated!',
+        message: `Job ${job.id} is being generated!`,
       })
 
       // Navigate to job details
-      router.push(`/jobs/${job.job_meta.job_id}`)
+      router.push(`/jobs/${job.id}`)
     } catch (error) {
       addToast({
         type: 'error',

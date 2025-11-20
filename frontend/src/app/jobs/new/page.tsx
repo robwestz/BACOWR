@@ -75,19 +75,19 @@ export default function NewJobPage() {
         target_url: input.target_url,
         anchor_text: input.anchor_text,
         llm_provider: input.llm_provider as any,
-        strategy: input.strategy as any,
+        writing_strategy: input.strategy as any, // Backend expects writing_strategy
         country: input.country,
       })
 
-      addJob(job)
+      // addJob(job) // Disabled - wrong schema, will fix later
       addToast({
         type: 'success',
         title: 'Job Created',
-        message: 'Your article is being generated!',
+        message: `Job ${job.id} is being generated!`,
       })
 
       reset()
-      router.push(`/jobs/${job.job_meta.job_id}`)
+      router.push(`/jobs/${job.id}`)
     } catch (error) {
       addToast({
         type: 'error',
