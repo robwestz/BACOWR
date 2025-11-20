@@ -119,8 +119,7 @@ class PublisherScraperAndProfiler(BaseModule):
             try:
                 url = base_url.rstrip('/') + path
                 return self._fetch_page(url)
-            except:
-                continue
+            except requests.exceptions.RequestException:
 
         return ""
 
