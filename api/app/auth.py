@@ -6,16 +6,13 @@ from fastapi import Depends, HTTPException, status, Security
 from fastapi.security import APIKeyHeader
 from sqlalchemy.orm import Session
 import secrets
-from passlib.context import CryptContext
+import bcrypt as bcrypt_lib
 
 from .database import get_db
 from .models.database import User
 
 # API Key header
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def generate_api_key() -> str:
@@ -24,13 +21,19 @@ def generate_api_key() -> str:
 
 
 def hash_password(password: str) -> str:
-    """Hash a password."""
-    return pwd_context.hash(password)
+    """Hash a password using bcrypt."""
+    # bcrypt has a max password length of 72 bytes
+    password_bytes = password.encode('utf-8')[:72]
+    salt = bcrypt_lib.gensalt()
+    hashed = bcrypt_lib.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    password_bytes = plain_password.encode('utf-8')[:72]
+    hashed_bytes = hashed_password.encode('utf-8')
+    return bcrypt_lib.checkpw(password_bytes, hashed_bytes)
 
 
 async def get_current_user(
