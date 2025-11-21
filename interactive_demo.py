@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 """
+LEGACY SCRIPT - Can still be used via new entry point
+
+This script can now be run through the unified entry point:
+  python run_bacowr.py --mode demo --demo-type interactive
+
+Or directly as before:
+  python interactive_demo.py
+
+---
+
 BACOWR Interactive Demo - No Browser Required
 Simulerar web-upplevelsen i terminalen
 """

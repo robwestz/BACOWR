@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 """
+LEGACY SCRIPT - DEPRECATED
+
+This script is kept for backward compatibility but is no longer the recommended way to run BACOWR.
+
+Please use the new unified entry point instead:
+  python run_bacowr.py --mode demo
+
+---
+
 BACOWR Demo - För Chefspresentation
 Kör detta script för att visa demon!
 

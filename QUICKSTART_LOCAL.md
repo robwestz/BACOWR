@@ -1,10 +1,103 @@
 # BACOWR Quick Start - Lokal Utveckling
 
-Kom igång med BACOWR på din lokala maskin på 10 minuter.
+Kom igång med BACOWR på din lokala maskin på 5 minuter.
 
 ## 🚀 Snabbstart (5 minuter)
 
-### 1. Backend Setup (2 min)
+### Metod 1: Använd Startskript (Rekommenderat)
+
+Det enklaste sättet att komma igång:
+
+```bash
+# Unix/Linux/macOS
+./start_bacowr.sh
+
+# Windows
+.\start_bacowr.ps1
+```
+
+Skriptet gör automatiskt:
+- Skapar virtuell miljö
+- Installerar dependencies
+- Kopierar .env.example till .env
+- Kör BACOWR i dev-läge
+
+### Metod 2: Manuell Setup
+
+Om du vill ha mer kontroll:
+
+```bash
+# 1. Skapa virtuell miljö
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 2. Installera dependencies
+pip install -r requirements.txt
+
+# 3. Kopiera .env.example till .env
+cp .env.example .env
+# Redigera .env och lägg till dina API-nycklar (valfritt för dev-läge)
+
+# 4. Kör i dev-läge (använder mock data)
+python run_bacowr.py --mode dev \
+  --publisher example.com \
+  --target https://example.com/page \
+  --anchor "test link"
+```
+
+### 3. Verifiera Installation
+
+```bash
+# Kör verifieringsskript
+python verify_startup.py
+
+# Förväntat resultat: Alla checks ska passa
+```
+
+## 🎯 Nästa Steg
+
+### Kör i Production Mode
+
+När du har lagt till API-nycklar i .env:
+
+```bash
+# Sätt API key (om inte i .env)
+export ANTHROPIC_API_KEY='your-key-here'
+
+# Kör med riktig LLM
+python run_bacowr.py --mode prod \
+  --publisher aftonbladet.se \
+  --target https://sv.wikipedia.org/wiki/Artificiell_intelligens \
+  --anchor "läs mer om AI"
+```
+
+### Interaktiv Demo
+
+```bash
+python run_bacowr.py --mode demo
+```
+
+## 🐳 Docker Alternative
+
+Om du föredrar Docker:
+
+```bash
+# Kopiera och redigera .env
+cp .env.example .env
+# Lägg till dina API-nycklar i .env
+
+# Starta med docker-compose
+docker-compose up --build
+
+# API körs på http://localhost:8000
+# Dokumentation: http://localhost:8000/docs
+```
+
+## 🌐 Fullständig Web Application
+
+För att köra hela web-applikationen (backend + frontend):
+
+### 1. Backend Setup
 
 ```bash
 # Gå till API-katalogen
@@ -28,9 +121,6 @@ DEBUG=true
 SECRET_KEY=dev-secret-key-change-in-production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# Redis (optional, använder in-memory fallback om ej tillgänglig)
-# REDIS_URL=redis://localhost:6379
 EOF
 
 # Installera dependencies
@@ -46,7 +136,7 @@ python -m uvicorn app.main:app --reload --port 8000
 Backend körs nu på: **http://localhost:8000**
 API Docs: **http://localhost:8000/docs**
 
-### 2. Frontend Setup (2 min)
+### 2. Frontend Setup
 
 Öppna en ny terminal:
 
@@ -68,24 +158,19 @@ npm run dev
 
 Frontend körs nu på: **http://localhost:3000**
 
-### 3. Verifiera Installation (1 min)
+## 📝 Exempel: Första Jobbet
 
-Öppna en ny terminal:
+### Via CLI (Snabbast)
 
 ```bash
-# Kör integration test
-python test_integration.py
-
-# Testa API endpoint
-curl http://localhost:8000/health
-
-# Förväntat svar:
-# {"status":"healthy","service":"bacowr-api","version":"1.0.0"}
+python run_bacowr.py --mode dev \
+  --publisher example.com \
+  --target https://example.com/page \
+  --anchor "test link" \
+  --verbose
 ```
 
-## 🎯 Första Testet
-
-### Skapa ett Job via API
+### Via API (Om du kör web-applikationen)
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/jobs \

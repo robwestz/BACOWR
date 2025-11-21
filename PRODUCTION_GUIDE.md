@@ -33,6 +33,19 @@ export AHREFS_API_KEY="xxx..."
 
 ### 3. Run Your First Job
 
+#### Using Unified Entry Point (Recommended)
+
+```bash
+python run_bacowr.py --mode prod \
+  --publisher example.com \
+  --target https://target.com/page \
+  --anchor "best solution" \
+  --llm anthropic \
+  --strategy multi_stage
+```
+
+#### Using Legacy Script (Still Supported)
+
 ```bash
 python production_main.py \
   --publisher example.com \
@@ -81,6 +94,16 @@ python production_main.py \
 ### Pattern 1: High Quality Single Article
 
 ```bash
+# Using run_bacowr.py (recommended)
+python run_bacowr.py --mode prod \
+  --publisher mynewssite.se \
+  --target https://client.com/product \
+  --anchor "bästa produkten" \
+  --llm anthropic \
+  --strategy multi_stage \
+  --verbose
+
+# Or using legacy script
 python production_main.py \
   --publisher mynewssite.se \
   --target https://client.com/product \

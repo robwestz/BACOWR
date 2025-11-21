@@ -49,5 +49,9 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Default command: Run API server
-CMD ["python", "-m", "uvicorn", "api.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command: Run BACOWR in production mode
+# Override with specific arguments as needed:
+# docker run bacowr python run_bacowr.py --mode prod --publisher example.com --target https://example.com --anchor "test"
+# Or run the API server:
+# docker run bacowr python -m uvicorn api.app.main:app --host 0.0.0.0 --port 8000
+CMD ["python", "run_bacowr.py", "--mode", "prod"]
