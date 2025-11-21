@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 """
+LEGACY SCRIPT - DEPRECATED
+
+This script is kept for backward compatibility but is no longer the recommended way to set up BACOWR.
+
+Please use the new unified entry point instead:
+  # Setup is now automatic with:
+  ./start_bacowr.sh
+  # or
+  .\start_bacowr.ps1
+
+---
+
 BACOWR Demo Setup - Automatisk Fork & Installation
 Kör detta script för att sätta upp en lokal demo-miljö (rör ej original-repo!)
 """

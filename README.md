@@ -575,39 +575,108 @@ Alla filer sparas i `storage/output/` (konfigurerbart).
 
 ### Krav
 
-- Python 3.8+
+- Python 3.9+
 - pip
 
-### Setup
+### Quick Setup (Recommended)
 
 ```bash
-# Klona repot
+# 1. Klona repot
 git clone https://github.com/robwestz/BACOWR.git
 cd BACOWR
 
-# Installera beroenden
+# 2. Skapa virtuell miljö
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 3. Installera beroenden
 pip install -r requirements.txt
+
+# 4. Kopiera och redigera .env
+cp .env.example .env
+# Lägg till dina API-nycklar i .env (valfritt för dev-läge)
+
+# 5. Kör BACOWR
+python run_bacowr.py --mode dev \
+  --publisher example.com \
+  --target https://example.com/page \
+  --anchor "test link"
 ```
+
+### Alternative: Use Startup Scripts
+
+```bash
+# Unix/Linux/macOS
+./start_bacowr.sh
+
+# Windows
+.\start_bacowr.ps1
+```
+
+These scripts automatically set up the virtual environment and install dependencies.
 
 ## 🚀 Quick Start
 
-### Interactive Quick Start (Recommended)
+### Method 1: Unified Entry Point (Recommended)
+
+The new `run_bacowr.py` provides a single, simple entry point for all modes:
+
+```bash
+# Development mode (uses mock data, no API keys needed)
+python run_bacowr.py --mode dev \
+  --publisher example.com \
+  --target https://example.com/page \
+  --anchor "example link"
+
+# Production mode (requires LLM API key)
+export ANTHROPIC_API_KEY='your-key-here'
+python run_bacowr.py --mode prod \
+  --publisher aftonbladet.se \
+  --target https://sv.wikipedia.org/wiki/Artificiell_intelligens \
+  --anchor "läs mer om AI"
+
+# Interactive demo
+python run_bacowr.py --mode demo
+```
+
+### Method 2: Startup Scripts
+
+```bash
+# Unix/Linux/macOS
+./start_bacowr.sh              # Runs in dev mode
+./start_bacowr.sh --mode prod  # Runs in production mode
+
+# Windows
+.\start_bacowr.ps1              # Runs in dev mode
+.\start_bacowr.ps1 -Mode prod   # Runs in production mode
+```
+
+### Method 3: Interactive Quick Start
 
 ```bash
 # Set API key
 export ANTHROPIC_API_KEY='your-key-here'
 
 # Run interactive guide
-python quickstart.py
+python run_bacowr.py --mode demo --demo-type quickstart
 ```
 
 This will guide you through generating your first article step-by-step.
 
-### Production CLI - Single Article
+### Single Article Generation
 
-Generate a single article:
+Generate a single article in production mode:
 
 ```bash
+# Using run_bacowr.py (recommended)
+python run_bacowr.py --mode prod \
+  --publisher aftonbladet.se \
+  --target https://sv.wikipedia.org/wiki/Artificiell_intelligens \
+  --anchor "läs mer om AI" \
+  --llm anthropic \
+  --strategy multi_stage
+
+# Or using legacy script (still supported)
 python production_main.py \
   --publisher aftonbladet.se \
   --target https://sv.wikipedia.org/wiki/Artificiell_intelligens \
@@ -658,6 +727,40 @@ python cost_calculator.py --jobs 1 --provider anthropic --strategy multi_stage
 python cost_calculator.py --input jobs.csv --details
 ```
 
+## 🐳 Docker Usage
+
+### Run with Docker Compose
+
+```bash
+# Copy .env.example to .env and add your API keys
+cp .env.example .env
+# Edit .env with your actual API keys
+
+# Start services
+docker-compose up --build
+
+# The API will be available at http://localhost:8000
+# API documentation at http://localhost:8000/docs
+```
+
+### Run Standalone Docker Container
+
+```bash
+# Build image
+docker build -t bacowr .
+
+# Run in production mode
+docker run --env-file .env bacowr \
+  python run_bacowr.py --mode prod \
+  --publisher example.com \
+  --target https://example.com \
+  --anchor "test link"
+
+# Run API server
+docker run -p 8000:8000 --env-file .env bacowr \
+  python -m uvicorn api.app.main:app --host 0.0.0.0 --port 8000
+```
+
 ## 🛠️ Advanced Usage
 
 ### CLI (Mock Mode)
@@ -665,6 +768,13 @@ python cost_calculator.py --input jobs.csv --details
 Kör full pipeline i mock-mode (ingen extern API krävs):
 
 ```bash
+# New unified entry point
+python run_bacowr.py --mode dev \
+  --publisher example-publisher.com \
+  --target https://client.com/product-x \
+  --anchor "bästa valet för [tema]"
+
+# Or using legacy script
 python main.py \
   --publisher example-publisher.com \
   --target https://client.com/product-x \

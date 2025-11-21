@@ -1,4 +1,13 @@
 """
+LEGACY SCRIPT - DEPRECATED
+
+This script is kept for backward compatibility but is no longer the recommended way to run demos.
+
+Please use the new unified entry point instead:
+  python run_bacowr.py --mode demo
+
+---
+
 BACOWR Pipeline Demo - For Management Review
 Shows complete backlink content generation pipeline.
 """

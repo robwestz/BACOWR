@@ -8,10 +8,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Database
-      - DATABASE_URL=postgresql://bacowr:bacowr_password@db:5432/bacowr
-
-      # LLM API Keys (provide your own)
+      # LLM API Keys (load from .env file or set here)
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
@@ -19,23 +16,30 @@ services:
       # SERP
       - AHREFS_API_KEY=${AHREFS_API_KEY:-}
 
+      # Database
+      - DATABASE_URL=postgresql://bacowr:bacowr_password@db:5432/bacowr
+
       # Application settings
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - OUTPUT_DIR=/app/storage/output
-      - DEFAULT_LLM_PROVIDER=anthropic
-      - DEFAULT_STRATEGY=multi_stage
+      - DEFAULT_LLM_PROVIDER=${DEFAULT_LLM_PROVIDER:-auto}
+      - DEFAULT_WRITING_STRATEGY=${DEFAULT_WRITING_STRATEGY:-multi_stage}
+      - DEFAULT_COUNTRY=${DEFAULT_COUNTRY:-se}
 
       # Frontend URL for CORS
       - FRONTEND_URL=http://localhost:3000
 
     volumes:
       - ./storage:/app/storage
-      - ./config:/app/config
+      - ./config:/app/config:ro  # Mount config as read-only
+      # Note: .env file is loaded via environment variables above, not mounted for security
     depends_on:
       - db
     networks:
       - bacowr-network
     restart: unless-stopped
+    # Override CMD to run API server instead of default run_bacowr.py
+    command: ["python", "-m", "uvicorn", "api.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
   # PostgreSQL Database
   db:
