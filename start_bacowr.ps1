@@ -64,11 +64,14 @@ if (Test-Path ".venv") {
 }
 
 # Check if dependencies are installed
-try {
-    python -c "import dotenv" 2>$null
-} catch {
+python -c "import dotenv" 2>$null
+if ($LASTEXITCODE -ne 0) {
     Write-Host "📦 Installing dependencies..." -ForegroundColor Yellow
     python -m pip install -q -r requirements.txt
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Failed to install dependencies" -ForegroundColor Red
+        exit 1
+    }
     Write-Host "✓ Dependencies installed" -ForegroundColor Green
     Write-Host ""
 }

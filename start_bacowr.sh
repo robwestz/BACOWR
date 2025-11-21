@@ -72,16 +72,27 @@ if ! python3 -c "import dotenv" 2>/dev/null; then
 fi
 
 # Default mode is dev, but allow override
-MODE="${1:-dev}"
+MODE="dev"
 
-# If first argument is --mode, use the second argument as mode
+# Parse mode argument
 if [ "$1" = "--mode" ]; then
-    MODE="$2"
-    shift 2
-else
-    # Remove --mode prefix if present
-    MODE="${MODE#--mode=}"
-    shift
+    # Check if second argument exists
+    if [ -n "$2" ]; then
+        MODE="$2"
+        shift 2
+    else
+        echo -e "${RED}Error: --mode requires an argument${NC}"
+        exit 1
+    fi
+elif [ -n "$1" ]; then
+    # Check if first argument is --mode=value format
+    if [[ "$1" == --mode=* ]]; then
+        MODE="${1#--mode=}"
+        shift
+    else
+        # Keep first argument as-is, use default mode
+        MODE="dev"
+    fi
 fi
 
 echo "Starting BACOWR in ${MODE} mode..."
