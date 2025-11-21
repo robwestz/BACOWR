@@ -51,7 +51,7 @@ def run_dev_mode(args):
     
     configure_logging(
         level=args.log_level,
-        json_logs=args.json_logs
+        json_output=args.json_logs
     )
     
     logger = get_logger(__name__)
@@ -59,15 +59,16 @@ def run_dev_mode(args):
     try:
         # Create pipeline
         pipeline = BacklinkPipeline(
-            serp_mode="mock",
-            output_dir=args.output
+            serp_mode="mock"
         )
         
         # Run pipeline
-        result = pipeline.run(
+        from pathlib import Path
+        result = pipeline.execute(
             publisher_domain=args.publisher,
             target_url=args.target,
-            anchor_text=args.anchor
+            anchor_text=args.anchor,
+            output_dir=Path(args.output)
         )
         
         print("\n" + "=" * 70)

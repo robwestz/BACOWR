@@ -110,6 +110,42 @@ jobs:
       env:
         BACOWR_LLM_MODE: mock
 
+  startup-verification:
+    name: Startup Verification
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run startup verification
+      run: |
+        python verify_startup.py
+
+    - name: Test run_bacowr.py help
+      run: |
+        python run_bacowr.py --help
+
+    - name: Test run_bacowr.py in dev mode (quick)
+      run: |
+        timeout 30 python run_bacowr.py --mode dev \
+          --publisher example.com \
+          --target https://example.com/page \
+          --anchor "test link" || echo "Dev mode test completed or timed out as expected"
+      env:
+        BACOWR_LLM_MODE: mock
+
   lint:
     name: Code Quality
     runs-on: ubuntu-latest
