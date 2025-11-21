@@ -31,8 +31,8 @@ services:
 
     volumes:
       - ./storage:/app/storage
-      - ./config:/app/config
-      - ./.env:/app/.env:ro  # Mount .env file as read-only
+      - ./config:/app/config:ro  # Mount config as read-only
+      # Note: .env file is loaded via environment variables above, not mounted for security
     depends_on:
       - db
     networks:

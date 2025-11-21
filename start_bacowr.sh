@@ -66,9 +66,13 @@ fi
 # Check if dependencies are installed
 if ! python3 -c "import dotenv" 2>/dev/null; then
     echo "📦 Installing dependencies..."
-    pip install -q -r requirements.txt
-    echo -e "${GREEN}✓ Dependencies installed${NC}"
-    echo ""
+    if pip install -q -r requirements.txt; then
+        echo -e "${GREEN}✓ Dependencies installed${NC}"
+        echo ""
+    else
+        echo -e "${RED}❌ Failed to install dependencies${NC}"
+        exit 1
+    fi
 fi
 
 # Default mode is dev, but allow override

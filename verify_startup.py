@@ -158,7 +158,7 @@ def test_basic_imports():
         'src.utils.logger',
         'src.utils.validation',
         'src.qc.quality_controller',
-        'src.pipeline.state_machine',  # Correct path as used in run_bacowr.py
+        'src.pipeline.state_machine',  # Used in dev mode
     ]
     
     all_ok = True
