@@ -16,6 +16,11 @@ import os
 from pathlib import Path
 import argparse
 
+# Setup Python path once at module level
+PROJECT_ROOT = Path(__file__).parent
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
+
 # Colors for output
 GREEN = '\033[0;32m'
 YELLOW = '\033[1;33m'
@@ -149,10 +154,6 @@ def test_basic_imports():
     """Test that BACOWR modules can be imported."""
     print("\n6. Testing BACOWR module imports...")
     
-    # Add src to path
-    sys.path.insert(0, str(Path(__file__).parent / "src"))
-    sys.path.insert(0, str(Path(__file__).parent))
-    
     modules_to_test = [
         'src.utils.logger',
         'src.utils.validation',
@@ -199,9 +200,6 @@ def test_run_bacowr_exists():
 def quick_smoke_test():
     """Run a quick smoke test of core functionality."""
     print("\n8. Running quick smoke test...")
-    
-    sys.path.insert(0, str(Path(__file__).parent / "src"))
-    sys.path.insert(0, str(Path(__file__).parent))
     
     try:
         # Try to import and create a logger

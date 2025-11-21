@@ -129,9 +129,9 @@ def run_prod_mode(args):
             target_url=args.target,
             anchor_text=args.anchor,
             llm_provider=args.llm,
-            strategy=args.strategy,
+            writing_strategy=args.strategy,
             output_dir=args.output,
-            verbose=args.verbose
+            enable_llm_profiling=args.verbose  # Use verbose for enhanced profiling
         )
         
         print("\n" + "=" * 70)
@@ -140,9 +140,17 @@ def run_prod_mode(args):
         print(f"Job ID: {result.get('job_id', 'N/A')}")
         print(f"Status: {result.get('status', 'N/A')}")
         print(f"Output Directory: {args.output}")
+        
+        # Show output files if available
+        if 'output_files' in result:
+            print("\nOutput Files:")
+            for name, path in result['output_files'].items():
+                print(f"  {name}: {path}")
+        
         print("=" * 70 + "\n")
         
-        if result.get('status') == 'success':
+        # Status can be 'DELIVERED', 'BLOCKED', or 'ABORTED'
+        if result.get('status') == 'DELIVERED':
             sys.exit(0)
         else:
             sys.exit(1)
