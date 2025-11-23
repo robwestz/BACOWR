@@ -1,0 +1,519 @@
+Punkt 0 – Syfte & omfattning
+{
+  "id": "Next-A1-0",
+  "title": "Syfte och omfattning – Variabelgiftermålet som stomme för allt",
+  "core_concept": "Variabelgiftermålet",
+  "variable_marriage": [
+    "publikationssajt",
+    "ankare",
+    "målsida",
+    "intention"
+  ],
+  "objectives": [
+    "Säkerställa att varje länkplacering är semantiskt motiverad",
+    "Följa användarens faktiska sökintention",
+    "Respektera publikationssajtens naturliga roll",
+    "Stärka målsidans långsiktiga auktoritet",
+    "Uppfylla tydliga krav på kvalitet, transparens och riskkontroll"
+  ],
+  "intention_principles": {
+    "weight": "Intention är lika viktig som publikationssajt, ankare och målsida",
+    "must_be_derived_from": [
+      "Målsidans faktiska innehåll och funktion",
+      "SERP-signaler för relevanta entiteter och kluster",
+      "Publikationssajtens naturliga roll och trovärdiga position i ekosystemet"
+    ],
+    "forbidden_assumptions": [
+      "Enbart lita på ankare",
+      "Enbart lita på manuell brief",
+      "Enbart lita på önskad CTA"
+    ],
+    "calibration_rule": "All utformning av länk, text och vinkel ska kalibreras mot modellerad intention"
+  },
+  "framework_components": [
+    "Bridge_type-märkning (strong | pivot | wrapper)",
+    "Trustkällors prioriteringsordning och definierade fallback-scenarion",
+    "LSI-kvalitet (entitetskluster + närfönsterregler)",
+    "Publisher-fit via röst-, ton- och formatprofilering",
+    "Autofix-matris (vad får justeras automatiskt vs kräver sign-off)",
+    "QC-scoredefinitioner och trösklar för spårbar kvalitetsbedömning",
+    "Branschspecifika disclaimers och compliance-regler",
+    "Bryggmönsterbibliotek för Scenario 2–3 (pivot/wrapper-case)"
+  ],
+  "governance": "Sektionerna 1–8 operationaliserar detta ramverk och är bindande för hur output struktureras, motiveras och kvalitetsgranskas."
+}
+
+****************************************
+Punkt 1 – JSON-schema: BacklinkArticleOutputV2_Extensions
+{
+  "id": "Next-A1-1",
+  "title": "BacklinkArticleOutputV2_Extensions",
+  "requirements": "Inkludera alltid links_extension, qc_extension och intent_extension. Om något inte är tillämpligt: använd null, \"none\" eller tomma listor, men utelämna inte fält.",
+  "schema": {
+    "links_extension": {
+      "bridge_type": {
+        "type": "string",
+        "allowed_values": ["strong", "pivot", "wrapper"]
+      },
+      "bridge_theme": {
+        "type": ["string", "null"]
+      },
+      "anchor_swap": {
+        "performed": {
+          "type": "boolean"
+        },
+        "from_type": {
+          "type": ["string", "null"],
+          "allowed_values": ["exact", "partial", "brand", "generic", null]
+        },
+        "to_type": {
+          "type": ["string", "null"],
+          "allowed_values": ["exact", "partial", "brand", "generic", null]
+        },
+        "rationale": {
+          "type": "string"
+        }
+      },
+      "placement": {
+        "paragraph_index_in_section": {
+          "type": "integer"
+        },
+        "offset_chars": {
+          "type": "integer"
+        },
+        "near_window": {
+          "unit": {
+            "type": "string",
+            "allowed_values": ["sentence"]
+          },
+          "radius": {
+            "type": "integer"
+          },
+          "lsi_count": {
+            "type": "integer"
+          }
+        }
+      },
+      "trust_policy": {
+        "level": {
+          "type": "string",
+          "allowed_values": ["T1_public", "T2_academic", "T3_industry", "T4_media"]
+        },
+        "fallback_used": {
+          "type": "boolean"
+        },
+        "unresolved": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "compliance": {
+        "disclaimers_injected": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "allowed_values": [
+              "gambling",
+              "finance",
+              "health",
+              "legal",
+              "crypto",
+              "none"
+            ]
+          }
+        }
+      }
+    },
+    "qc_extension": {
+      "anchor_risk": {
+        "type": "string",
+        "allowed_values": ["low", "medium", "high"]
+      },
+      "readability": {
+        "lix": {
+          "type": "number"
+        },
+        "target_range": {
+          "type": "string",
+          "example": "35–45"
+        }
+      },
+      "thresholds_version": {
+        "type": "string",
+        "example": "A1"
+      },
+      "notes_observability": {
+        "signals_used": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "allowed_values": [
+              "target_entities",
+              "publisher_profile",
+              "SERP_intent",
+              "trust_source",
+              "blueprint"
+            ]
+          }
+        },
+        "autofix_done": {
+          "type": "boolean"
+        }
+      }
+    },
+    "intent_extension": {
+      "serp_intent_primary": {
+        "type": "string",
+        "allowed_values": [
+          "info_primary",
+          "commercial_research",
+          "transactional",
+          "navigational_brand",
+          "support",
+          "local",
+          "mixed"
+        ]
+      },
+      "serp_intent_secondary": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "target_page_intent": {
+        "type": "string"
+      },
+      "anchor_implied_intent": {
+        "type": "string"
+      },
+      "publisher_role_intent": {
+        "type": "string"
+      },
+      "intent_alignment": {
+        "anchor_vs_serp": {
+          "type": "string",
+          "allowed_values": ["aligned", "partial", "off"]
+        },
+        "target_vs_serp": {
+          "type": "string",
+          "allowed_values": ["aligned", "partial", "off"]
+        },
+        "publisher_vs_serp": {
+          "type": "string",
+          "allowed_values": ["aligned", "partial", "off"]
+        },
+        "overall": {
+          "type": "string",
+          "allowed_values": ["aligned", "partial", "off"]
+        }
+      },
+      "recommended_bridge_type": {
+        "type": "string",
+        "allowed_values": ["strong", "pivot", "wrapper"]
+      },
+      "recommended_article_angle": {
+        "type": "string"
+      },
+      "required_subtopics": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "forbidden_angles": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "notes": {
+        "rationale": {
+          "type": "string"
+        },
+        "data_confidence": {
+          "type": "string",
+          "allowed_values": ["high", "medium", "low"]
+        }
+      }
+    }
+  }
+}
+*************************************************************
+
+Punkt 2 – Bryggtyp & Intent-koppling
+
+{
+  "id": "Next-A1-2",
+  "title": "Bryggtyp — beslutsträd, triggers och koppling till intent",
+  "intent_rule": {
+    "description": "Val av bridge_type ska alltid valideras mot intent_extension.overall.",
+    "constraints": {
+      "strong": "Endast om publisher_vs_serp, anchor_vs_serp och target_vs_serp inte är 'off'.",
+      "pivot": "När minst en är 'partial' men kan lösas via tematiskt brobyggande.",
+      "wrapper": "När overall är 'off' utan legitim direktkoppling; etablera meta-ram först, placera länken efter."
+    }
+  },
+  "bridge_types": {
+    "strong": {
+      "triggers": [
+        "anchor_semantics ≈ target_page_focus",
+        "publisher_niche overlap ≥ 0.7"
+      ],
+      "placement_rule": "Placera länken i den första tydligt relevanta huvudsektionen (ofta en H2), tidigt men efter att kontexten etablerats.",
+      "trust_requirement": "Minst 1 standard/auktoritet (t.ex. T1/T2/T3 beroende på ämne)."
+    },
+    "pivot": {
+      "triggers": [
+        "Anchorn är bredare eller angränsande till target",
+        "publisher_niche overlap 0.4–0.7"
+      ],
+      "method": "Formulera en övergripande problemformulering eller fråga; etablera en semantisk pivot som knyter ihop publisher och target.",
+      "trust_requirement": "1–2 källor som stödjer pivot-vinkeln."
+    },
+    "wrapper": {
+      "triggers": [
+        "publisher_niche overlap < 0.4",
+        "ankaret upplevs generiskt eller omaka"
+      ],
+      "method": "Bygg en neutral temaram kring metodik, risk, statistik, innovation, etik, hållbarhet eller säkerhet.",
+      "trust_requirement": "2–3 källor; triangulering Publisher ↔ TRUST ↔ Target.",
+      "placement_rule": "Placera länken först efter att bryggan/metaramen är etablerad."
+    }
+  }
+}
+
+***********************************************************************
+Punkt 3 – TrustkällorTrustPolicy:
+{
+  "id": "Next-A1-3",
+  "title": "Trustkällor – prioritet, regler och fallback",
+  "TrustPolicy": {
+    "priority_order": {
+      "T1_public": "Myndigheter, standardiseringsorgan, officiella riktlinjer (SE prioriteras).",
+      "T2_academic": "Universitet, forskningsdatabaser, peer-review.",
+      "T3_industry": "Branschorganisationer, whitepapers, tekniska standarder.",
+      "T4_media": "Respekterade nyhetshus; endast om T1–T3 saknas."
+    },
+    "constraints": [
+      "Aldrig länka till direkta konkurrenter till target_url.",
+      "Undvik user-generated content som primär trust.",
+      "Föredra svenska källor i SE-case; annars EU/NO/UK med hög trovärdighet.",
+      "Trustval ska stödja den dominerande search intenten (intent_extension.serp_intent_primary), inte motsäga den."
+    ],
+    "unresolved_policy": {
+      "action_when_missing": "Sätt url='PLATSFÖRSLAG' och motivera i rationale."
+    },
+    "placement_guideline": [
+      "Samla trustlänkar i en Resurser/Avslut-sektion när det är naturligt.",
+      "Om trust används i bryggstycket: 1–2 diskreta omnämnanden, inte listform."
+    ]
+  }
+}
+***********************************************************************
+4) LSI‑kvalitet och närfönster
+{
+  "id": "Next-A1-4",
+  "title": "LSI-kvalitet och närfönster",
+  "LSI": {
+    "window": {
+      "unit": "sentence",
+      "radius": 2,
+      "min_count": 6,
+      "max_count": 10
+    },
+    "sourcing": [
+      "Hämta entiteter/termer från target_url (huvudtema + 3–6 nyckelentiteter).",
+      "Lägg till pivotthema-termer om bridge_type är pivot eller wrapper."
+    ],
+    "quality": {
+      "must": [
+        "Blanda begreppstyper: process (t.ex. 'verifiering'), mått/teori (t.ex. 'sannolikhet'), felkällor (t.ex. 'bias').",
+        "Undvik endast synonymer; eftersträva entitetskluster.",
+        "Spegla relevanta 'required_subtopics' från intent_extension så att texten deltar i rätt tematiska kluster."
+      ],
+      "avoid": [
+        "Upprepning av samma rotord.",
+        "Överoptimering runt ankaret."
+      ]
+    }
+  }
+}
+***********************************************************************
+Punkt 5 – Publisher-fit
+{
+  "id": "Next-A1-5",
+  "title": "Publisher-fit — röstprofiler och stil",
+  "PublisherVoice": {
+    "academic": {
+      "tone": "saklig, källförande, låg värdeladdning",
+      "structure": ["inledning", "metod", "resultat/implikation", "resurser"],
+      "citation_style": "kort källhänvisning i text, trust i slutet"
+    },
+    "authority_public": {
+      "tone": "myndighetsnära klarspråk",
+      "structure": ["sammanhang", "rekommendation", "hur-gör-man", "källor"]
+    },
+    "consumer_magazine": {
+      "tone": "lättillgänglig, nytta först, konkreta exempel",
+      "structure": ["hook", "mittpunkt", "fördjupning", "call-to-value", "resurser"]
+    },
+    "hobby_blog": {
+      "tone": "personligt sakkunnig, berättande med praktiska tips",
+      "structure": ["bakgrund", "mittpunkt med case", "tips", "resurser"]
+    }
+  },
+  "rules": {
+    "infer_when_missing": "Om ingen explicit profil finns: inferera via 'Om oss' eller typiska artiklar.",
+    "log_in_qc": "Vald profil/logik ska loggas i qc_extension.notes_observability.signals_used.",
+    "log_in_intent": "Vald röst/roll ska loggas i intent_extension.publisher_role_intent och användas i intent_alignment.publisher_vs_serp."
+  }
+}
+***********************************************************************
+Punkt 6 – Ankarrisk, placering & byteAnchor:
+{
+  "id": "Next-A1-6",
+  "title": "Ankarrisk, placering och ankartypsbyte",
+  "Anchor": {
+    "never_in_headers": ["H1", "H2"],
+    "preferred_section": "H2: Mittpunkt (eller motsvarande huvudsektion)",
+    "paragraph_target": "stycke 1–2 i relevant huvudsektion, efter att kontext etablerats",
+    "anchor_risk_heuristics": {
+      "high": [
+        "Exact match + stark kommersiell intent i svag eller missanpassad kontext.",
+        "Upprepning av samma ankare två eller fler gånger i samma sektion."
+      ],
+      "medium": [
+        "Generic-ankare i svag kontext utan trust.",
+        "Partial-ankare med snäv eller tveksam semantisk passform."
+      ],
+      "low": [
+        "Brand/generic i naturlig kontext med relevanta LSI-termer och trust i närheten."
+      ]
+    },
+    "swap_policy": {
+      "allowed": true,
+      "examples": [
+        {
+          "from": "exact",
+          "to": "generic",
+          "rationale": "Ökad naturlighet i en metodik-/risk-ram."
+        },
+        {
+          "from": "partial",
+          "to": "brand",
+          "rationale": "Om varumärket har E-E-A-T-signal och passar publikationssajtens stil."
+        }
+      ]
+    },
+    "interpretation_note": "Denna sektion definierar hur ankare placeras, hur risknivå bedöms och när ankartypsbyte är tillåtet enligt Autofix-policy."
+  }
+}
+***********************************************************************
+Punkt 7 – Autofix:
+{
+  "id": "Next-A1-7",
+  "title": "Autofix – vad får göras utan sign-off",
+  "Autofix": {
+    "allowed": [
+      "Flytta [[LINK]] inom den relevanta huvudsektionen för naturlig och låg-risk placering.",
+      "Byta ankartyp (exact/partial/brand/generic) för ökad naturlighet.",
+      "Lägga till eller byta ut [[TRUST]]; använd 'PLATSFÖRSLAG' vid behov med motivering.",
+      "Injicera 6–10 relevanta LSI-termer i närfönstret.",
+      "Infoga branschdisclaimer i avslut/Resurser där det är lämpligt.",
+      "Justera ankartyp och mikrocopy så att de följer serp_intent_primary och target_page_intent utan att förvanska budskapet."
+    ],
+    "needs_sign_off": [
+      "Ändra H1, titel eller metatitel.",
+      "Byta huvudtema eller grundstruktur på sektioner.",
+      "Ta bort hela sektioner."
+    ],
+    "never": [
+      "Fabricera siffror eller citat.",
+      "Länka till konkurrerande målsidor.",
+      "Ändra intent på ett sätt som strider mot intent_extension.overall eller skapar vilseledning."
+    ],
+    "comment": "Autofix är tillåtet för språk, semantik och mikrojuseringar runt länkplacering, men aldrig för grundläggande struktur eller policykritiska beslut."
+  }
+}
+***********************************************************************
+8) QC – definitioner, trösklar och statuslogik
+{
+  "id": "Next-A1-8",
+  "title": "QC – definitioner, trösklar och statuslogik",
+  "QCScoring": {
+    "definitions": {
+      "preflight": "Korrekt variabelgifte och rimligt vald bridge_type.",
+      "draft": "Flyt, struktur och tydlig röd tråd.",
+      "anchor": "Naturlig placering och ankarrisk låg/medel.",
+      "trust": "Källkvalitet och rimlig triangulering mellan Publisher, TRUST och Target.",
+      "intent": "Giftemålet följer dominant SERP-intent; anchor/target/publisher är inte 'off' i intent_extension.overall.",
+      "lsi": "6–10 relevanta LSI-termer i närfönster med god kvalitet.",
+      "fit": "Röst och ton matchar publikationssajten.",
+      "compliance": "Disclaimers, policykrav och PII-hantering uppfylls."
+    },
+    "evaluation_rules": [
+      "QC ska läsa links_extension, intent_extension och qc_extension tillsammans.",
+      "Vid konflikt mellan intent_extension.recommended_bridge_type och links_extension.bridge_type ska caset flaggas för manuell granskning.",
+      "Vid intent_extension.overall = 'off' ska caset flaggas för omarbetning eller wrapper/pivot-lösning."
+    ]
+  }
+}
+***********************************************************************
+{
+  "serp_research_extension": {
+    "main_query": "string",
+    "cluster_queries": [
+      "string"
+    ],
+    "queries_rationale": "string",
+    "serp_sets": [
+      {
+        "query": "string",
+        "dominant_intent": "info_primary | commercial_research | transactional | navigational_brand | support | local | mixed",
+        "secondary_intents": [
+          "string"
+        ],
+        "page_archetypes": [
+          "guide",
+          "comparison",
+          "category",
+          "product",
+          "review",
+          "tool",
+          "faq",
+          "news",
+          "official",
+          "other"
+        ],
+        "required_subtopics": [
+          "string"
+        ],
+        "top_results_sample": [
+          {
+            "rank": 1,
+            "url": "string",
+            "title": "string",
+            "detected_page_type": "guide | comparison | category | product | review | tool | faq | news | official | other",
+            "snippet": "string",
+            "content_signals": [
+              "kort beskrivning av vad sidan betonar (t.ex. jämförelse, transparens, villkor, risker)"
+            ],
+            "key_entities": [
+              "string"
+            ],
+            "key_subtopics": [
+              "string"
+            ]
+          }
+        ]
+      }
+    ],
+    "derived_links": {
+      "intent_profile_ref": "kopplas till intent_extension.serp_intent_primary / serp_intent_secondary",
+      "required_subtopics_merged_ref": "kopplas till intent_extension.required_subtopics",
+      "data_confidence": "high | medium | low"
+    }
+  }
+}
