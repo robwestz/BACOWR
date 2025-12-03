@@ -1,0 +1,237 @@
+# Guardrails Policies Configuration
+# Priority-based policy enforcement for Next-A1 compliance
+
+# ============================================================================
+# PRIORITY LEVELS
+# ============================================================================
+# HARD_BLOCK (1) - Must be satisfied, blocks delivery
+# STRONG (2) - Should be satisfied, triggers human review
+# SOFT (3) - Nice to have, logs warning only
+
+# ============================================================================
+# VERTICAL-SPECIFIC GUARDRAILS
+# ============================================================================
+
+finance:
+  required_disclaimers:
+    priority: HARD_BLOCK
+    policy: >
+      Alla finansiella artiklar måste innehålla disclaimer som klargör att
+      innehållet inte utgör finansiell rådgivning. Exempel: "Detta är inte
+      finansiell rådgivning. Konsultera alltid en certifierad rådgivare innan
+      finansiella beslut."
+
+  no_unbacked_claims:
+    priority: HARD_BLOCK
+    policy: >
+      Inga finansiella påståenden (avkastning, risk, prognos) utan backing
+      från T1/T2-källor. Alla siffror måste härledas till officiell källa.
+
+  trust_tier_minimum:
+    priority: HARD_BLOCK
+    threshold: 1.0
+    policy: >
+      Minst EN T1-källa (Finansinspektionen, Riksbanken, SCB) eller
+      TVÅ T2-källor krävs för finansiella artiklar.
+
+health:
+  required_disclaimers:
+    priority: HARD_BLOCK
+    policy: >
+      Alla hälso/medicin-artiklar måste innehålla disclaimer. Exempel:
+      "Detta innehåll utgör inte medicinsk rådgivning. Kontakta alltid
+      läkare eller sjukvårdspersonal för medicinska frågor."
+
+  no_unbacked_health_claims:
+    priority: HARD_BLOCK
+    policy: >
+      Inga medicinska påståenden (effekt, risk, diagnos, behandling) utan
+      backing från T1 (myndighet) eller T2 (peer-reviewed forskning).
+      Absolut förbud mot pseudovetenskap.
+
+  trust_tier_minimum:
+    priority: HARD_BLOCK
+    threshold: 1.0
+    policy: >
+      Minst EN T1-källa (Folkhälsomyndigheten, WHO, 1177) eller
+      EN T2-källa (Karolinska, peer-reviewed journal) krävs.
+
+medical:
+  # Same as health but stricter
+  required_disclaimers:
+    priority: HARD_BLOCK
+    policy: >
+      Medicinsk disclaimer obligatorisk. Exempel: "Detta är medicinsk
+      information, inte medicinsk rådgivning. Konsultera läkare."
+
+  no_unbacked_health_claims:
+    priority: HARD_BLOCK
+    policy: >
+      Alla medicinska påståenden måste backas av T1/T2-källor.
+      Noll-tolerans för unbacked claims.
+
+  trust_tier_minimum:
+    priority: HARD_BLOCK
+    threshold: 2.0
+    policy: >
+      Minst TVÅ T1/T2-källor krävs för alla medicinska artiklar.
+
+legal:
+  required_disclaimers:
+    priority: HARD_BLOCK
+    policy: >
+      Juridisk disclaimer obligatorisk. Exempel: "Detta utgör inte juridisk
+      rådgivning. Kontakta jurist för specifik rådgivning."
+
+  no_unbacked_claims:
+    priority: HARD_BLOCK
+    policy: >
+      Alla juridiska påståenden (lag, praxis, tolkningar) måste backas av
+      officiella källor: lagar, domar, myndighetsinformation.
+
+  trust_tier_minimum:
+    priority: STRONG
+    threshold: 1.0
+    policy: >
+      Minst EN T1-källa (Riksdagen, domstol, myndighet) rekommenderas starkt.
+
+gambling:
+  required_disclaimers:
+    priority: HARD_BLOCK
+    policy: >
+      Obligatorisk disclaimer + Stödlinjen. Exempel: "Spela ansvarsfullt.
+      Risk för spelberoende. Stödlinjen: 020-81 91 00"
+
+  no_unbacked_claims:
+    priority: HARD_BLOCK
+    policy: >
+      Inga påståenden om odds, vinst-sannolikhet utan backing.
+      Förbjudet att lova vinst eller bortse från risk.
+
+  commercial_density:
+    priority: STRONG
+    threshold: 0.15
+    policy: >
+      Max 15% kommersiella stycken (lägre än default). Gambling kräver
+      försiktig presentation.
+
+# ============================================================================
+# UNIVERSAL GUARDRAILS (all verticals)
+# ============================================================================
+
+universal:
+  no_unknown_external_urls:
+    priority: HARD_BLOCK
+    policy: >
+      Inga externa länkar utanför trustlink-plan + target-url. Alla länkar
+      måste vara godkända i förväg. Blockerar automatiskt vid violation.
+
+  max_commercial_density:
+    priority: STRONG
+    threshold: 0.25
+    policy: >
+      Högst 25% av styckena får innehålla direkta uppmaningar att klicka/köpa.
+      Publisher-tone respekteras. Info-first publishers får lägre tolerans.
+
+  block_forbidden_angles:
+    priority: STRONG
+    policy: >
+      Vinklar markerade som "forbidden" i variable_marriage får EJ användas.
+      Exempel: hård säljtakt när publisher_role är info-first, löften som
+      target inte kan backa upp.
+
+  trust_tier_baseline:
+    priority: STRONG
+    threshold: 1.0
+    policy: >
+      Även om inte reglerad vertikal: sträva efter minst EN T1-T3-källa
+      för trovärdighet. Logs warning om trust_plan.mode == "none".
+
+  anchor_risk_high:
+    priority: STRONG
+    policy: >
+      Om anchor_risk == "high" (exact match, över-optimerad):
+      triggar human review. Kräver extra granskning av naturlighet.
+
+  intent_alignment_off:
+    priority: STRONG
+    policy: >
+      Om intent_alignment.overall == "off": triggar human review.
+      Stark missmatch mellan publisher-anchor-target-SERP.
+
+# ============================================================================
+# LINK PLACEMENT RULES
+# ============================================================================
+
+link_placement:
+  no_h1_h2:
+    priority: HARD_BLOCK
+    policy: >
+      Target-länk får ALDRIG placeras i H1 eller H2. Blockerande regel.
+      Endast body-text eller H3+ tillåts.
+
+  middle_section_preferred:
+    priority: SOFT
+    policy: >
+      Föredra placering i mittsektion (section 2-3 av 4-5 totalt).
+      Ej för tidigt, ej allra sist. Natural flow.
+
+  context_before_link:
+    priority: STRONG
+    policy: >
+      Minst 2-3 meningar kontext INNAN länk. Etablera tema först,
+      länka sedan. Aldrig länk i första mening av sektion.
+
+# ============================================================================
+# LSI REQUIREMENTS
+# ============================================================================
+
+lsi:
+  count_range:
+    priority: STRONG
+    min: 6
+    max: 10
+    policy: >
+      6-10 LSI-termer inom ±2 meningar från länk. Inte bara synonymer -
+      faktisk entity/topic diversity. Beräknas automatiskt i QC.
+
+  window_size:
+    priority: STRONG
+    value: 2
+    policy: >
+      LSI-window: ±2 meningar runt länk. Räkna alla relevanta termer
+      inom denna radie. För tätt/för glest båda problem.
+
+# ============================================================================
+# COMPLIANCE CHECKLIST PER VERTICAL
+# ============================================================================
+
+compliance_checklists:
+  finance:
+    - Disclaimer om finansiell rådgivning
+    - Minst 1 T1/T2-källa
+    - Inga unbacked påståenden om avkastning/risk
+    - Länka aldrig konkurrerande finansprodukt
+
+  health:
+    - Disclaimer om medicinsk rådgivning
+    - Minst 1 T1/T2-källa
+    - Inga unbacked hälsopåståenden
+    - Inga medicinska diagnoser
+
+  medical:
+    - Medicinsk disclaimer
+    - Minst 2 T1/T2-källor
+    - Alla claims backed
+    - Noll pseudovetenskap
+
+  legal:
+    - Juridisk disclaimer
+    - Käll-referens till lagar/domar
+    - Inga unbacked juridiska tolkningar
+
+  gambling:
+    - Ansvarsfullt spel-disclaimer + Stödlinjen
+    - Låg commercial density (15%)
+    - Inga vinstlöften
+    - Risk-information tydlig

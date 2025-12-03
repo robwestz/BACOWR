@@ -1,0 +1,436 @@
+# Trustlink Sources Configuration
+# Preconfigured T1-T5 trust sources for Swedish market
+#
+# Tier hierarchy:
+# T1_GOVERNMENT - Government, official standards (highest authority)
+# T2_ACADEMIC - Academic, peer-reviewed research
+# T3_INDUSTRY - Industry organizations, whitepapers
+# T4_MEDIA - Reputable media
+# T5_BRAND - Established brands
+# DATA_PORTAL - Data portals and statistics
+
+# ============================================================================
+# T1 - GOVERNMENT & OFFICIAL SOURCES
+# ============================================================================
+
+regeringen.se:
+  tier: T1_GOVERNMENT
+  title: "Regeringen"
+  authority: 99
+  topics:
+    - politik
+    - samhälle
+    - ekonomi
+    - juridik
+    - hälsa
+    - utbildning
+  industries:
+    - government
+    - public_sector
+    - policy
+
+riksdagen.se:
+  tier: T1_GOVERNMENT
+  title: "Riksdagen"
+  authority: 99
+  topics:
+    - lagstiftning
+    - politik
+    - demokrati
+    - samhälle
+  industries:
+    - government
+    - legal
+
+scb.se:
+  tier: DATA_PORTAL
+  title: "Statistiska centralbyrån"
+  authority: 98
+  topics:
+    - statistik
+    - ekonomi
+    - befolkning
+    - arbetsmarknad
+    - samhälle
+  industries:
+    - statistics
+    - research
+    - economics
+
+folkhalsomyndigheten.se:
+  tier: T1_GOVERNMENT
+  title: "Folkhälsomyndigheten"
+  authority: 98
+  topics:
+    - hälsa
+    - medicin
+    - folkhälsa
+    - vaccination
+    - smittskydd
+  industries:
+    - health
+    - medical
+    - public_health
+
+konsumentverket.se:
+  tier: T1_GOVERNMENT
+  title: "Konsumentverket"
+  authority: 97
+  topics:
+    - konsument
+    - rättigheter
+    - ekonomi
+    - försäkring
+    - köp
+  industries:
+    - consumer_protection
+    - finance
+    - legal
+
+finansinspektionen.se:
+  tier: T1_GOVERNMENT
+  title: "Finansinspektionen"
+  authority: 98
+  topics:
+    - finans
+    - bank
+    - försäkring
+    - värdepapper
+    - reglering
+  industries:
+    - finance
+    - banking
+    - insurance
+    - regulation
+
+skatteverket.se:
+  tier: T1_GOVERNMENT
+  title: "Skatteverket"
+  authority: 97
+  topics:
+    - skatt
+    - ekonomi
+    - företag
+    - moms
+    - deklaration
+  industries:
+    - taxation
+    - finance
+    - business
+
+arbetsmiljoverket.se:
+  tier: T1_GOVERNMENT
+  title: "Arbetsmiljöverket"
+  authority: 96
+  topics:
+    - arbetsmiljö
+    - säkerhet
+    - hälsa
+    - arbetsrätt
+  industries:
+    - labor
+    - safety
+    - health
+
+naturvardsverket.se:
+  tier: T1_GOVERNMENT
+  title: "Naturvårdsverket"
+  authority: 96
+  topics:
+    - miljö
+    - klimat
+    - hållbarhet
+    - natur
+  industries:
+    - environment
+    - sustainability
+
+# ============================================================================
+# T2 - ACADEMIC & RESEARCH
+# ============================================================================
+
+ki.se:
+  tier: T2_ACADEMIC
+  title: "Karolinska Institutet"
+  authority: 94
+  topics:
+    - medicin
+    - hälsa
+    - forskning
+    - utbildning
+  industries:
+    - medical
+    - health
+    - research
+    - education
+
+umu.se:
+  tier: T2_ACADEMIC
+  title: "Umeå universitet"
+  authority: 90
+  topics:
+    - forskning
+    - utbildning
+    - vetenskap
+    - samhälle
+  industries:
+    - research
+    - education
+    - science
+
+su.se:
+  tier: T2_ACADEMIC
+  title: "Stockholms universitet"
+  authority: 91
+  topics:
+    - forskning
+    - utbildning
+    - samhällsvetenskap
+    - humaniora
+  industries:
+    - research
+    - education
+    - humanities
+
+gu.se:
+  tier: T2_ACADEMIC
+  title: "Göteborgs universitet"
+  authority: 90
+  topics:
+    - forskning
+    - utbildning
+    - samhälle
+    - hälsa
+  industries:
+    - research
+    - education
+    - health
+
+# ============================================================================
+# T3 - INDUSTRY ORGANIZATIONS
+# ============================================================================
+
+svenskhandel.se:
+  tier: T3_INDUSTRY
+  title: "Svensk Handel"
+  authority: 82
+  topics:
+    - handel
+    - detaljhandel
+    - e-handel
+    - konsument
+    - ekonomi
+  industries:
+    - retail
+    - ecommerce
+    - business
+
+industriarbetsgivarna.se:
+  tier: T3_INDUSTRY
+  title: "Industriarbetsgivarna"
+  authority: 80
+  topics:
+    - industri
+    - arbetsliv
+    - arbetsgivare
+    - avtal
+  industries:
+    - manufacturing
+    - labor
+    - business
+
+svensktnaringsliv.se:
+  tier: T3_INDUSTRY
+  title: "Svenskt Näringsliv"
+  authority: 81
+  topics:
+    - företag
+    - näringsliv
+    - ekonomi
+    - politik
+  industries:
+    - business
+    - economics
+    - policy
+
+tco.se:
+  tier: T3_INDUSTRY
+  title: "TCO"
+  authority: 79
+  topics:
+    - arbetsliv
+    - fackförening
+    - arbetsrätt
+    - löner
+  industries:
+    - labor
+    - unions
+    - employment
+
+lo.se:
+  tier: T3_INDUSTRY
+  title: "LO"
+  authority: 79
+  topics:
+    - arbetsliv
+    - fackförening
+    - arbetsrätt
+    - politik
+  industries:
+    - labor
+    - unions
+    - politics
+
+# ============================================================================
+# T4 - REPUTABLE MEDIA
+# ============================================================================
+
+svd.se:
+  tier: T4_MEDIA
+  title: "Svenska Dagbladet"
+  authority: 72
+  topics:
+    - nyheter
+    - ekonomi
+    - politik
+    - kultur
+    - samhälle
+  industries:
+    - journalism
+    - news
+    - media
+
+dn.se:
+  tier: T4_MEDIA
+  title: "Dagens Nyheter"
+  authority: 73
+  topics:
+    - nyheter
+    - politik
+    - ekonomi
+    - kultur
+  industries:
+    - journalism
+    - news
+    - media
+
+sverigesradio.se:
+  tier: T4_MEDIA
+  title: "Sveriges Radio"
+  authority: 74
+  topics:
+    - nyheter
+    - samhälle
+    - kultur
+    - politik
+  industries:
+    - journalism
+    - broadcasting
+    - public_media
+
+svt.se:
+  tier: T4_MEDIA
+  title: "SVT"
+  authority: 74
+  topics:
+    - nyheter
+    - samhälle
+    - kultur
+    - underhållning
+  industries:
+    - journalism
+    - broadcasting
+    - public_media
+
+breakit.se:
+  tier: T4_MEDIA
+  title: "Breakit"
+  authority: 68
+  topics:
+    - tech
+    - startup
+    - innovation
+    - företag
+  industries:
+    - technology
+    - startups
+    - business
+
+di.se:
+  tier: T4_MEDIA
+  title: "Dagens Industri"
+  authority: 71
+  topics:
+    - ekonomi
+    - börs
+    - företag
+    - finans
+  industries:
+    - business
+    - finance
+    - economics
+
+# ============================================================================
+# T5 - ESTABLISHED BRANDS (Use sparingly)
+# ============================================================================
+
+ica.se:
+  tier: T5_BRAND
+  title: "ICA"
+  authority: 60
+  topics:
+    - mat
+    - recept
+    - hälsa
+    - konsument
+  industries:
+    - food
+    - retail
+    - consumer
+
+# ============================================================================
+# DATA PORTALS
+# ============================================================================
+
+data.europa.eu:
+  tier: DATA_PORTAL
+  title: "EU Open Data Portal"
+  authority: 88
+  topics:
+    - data
+    - statistik
+    - samhälle
+    - ekonomi
+    - policy
+  industries:
+    - statistics
+    - research
+    - government
+
+worldbank.org:
+  tier: DATA_PORTAL
+  title: "World Bank"
+  authority: 85
+  topics:
+    - ekonomi
+    - utveckling
+    - statistik
+    - global
+  industries:
+    - economics
+    - development
+    - finance
+
+who.int:
+  tier: T1_GOVERNMENT
+  title: "World Health Organization"
+  authority: 96
+  topics:
+    - hälsa
+    - medicin
+    - global_health
+    - pandemi
+  industries:
+    - health
+    - medical
+    - global_health
